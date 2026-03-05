@@ -124,8 +124,8 @@ GAME_INCLUDES = [
     RELATIVE_ENGINE_ROOT,
     RELATIVE_ENGINE_VENDOR,
     RELATIVE_STB_ROOT,
-    f"{RELATIVE_GLAD_ROOT}/include",
     RELATIVE_GLFW_ROOT,
+    f"{RELATIVE_GLAD_ROOT}/include",
     f"{RELATIVE_ASSIMP_ROOT}/include",
 ]
 
@@ -139,6 +139,7 @@ procedures_config = {
             f"{RELATIVE_ENGINE_ROOT}/Core/**/*.cpp",
             f"{RELATIVE_ENGINE_ROOT}/Platform/**/*.cpp",
             f"{RELATIVE_ENGINE_ROOT}/Input/**/*.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/Graphics/**/*.cpp",
             f"{RELATIVE_ENGINE_ROOT}/engine.cpp",
             f"{RELATIVE_ENGINE_ROOT}/application.cpp",
             

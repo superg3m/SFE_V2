@@ -4,6 +4,8 @@
 #include "../../../Platform/sfe_platform.hpp"
 #include "sfe_shader.hpp"
 
+#include "sfe_gl_check.hpp"
+
 Shader::Shader(DS::Vector<const char*> shader_paths) {
     this->program_id = glCreateProgram();
     this->shader_paths = shader_paths;

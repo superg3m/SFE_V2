@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 
+#include "./sfe_texture.hpp"
 #include "../../Core/DataStructure/sfe_ds.hpp"
 #include "../../Core/Math/sfe_math.hpp"
 
@@ -27,6 +28,8 @@ struct Shader {
     void setBool(const char* name, bool value);
     void setInt(const char* name, int value);
     void setFloat(const char* name, float value);
+    void setTexture2D(const char* name, int texture_unit, Texture &texture);
+    void setTexture3D(const char* name, int texture_unit, Texture &texture);
     void setVec2(const char* name, const Math::Vec2& value);
     void setVec2(const char* name, float x, float y);
     void setVec3(const char* name, const Math::Vec3& value);

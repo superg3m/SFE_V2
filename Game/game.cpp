@@ -2,6 +2,9 @@
 #include <iostream>
 
 bool Game::Initalize() {
+	SFE::GraphicsAPI& graphics = SFE::Engine::GetInstance().GetGraphicsAPI();
+	Shader shader = graphics.CreateShader({"../../Shaders/text.vert", "../../Shaders/text.frag"});
+
 	return true;
 }
 
