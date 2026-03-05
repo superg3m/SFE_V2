@@ -7,7 +7,9 @@ bool Game::Initalize() {
 
 void Game::Update(float dt) {
 	SFE::InputManager& input = SFE::Engine::GetInstance().GetInputManager();
-	if (input.GetKeyPressed(SFE::KEY_A)) {
+	const bool SHIFT = input.GetKey(SFE::KEY_SHIFT, SFE::PRESSED|SFE::DOWN);
+
+	if (SHIFT && input.GetKeyPressed(SFE::KEY_A)) {
 		std::cout << "DeltaTime: " << dt << std::endl;
 	}
 }
