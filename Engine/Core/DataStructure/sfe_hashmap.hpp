@@ -64,8 +64,8 @@ namespace DS {
 
             STATIC_ASSERT((key_is_trivial && !key_is_pointer) || key_is_cstring || key_is_string_view);
 
-            this->m_count = list.size();
-            this->m_capacity = this->m_count * 2;
+            this->m_count = 0;
+            this->m_capacity = list.size() * 2;
             this->m_entries = (HashmapEntry*)Memory::Malloc(this->m_capacity * sizeof(HashmapEntry));
 
             if constexpr (key_is_trivial && !key_is_pointer) {

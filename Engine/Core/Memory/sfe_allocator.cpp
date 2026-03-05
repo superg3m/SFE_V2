@@ -5,34 +5,23 @@
 #include "sfe_allocator.hpp"
 
 namespace Memory {
-    // This is pretty ugly
-    static BaseAllocator* g_allocator = nullptr;
-
-    void bindAllocator(BaseAllocator* allocator) {
-        RUNTIME_ASSERT(allocator);
-        RUNTIME_ASSERT(allocator->is_valid());
-
-        g_allocator = allocator;
-    }
-
     void* Malloc(size_t allocation_size) {
-        return g_allocator->malloc(allocation_size);
+        void* ret = std::malloc(allocation_size);
+        Memory::Zero(ret, allocation_size);
+
+        return ret;
     }
 
     void Free(void* data) {
-        g_allocator->free(data);
+        std::free(data);
     }
 
     void* Realloc(void* data, size_t old_allocation_size, size_t new_allocation_size) {
-        return g_allocator->realloc(data, old_allocation_size, new_allocation_size);
+        return std::realloc(data, new_allocation_size);
     }
 
     GeneralAllocator::GeneralAllocator() {
         this->valid = true;
-    }
-
-    GeneralAllocator::~GeneralAllocator() {
-        this->valid = false;
     }
 
     void* GeneralAllocator::malloc(size_t allocation_size) {

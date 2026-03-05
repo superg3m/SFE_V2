@@ -1,9 +1,9 @@
 #include <sfe.hpp>
 
+/*
 #undef APIENTRY
 #include <windows.h>
 #undef CopyFile
-
 
 FILETIME get_last_write_time(const char* path) {
     WIN32_FILE_ATTRIBUTE_DATA data;
@@ -119,4 +119,21 @@ int main(int argc, char** argv) {
 
     glfwTerminate();
     return 0;
+}
+*/
+
+#include "game.hpp"
+
+int main() {
+	Game* game = new Game;
+	SFE::Engine& engine = SFE::Engine::GetInstance();
+	engine.SetApplication(game);
+
+	if (engine.Initalize(800, 800, "LearningOpenGL")){
+		engine.Run();
+	}
+
+	engine.Shutdown();
+
+	return 0;
 }

@@ -26,11 +26,8 @@ namespace Memory {
         bool valid = false;
     };
 
-    void bindAllocator(BaseAllocator* allocator);
-
     struct GeneralAllocator : public BaseAllocator {
         GeneralAllocator();
-        ~GeneralAllocator();
 
         void* malloc(size_t allocation_size) override;
         void free(void* data) override;

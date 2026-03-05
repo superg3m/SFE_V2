@@ -85,7 +85,10 @@ procedures_config = {
         source_files = [
             "../../Engine/Core/**/*.cpp",
             "../../Engine/Platform/**/*.cpp",
-            "../../Engine/Vendor/stb/*.c"
+            "../../Engine/Input/**/*.cpp",
+            
+            "../../Engine/engine.cpp",
+            "../../Engine/application.cpp"
         ],
         additional_libs = [],
         include_paths = [
@@ -103,6 +106,7 @@ procedures_config = {
         output_name = f"main.exe",
         source_files = [
             "../../Game/main.cpp",
+            "../../Game/game.cpp",
             "../../Engine/Vendor/glad/src/glad.c",
         ],
         additional_libs = libs,
@@ -116,28 +120,30 @@ procedures_config = {
             "../../Engine/Vendor/assimp/include",
         ],
         compiler_inject_into_args=[]
-    ),
-    
-    "Game DLL": ProcedureConfig(
-        build_directory = f"./{build_postfix}",
-        output_name = f"Game.dll",
-        source_files = [
-            "../../Game/game.cpp",
-        ],
-        additional_libs = libs,
-        compile_time_defines=[],
-        include_paths = [
-            "../../Engine",
-            "../../Engine/Vendor",
-            "../../Engine/Vendor/stb",
-            "../../Engine/Vendor/glad/include", 
-            "../../Engine/Vendor/glfw",
-            "../../Engine/Vendor/assimp/include",
-        ],
-        compiler_inject_into_args=[],
-        on_source_change_recompile=True
-    ),
+    )
 }
+
+"""
+"Game DLL": ProcedureConfig(
+    build_directory = f"./{build_postfix}",
+    output_name = f"Game.dll",
+    source_files = [
+        "../../Game/game.cpp",
+    ],
+    additional_libs = libs,
+    compile_time_defines=[],
+    include_paths = [
+        "../../Engine",
+        "../../Engine/Vendor",
+        "../../Engine/Vendor/stb",
+        "../../Engine/Vendor/glad/include", 
+        "../../Engine/Vendor/glfw",
+        "../../Engine/Vendor/assimp/include",
+    ],
+    compiler_inject_into_args=[],
+    on_source_change_recompile=True
+),
+"""
 
 manager: Manager = Manager(cc, pc, procedures_config)
 manager.build_project()

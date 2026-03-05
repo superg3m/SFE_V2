@@ -1,8 +1,17 @@
-#include <sfe.hpp>
+#include "game.hpp"
+#include <iostream>
 
-extern "C" __declspec(dllexport) void clear_color(OpenGL_API* gl) {
-	gl->test = Math::Mat4::Scale(Math::Mat4::Identity(), Random::GenerateRange(&gl->seed, 2, 10));
+bool Game::Initalize() {
+	return true;
+}
 
-	gl->clearColor(0.2f, 0.8f, 0.2f, 1.0f);
-	gl->clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void Game::Update(float dt) {
+	SFE::InputManager& input = SFE::Engine::GetInstance().GetInputManager();
+	if (input.GetKeyPressed(SFE::KEY_A)) {
+		std::cout << "DeltaTime: " << dt << std::endl;
+	}
+}
+
+void Game::Shutdown() {
+
 }
