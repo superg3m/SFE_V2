@@ -12,9 +12,10 @@ def FIND_C_BUILD(current_dir):
         FIND_C_BUILD(parent_dir)
 
 FIND_C_BUILD(os.path.abspath(os.path.dirname(__file__)))
+
 from c_build.source.UserUtilities import *
 from c_build.source.Manager import *
-# --------------------------------------------------------------------------------------s
+# ---------------------------------------------------------------------------------------
 
 cc: CompilerConfig = CompilerConfig(
     compiler_name = C_BUILD_COMPILER_NAME() if C_BUILD_IS_DEPENDENCY() else "INVALID_COMPILER",
@@ -26,6 +27,8 @@ pc: ProjectConfig = ProjectConfig(
     project_debug_with_visual_studio = True,
     project_executable_names = ["main.exe"]
 )
+
+# ---------------------------- COMPILER SELECTION --------------------------------------
 
 if IS_WINDOWS() and not C_BUILD_IS_DEPENDENCY():
     cc.compiler_name = "cl"
@@ -40,121 +43,138 @@ if cc.compiler_name == "cl":
 else:
     cc.compiler_warning_level = ""
     cc.compiler_disable_specific_warnings = [
-        "deprecated", 
-        "parentheses", 
+        "deprecated",
+        "parentheses",
         "implicit-fallthrough",
         "unused-variable"
     ]
 
-build_postfix = f"./build_{cc.compiler_name}/{C_BUILD_BUILD_TYPE()}"
+# ---------------------------------------------------------------------------------------
+ABSOLUTE_ENGINE_ROOT = "./Engine"
+ABSOLUTE_ENGINE_VENDOR = "./Engine/Vendor"
+ABSOLUTE_GAME_ROOT = "./Game"
+
+BUILD_APPEND = f"build_{cc.compiler_name}/{C_BUILD_BUILD_TYPE()}"
+ABSOLUTE_ENGINE_BUILD = f"./Engine/{BUILD_APPEND}"
+ABSOLUTE_GAME_BUILD = f"./Game/{BUILD_APPEND}"
+
+ABSOLUTE_GLFW_ROOT = f"{ABSOLUTE_ENGINE_VENDOR}/glfw"
+ABSOLUTE_ASSIMP_ROOT = f"{ABSOLUTE_ENGINE_VENDOR}/assimp"
+ABSOLUTE_GLAD_ROOT = f"{ABSOLUTE_ENGINE_VENDOR}/glad"
+ABSOLUTE_STB_ROOT = f"{ABSOLUTE_ENGINE_VENDOR}/stb"
+
+# ---
+
+RELATIVE_ENGINE_ROOT = "../../../Engine"
+RELATIVE_ENGINE_VENDOR = f"{RELATIVE_ENGINE_ROOT}/Vendor"
+RELATIVE_GLFW_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glfw"
+RELATIVE_ASSIMP_ROOT = f"{RELATIVE_ENGINE_VENDOR}/assimp"
+RELATIVE_GLAD_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glad"
+RELATIVE_STB_ROOT = f"{RELATIVE_ENGINE_VENDOR}/stb"
+
+RELATIVE_GAME_ROOT = "../../../Game"
+
+
 inject = []
-libs = ["sfe.lib"]
+libs = [
+    f"{RELATIVE_ENGINE_ROOT}/{BUILD_APPEND}/sfe.lib"
+]
+
+# -------------------------------- PLATFORM LIBS ---------------------------------------
 
 if IS_WINDOWS():
     if cc.compiler_name == "cl":
-        glfw_path = "../../Engine/Vendor/glfw/bin/windows/lib-static-ucrt/glfw3dll.lib"  
-    else: 
-        glfw_path = "../../Engine/Vendor/glfw/bin/windows/lib-mingw-w64/libglfw3dll.a"
-        inject += ["-L/ucrt64/lib", "-lassimp"] #hacky but works for now
-    
+        glfw_lib = f"{RELATIVE_GLFW_ROOT}/bin/windows/lib-static-ucrt/glfw3dll.lib"
+    else:
+        glfw_lib = f"{RELATIVE_GLFW_ROOT}/bin/windows/lib-mingw-w64/libglfw3dll.a"
+        inject += ["-L/ucrt64/lib", "-lassimp"]
+
     libs += [
-        glfw_path,
-        f"../../Engine/Vendor/assimp/bin/windows/assimp-vc143-mtd.lib",
+        glfw_lib,
+        f"{RELATIVE_ASSIMP_ROOT}/bin/windows/assimp-vc143-mtd.lib",
         GET_LIB_FLAG(cc, "Kernel32"),
         GET_LIB_FLAG(cc, "User32"),
         GET_LIB_FLAG(cc, "Gdi32"),
-        GET_LIB_FLAG(cc, "OpenGL32"), 
+        GET_LIB_FLAG(cc, "OpenGL32"),
         GET_LIB_FLAG(cc, "Winmm"),
     ]
+
 elif IS_DARWIN():
     inject += ["-Wl,-rpath,@executable_path"]
     libs += [
-        f"../../Engine/Vendor/glfw/bin/macos/lib-arm64/libglfw3.a",
-        f"../../Engine/Vendor/assimp/bin/macos/libassimp.dylib",
+        f"{RELATIVE_GLFW_ROOT}/bin/macos/lib-arm64/libglfw3.a",
+        f"{RELATIVE_ASSIMP_ROOT}/bin/macos/libassimp.dylib",
         "-framework OpenGL",
         "-framework Cocoa",
         "-framework IOKit",
         "-framework CoreFoundation",
     ]
 
+# ---------------------------------------------------------------------------------------
+
+ENGINE_INCLUDES = [
+    RELATIVE_ENGINE_VENDOR,
+    RELATIVE_STB_ROOT,
+    RELATIVE_GLFW_ROOT,
+    f"{RELATIVE_GLAD_ROOT}/include",
+    f"{RELATIVE_ASSIMP_ROOT}/include",
+]
+
+GAME_INCLUDES = [
+    RELATIVE_ENGINE_ROOT,
+    RELATIVE_ENGINE_VENDOR,
+    RELATIVE_STB_ROOT,
+    f"{RELATIVE_GLAD_ROOT}/include",
+    RELATIVE_GLFW_ROOT,
+    f"{RELATIVE_ASSIMP_ROOT}/include",
+]
+
+# ---------------------------------------------------------------------------------------
 
 procedures_config = {
     "SFE Engine": ProcedureConfig(
-        build_directory = f"./{build_postfix}",
-        output_name = f"sfe.lib",
+        build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
+        output_name = "sfe.lib",
         source_files = [
-            "../../Engine/Core/**/*.cpp",
-            "../../Engine/Platform/**/*.cpp",
-            "../../Engine/Input/**/*.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/Core/**/*.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/Platform/**/*.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/Input/**/*.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/engine.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/application.cpp",
             
-            "../../Engine/engine.cpp",
-            "../../Engine/application.cpp"
+            f"{RELATIVE_GLAD_ROOT}/src/glad.c",
         ],
         additional_libs = [],
-        include_paths = [
-            "../../Engine/Vendor",
-            "../../Engine/Vendor/stb",
-            "../../Engine/Vendor/glad/include", 
-            "../../Engine/Vendor/glfw",
-            "../../Engine/Vendor/assimp/include",
-        ],
+        include_paths = ENGINE_INCLUDES,
         compiler_inject_into_args=[]
     ),
-    
+
     "Main": ProcedureConfig(
-        build_directory = f"./{build_postfix}",
-        output_name = f"main.exe",
+        build_directory = f"{ABSOLUTE_GAME_BUILD}",
+        output_name = "main.exe",
         source_files = [
-            "../../Game/main.cpp",
-            "../../Game/game.cpp",
-            "../../Engine/Vendor/glad/src/glad.c",
+            f"{RELATIVE_GAME_ROOT}/main.cpp",
+            f"{RELATIVE_GAME_ROOT}/game.cpp",
         ],
         additional_libs = libs,
         compile_time_defines=[],
-        include_paths = [
-            "../../Engine",
-            "../../Engine/Vendor",
-            "../../Engine/Vendor/stb",
-            "../../Engine/Vendor/glad/include", 
-            "../../Engine/Vendor/glfw",
-            "../../Engine/Vendor/assimp/include",
-        ],
+        include_paths = GAME_INCLUDES,
         compiler_inject_into_args=[]
     )
 }
 
-"""
-"Game DLL": ProcedureConfig(
-    build_directory = f"./{build_postfix}",
-    output_name = f"Game.dll",
-    source_files = [
-        "../../Game/game.cpp",
-    ],
-    additional_libs = libs,
-    compile_time_defines=[],
-    include_paths = [
-        "../../Engine",
-        "../../Engine/Vendor",
-        "../../Engine/Vendor/stb",
-        "../../Engine/Vendor/glad/include", 
-        "../../Engine/Vendor/glfw",
-        "../../Engine/Vendor/assimp/include",
-    ],
-    compiler_inject_into_args=[],
-    on_source_change_recompile=True
-),
-"""
-
 manager: Manager = Manager(cc, pc, procedures_config)
 manager.build_project()
-# ------------------------------------------------------------------------------------
+
+# -------------------------------- POST BUILD ------------------------------------------
 
 if IS_WINDOWS():
     if cc.compiler_name == "cl":
-        COPY_FILE_TO_DIR("./Engine/Vendor/glfw/bin/windows/lib-static-ucrt", "glfw3.dll", build_postfix)
+        COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-static-ucrt", "glfw3.dll", ABSOLUTE_GAME_BUILD)
     else:
-        COPY_FILE_TO_DIR("./Engine/Vendor/glfw/bin/windows/lib-mingw-w64", "glfw3.dll", build_postfix)
-            
-    COPY_FILE_TO_DIR("./Engine/Vendor/assimp/bin/windows", "assimp-vc143-mtd.dll", build_postfix)
+        COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-mingw-w64", "glfw3.dll", ABSOLUTE_GAME_BUILD)
+
+    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/windows", "assimp-vc143-mtd.dll", ABSOLUTE_GAME_BUILD)
+
 elif IS_DARWIN():
-    COPY_FILE_TO_DIR("./Engine/Vendor/assimp/bin/macos", "libassimp.6.dylib", build_postfix)
+    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_GAME_BUILD)

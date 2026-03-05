@@ -116,4 +116,8 @@ namespace SFE {
 	InputManager& Engine::GetInputManager() {
 		return this->input;
 	}
+
+	GraphicsAPI& Engine::GetGraphicsAPI() {
+		return this->graphics;
+	}
 }

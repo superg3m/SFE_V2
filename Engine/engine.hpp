@@ -2,6 +2,7 @@
 
 #include "Input/sfe_input_manager.hpp"
 #include "Core/Memory/sfe_allocator.hpp"
+#include "Graphics/sfe_graphics_api.hpp"
 #include <chrono>
 
 struct GLFWwindow;
@@ -18,12 +19,14 @@ namespace SFE {
 		void SetApplication(Application* app);
 		Application* GetApplication();
 		InputManager& GetInputManager();
+		GraphicsAPI& GetGraphicsAPI();
 
 	private:
 		Application* app = nullptr;
 		GLFWwindow* window = nullptr;
 
 		InputManager input;
+		GraphicsAPI graphics;
 		std::chrono::steady_clock::time_point previous_time;
 
 		Engine() = default;
