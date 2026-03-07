@@ -13,5 +13,7 @@ namespace SFE {
 
 		void BindShaderProgram(Shader* shader);
 		void BindMaterial(Material* material);
+		void BindMesh(Mesh* mesh);
+		void DrawMesh(Mesh* mesh);
 	};
 }
