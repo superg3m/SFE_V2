@@ -11,3 +11,6 @@
 
 #include "application.hpp"
 #include "engine.hpp"
+#include "Graphics/sfe_mesh.hpp"
+#include "Graphics/sfe_material.hpp"
+#include "Graphics/sfe_vertex_layout.hpp"

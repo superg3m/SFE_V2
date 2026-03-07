@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../Core/sfe_core.hpp"
 #include <glad/glad.h>
 
