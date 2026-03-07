@@ -62,10 +62,10 @@ namespace SFE {
 	}
 
 	void Mesh::Draw() {
-		if (this->vertex_count) {
-			glDrawArrays(GL_TRIANGLES, 0, this->vertex_count);
-		} else if (this->index_count) {
+		if (this->index_count) {
 			glDrawElements(GL_TRIANGLES, this->index_count, GL_UNSIGNED_INT, 0);
+		} else {
+			glDrawArrays(GL_TRIANGLES, 0, this->vertex_count);
 		}
 	}
 }

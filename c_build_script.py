@@ -24,7 +24,7 @@ cc: CompilerConfig = CompilerConfig(
 pc: ProjectConfig = ProjectConfig(
     project_name = "SFE",
     project_dependencies = [],
-    project_debug_with_visual_studio = False,
+    project_debug_with_visual_studio = True,
     project_executable_names = ["main.exe"]
 )
 

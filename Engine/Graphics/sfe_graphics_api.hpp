@@ -5,6 +5,7 @@
 namespace SFE {
 	struct Shader;
 	struct Material;
+	struct Mesh;
 
 	struct GraphicsAPI {
 		Shader* CreateShader(DS::Vector<const char*> shader_paths);

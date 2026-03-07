@@ -6,26 +6,27 @@
 #include "../Memory/sfe_memory.hpp"
 #include "../Common/sfe_common.hpp"
 
+#define DEFAULT_DS_VECTOR_CAPACITY 1
+
 namespace DS {
     template <typename T>
     struct Vector {
         Vector() {
             this->m_count = 0;
-            this->m_capacity = 0;
-            this->m_data = nullptr;
+            this->m_capacity = DEFAULT_DS_VECTOR_CAPACITY;
+            this->m_data = (T*)Memory::Malloc(this->m_capacity * sizeof(T));
         }
 
         Vector(std::initializer_list<T> list) {
             this->m_count = list.size();
-            this->m_capacity = this->m_count * 2;
-
+            this->m_capacity = (this->m_count * 2) ? (this->m_count * 2) : DEFAULT_DS_VECTOR_CAPACITY;
             this->m_data = (T*)Memory::Malloc(this->m_capacity * sizeof(T));
             Memory::Copy(this->m_data, this->m_capacity * sizeof(T), list.begin(), list.size() * sizeof(T));
         }
 
         Vector(u64 capacity, u64 count = 0) {
             this->m_count = count;
-            this->m_capacity = capacity;
+            this->m_capacity = capacity ? capacity : DEFAULT_DS_VECTOR_CAPACITY;;
 
             this->m_data = (T*)Memory::Malloc(this->m_capacity * sizeof(T));
         }
@@ -173,6 +174,8 @@ namespace DS {
         }
         
         void grow() {
+              
+
             size_t old_allocation_size = (this->m_capacity * sizeof(T));
             this->m_capacity *= 2;
             size_t new_allocation_size = (this->m_capacity * sizeof(T));

@@ -6,7 +6,8 @@
 #include "../Hashing/sfe_hashing.hpp"
 #include "sfe_view.hpp"
 
-#define HASHMAP_DEFAULT_getLoadFactor 0.7f
+#define DS_HASHMAP_DEFAULT_LOAD_FACTOR 0.7f
+#define DEFAULT_DS_HASHMAP_CAPACITY 1
 
 namespace DS {
     typedef u64(HashFunction)(const void*, size_t);
@@ -21,6 +22,43 @@ namespace DS {
             bool dead = false;
         };
 
+        struct Iterator {
+            HashmapEntry* ptr;
+            HashmapEntry* end;
+
+            Iterator(HashmapEntry* p, HashmapEntry* e) : ptr(p), end(e) {
+                skip();
+            }
+
+            void skip() {
+                while ((ptr != end) && (!ptr->filled || ptr->dead)) {
+                    ptr++;
+                }
+            }
+
+            HashmapEntry& operator*() const {
+                return *ptr;
+            }
+
+            Iterator& operator++() {
+                ++ptr;
+                skip();
+                return *this;
+            }
+
+            bool operator!=(const Iterator& other) const {
+                return ptr != other.ptr;
+            }
+        };
+
+        Iterator begin() {
+            return Iterator(m_entries, m_entries + m_capacity);
+        }
+
+        Iterator end() {
+            return Iterator(m_entries + m_capacity, m_entries + m_capacity);
+        }
+
         struct InitPair {
             K key;
             V value;
@@ -28,8 +66,8 @@ namespace DS {
 
         Hashmap() {
             this->m_count = 0;
-            this->m_capacity = 0;
-            this->m_entries = nullptr;
+            this->m_capacity = DEFAULT_DS_HASHMAP_CAPACITY;
+            this->m_entries = (HashmapEntry*)Memory::Malloc(this->m_capacity * sizeof(HashmapEntry));
         }
 
         Hashmap(u64 capacity) {
@@ -41,7 +79,7 @@ namespace DS {
             STATIC_ASSERT((key_is_trivial && !key_is_pointer) || key_is_cstring || key_is_string_view);
 
             this->m_count = 0;
-            this->m_capacity = capacity;
+            this->m_capacity = capacity ? capacity : DEFAULT_DS_VECTOR_CAPACITY;
             this->m_entries = (HashmapEntry*)Memory::Malloc(this->m_capacity * sizeof(HashmapEntry));
 
             if constexpr (key_is_trivial && !key_is_pointer) {
@@ -65,7 +103,7 @@ namespace DS {
             STATIC_ASSERT((key_is_trivial && !key_is_pointer) || key_is_cstring || key_is_string_view);
 
             this->m_count = 0;
-            this->m_capacity = list.size() * 2;
+            this->m_capacity = (list.size() * 2) ? (list.size() * 2) : DEFAULT_DS_HASHMAP_CAPACITY;
             this->m_entries = (HashmapEntry*)Memory::Malloc(this->m_capacity * sizeof(HashmapEntry));
 
             if constexpr (key_is_trivial && !key_is_pointer) {
@@ -122,7 +160,7 @@ namespace DS {
         void put(K key, V value) {
             RUNTIME_ASSERT(this->m_entries); 
 
-            if (this->getLoadFactor() >= HASHMAP_DEFAULT_getLoadFactor) {
+            if (this->getLoadFactor() >= DS_HASHMAP_DEFAULT_LOAD_FACTOR) {
                 this->growRehash();
             }
 
@@ -193,6 +231,7 @@ namespace DS {
             return this->m_count;
         }
 
+        /*
         HashmapEntry* begin() { 
             return m_entries; 
         }
@@ -205,6 +244,7 @@ namespace DS {
         const HashmapEntry* end() const { 
             return m_entries + m_capacity; 
         }
+        */
 
     private:
         u64 m_count = 0;

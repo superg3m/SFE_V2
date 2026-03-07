@@ -10,6 +10,9 @@ namespace SFE {
 	}
 
 	void Material::bind() {
+		if (!this->shader) return;
+
+		this->shader->use();
 		for (const auto &entry : this->floatParams) {
 			this->shader->setFloat(entry.key, entry.value);
 		}

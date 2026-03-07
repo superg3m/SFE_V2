@@ -83,9 +83,7 @@ namespace SFE {
 
 			this->app->Update(dt);
 
-			glClearColor(0.2f, 0.8f, 0.2f, 1.0f);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+			this->render_queue.Draw(this->graphics);
 			glfwSwapBuffers(this->window);
 		}
 	}
@@ -119,5 +117,9 @@ namespace SFE {
 
 	GraphicsAPI& Engine::GetGraphicsAPI() {
 		return this->graphics;
+	}
+
+	RenderQueue& Engine::GetRenderQueue() {
+		return this->render_queue;
 	}
 }

@@ -12,7 +12,6 @@ namespace SFE {
 		void Bind();
 		void Draw();
 
-	private:
 		unsigned int VAO = 0;
 		unsigned int VBO = 0;
 		unsigned int EBO = 0;
@@ -20,5 +19,9 @@ namespace SFE {
 		VertexLayout layout;
 		unsigned int vertex_count = 0;
 		unsigned int index_count = 0;
+
+	private:
+
+
 	};
 }
