@@ -26,7 +26,7 @@ bool Game::Initalize() {
 	layout.stride = sizeof(float) * 6;
 
 	DS::Vector<float> vertices = {
-		//   Position           Position
+		//   Position               Color
 		+0.5f, +0.5f, +0.0f,    1.0f, 0.0f, 0.0f,
 		-0.5f, +0.5f, +0.0f,    0.0f, 1.0f, 0.0f,
 		-0.5f, -0.5f, +0.0f,    0.0f, 0.0f, 1.0f,
