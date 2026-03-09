@@ -55,29 +55,37 @@ void PlayerEntity::Update(float dt) {
 	glClearColor(0.2f, 0.8f, 0.2f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	SFE::RenderCommand command = {
-		.mesh = this->mesh,
-		.material = &this->material,
-	};
-
     if (input.GetKeyDown(SFE::KEY_W)) {
-		this->offset_y += 0.01f;
+		this->position.y += 0.01f;
 	}
 
     if (input.GetKeyDown(SFE::KEY_A)) {
-		this->offset_x -= 0.01f;
+		this->position.x -= 0.01f;
 	}
 
     if (input.GetKeyDown(SFE::KEY_S)) {
-		this->offset_y -= 0.01f;
+		this->position.y -= 0.01f;
 	}
 
     if (input.GetKeyDown(SFE::KEY_D)) {
-		this->offset_x += 0.01f;
+		this->position.x += 0.01f;
 	}
 
-    this->material.setParam("offset_x", this->offset_x);
-    this->material.setParam("offset_y", this->offset_y);
+    if (input.GetKeyDown(SFE::KEY_LEFT)) {
+		this->rotation.z += 1;
+		this->orientation = Math::Quat::FromEuler(this->rotation);
+	}
+
+    if (input.GetKeyDown(SFE::KEY_RIGHT)) {
+		this->rotation.z -= 1;
+		this->orientation = Math::Quat::FromEuler(this->rotation);
+	}
+
+	SFE::RenderCommand command = {
+		.mesh = this->mesh,
+		.material = &this->material,
+		.model = this->GetWorldTrasform()
+	};
 
 	queue.Submit(command);
 }

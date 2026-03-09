@@ -4,11 +4,13 @@
 #include "sfe_graphics_api.hpp"
 
 namespace SFE {
-	typedef struct Mesh Mesh;
-	typedef struct Material Material;
+	struct Mesh;
+	struct Material;
+
 	struct RenderCommand {
 		Mesh* mesh = nullptr;
 		Material* material = nullptr;
+		Math::Mat4 model;
 	};
 
 	struct RenderQueue {

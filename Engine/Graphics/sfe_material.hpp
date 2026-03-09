@@ -9,8 +9,9 @@ namespace SFE {
 		void setParam(const char*, float value);
 		void bind();
 
-	private:
 		Shader* shader;
+	private:
+		
 		DS::Hashmap<const char*, float> floatParams;
 	};
 }
