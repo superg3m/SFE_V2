@@ -9,7 +9,6 @@ namespace SFE {
 		Mesh(Mesh &mesh) = delete;
 		Mesh& operator=(Mesh &mesh) = delete;
 
-		void Bind();
 		void Draw();
 
 		unsigned int VAO = 0;

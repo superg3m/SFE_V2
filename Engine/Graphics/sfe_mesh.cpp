@@ -57,11 +57,9 @@ namespace SFE {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	void Mesh::Bind() {
-		glBindVertexArray(this->VAO);
-	}
-
 	void Mesh::Draw() {
+		glBindVertexArray(this->VAO);
+		
 		if (this->index_count) {
 			glDrawElements(GL_TRIANGLES, this->index_count, GL_UNSIGNED_INT, 0);
 		} else {

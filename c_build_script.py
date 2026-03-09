@@ -98,7 +98,6 @@ if IS_WINDOWS():
         GET_LIB_FLAG(cc, "OpenGL32"),
         GET_LIB_FLAG(cc, "Winmm"),
     ]
-
 elif IS_DARWIN():
     inject += ["-Wl,-rpath,@executable_path"]
     libs += [
@@ -160,7 +159,7 @@ procedures_config = {
         additional_libs = libs,
         compile_time_defines=[],
         include_paths = GAME_INCLUDES,
-        compiler_inject_into_args=[]
+        compiler_inject_into_args=inject
     )
 }
 
@@ -176,6 +175,5 @@ if IS_WINDOWS():
         COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-mingw-w64", "glfw3.dll", ABSOLUTE_GAME_BUILD)
 
     COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/windows", "assimp-vc143-mtd.dll", ABSOLUTE_GAME_BUILD)
-
 elif IS_DARWIN():
     COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_GAME_BUILD)

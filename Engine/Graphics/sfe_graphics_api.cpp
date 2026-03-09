@@ -40,12 +40,6 @@ namespace SFE {
 		}
 	}
 
-	void GraphicsAPI::BindMesh(Mesh* mesh) {
-		if (mesh) {
-			mesh->Bind();
-		}
-	}
-
 	void GraphicsAPI::DrawMesh(Mesh* mesh) {
 		if (mesh) {
 			mesh->Draw();
