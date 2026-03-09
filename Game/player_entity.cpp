@@ -61,19 +61,19 @@ void PlayerEntity::Update(float dt) {
 	};
 
     if (input.GetKeyDown(SFE::KEY_W)) {
-		this->offset_y += 0.001f;
+		this->offset_y += 0.01f;
 	}
 
     if (input.GetKeyDown(SFE::KEY_A)) {
-		this->offset_x -= 0.001f;
+		this->offset_x -= 0.01f;
 	}
 
     if (input.GetKeyDown(SFE::KEY_S)) {
-		this->offset_y -= 0.001f;
+		this->offset_y -= 0.01f;
 	}
 
     if (input.GetKeyDown(SFE::KEY_D)) {
-		this->offset_x += 0.001f;
+		this->offset_x += 0.01f;
 	}
 
     this->material.setParam("offset_x", this->offset_x);

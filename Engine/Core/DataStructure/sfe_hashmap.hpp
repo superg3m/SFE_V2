@@ -65,9 +65,27 @@ namespace DS {
         };
 
         Hashmap() {
+            constexpr bool key_is_trivial = std::is_trivially_copyable_v<K>;
+            constexpr bool key_is_pointer = std::is_pointer_v<K>;
+            constexpr bool key_is_cstring = std::is_same_v<K, char*> || std::is_same_v<K, const char*>;
+            constexpr bool key_is_string_view = std::is_same_v<K, DS::View<char>> || std::is_same_v<K, DS::View<const char>>;
+            
+            STATIC_ASSERT((key_is_trivial && !key_is_pointer) || key_is_cstring || key_is_string_view);
+
             this->m_count = 0;
-            this->m_capacity = DEFAULT_DS_HASHMAP_CAPACITY;
+            this->m_capacity = DEFAULT_DS_VECTOR_CAPACITY;
             this->m_entries = (HashmapEntry*)Memory::Malloc(this->m_capacity * sizeof(HashmapEntry));
+
+            if constexpr (key_is_trivial && !key_is_pointer) {
+                this->m_hash_func = Hashing::siphash24;
+                this->m_equal_func = Memory::Equal;
+            } else if constexpr (key_is_cstring) {
+                this->m_hash_func = Hashing::cstringHash;
+                this->m_equal_func = Hashing::cstringEquality;
+            } else if constexpr (key_is_string_view) {
+                this->m_hash_func = Hashing::stringViewHash;
+                this->m_equal_func = Hashing::stringViewEquality;
+            }
         }
 
         Hashmap(u64 capacity) {
@@ -158,7 +176,7 @@ namespace DS {
         }
 
         void put(K key, V value) {
-            RUNTIME_ASSERT(this->m_entries); 
+            RUNTIME_ASSERT_MSG(this->m_entries, "NO ENTRIES???\n"); 
 
             if (this->getLoadFactor() >= DS_HASHMAP_DEFAULT_LOAD_FACTOR) {
                 this->growRehash();

@@ -87,7 +87,6 @@ namespace SFE {
         Entity* entity = new Entity();
         entity->name = name;
         this->SetParent(entity, parent);
-        this->root.push(entity);
 
         return entity;
     }

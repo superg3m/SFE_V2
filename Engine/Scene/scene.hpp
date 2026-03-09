@@ -16,8 +16,11 @@ namespace SFE {
         T* CreateEntity(const char* name, Entity* parent = nullptr) {
             T* entity = new T();
             entity->name = name;
-            this->SetParent(entity, parent);
-            this->root.push(entity);
+            if (this->SetParent(entity, parent)) {
+                LOG_DEBUG("Success!\n");  
+            } else {
+                LOG_WARN("Fail!\n");  
+            }
 
             return entity;
         }
