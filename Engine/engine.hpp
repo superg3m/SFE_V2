@@ -4,6 +4,8 @@
 #include "Core/Memory/sfe_allocator.hpp"
 #include "Graphics/sfe_graphics_api.hpp"
 #include "Graphics/sfe_render_queue.hpp"
+#include "Scene/scene.hpp"
+#include "Scene/entity.hpp"
 #include <chrono>
 
 struct GLFWwindow;

@@ -139,6 +139,7 @@ procedures_config = {
             f"{RELATIVE_ENGINE_ROOT}/Platform/**/*.cpp",
             f"{RELATIVE_ENGINE_ROOT}/Input/**/*.cpp",
             f"{RELATIVE_ENGINE_ROOT}/Graphics/**/*.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/Scene/**/*.cpp",
             f"{RELATIVE_ENGINE_ROOT}/engine.cpp",
             f"{RELATIVE_ENGINE_ROOT}/application.cpp",
             
@@ -153,8 +154,7 @@ procedures_config = {
         build_directory = f"{ABSOLUTE_GAME_BUILD}",
         output_name = "main.exe",
         source_files = [
-            f"{RELATIVE_GAME_ROOT}/main.cpp",
-            f"{RELATIVE_GAME_ROOT}/game.cpp",
+            f"{RELATIVE_GAME_ROOT}/*.cpp",
         ],
         additional_libs = libs,
         compile_time_defines=[],

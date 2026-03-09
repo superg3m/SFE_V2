@@ -14,10 +14,12 @@ namespace SFE {
 
         template<typename T, typename = typename std::enable_if<std::is_base_of_v<Entity, T>>>
         T* CreateEntity(const char* name, Entity* parent = nullptr) {
-            T* entity = new T(name);
+            T* entity = new T();
+            entity->name = name;
             this->SetParent(entity, parent);
+            this->root.push(entity);
 
-            this->entities.push(entity);
+            return entity;
         }
         
         DS::Vector<Entity*> root;

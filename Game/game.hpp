@@ -7,6 +7,5 @@ struct Game : public SFE::Application {
 
 	
 private:
-	SFE::Material material;
-	SFE::Mesh* mesh;
+	SFE::Scene scene;
 };

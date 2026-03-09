@@ -11,8 +11,4 @@ namespace SFE {
             } 
         }
     }
-
-    Entity::Entity(const char* name) {
-        this->name = name;
-    }
 }

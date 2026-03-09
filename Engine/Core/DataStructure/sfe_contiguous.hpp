@@ -122,6 +122,20 @@ namespace DS {
             this->m_data[i] = this->m_data[this->m_count--];
         }
 
+        /**
+         * If this returns -1 then it couldn not find the element
+         * If there are multiple occurences of this element return the first one's index
+         */
+        int find(T element) {
+            for (int i = 0; i < this->count(); i++) {
+                if (this->m_data[i] == element) {
+                   return i;
+                }
+            }
+
+            return -1;
+        }
+
         T* begin() { 
             return m_data; 
         }

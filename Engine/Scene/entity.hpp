@@ -19,6 +19,5 @@ namespace SFE {
 
     protected:
         Entity() = default;
-        Entity(const char* name);
     };
 }
