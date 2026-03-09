@@ -3,22 +3,57 @@
 
 namespace SFE {
     void Scene::Update(float dt) {
-        for (int i = 0; i < this->entities.count(); i++) {
-            Entity* child = this->entities[i];
+        for (int i = 0; i < this->root.count(); i++) {
+            Entity* child = this->root[i];
             if (child->alive) {
                 child->Update(dt);
             } else {
-                this->entities.unstableSwapbackRemove(i--);
+                this->root.unstableSwapbackRemove(i--);
             } 
         }
     }
 
     void Scene::Clear() {
-        this->entities.clear();
+        this->root.clear();
     }
 
-    void Scene::SetParent(Entity* entity, Entity* parent) {
+    bool Scene::SetParent(Entity* entity, Entity* parent) {
+        if (!parent) {
+            if (entity->parent) {
+                for (int i = 0; i < entity->parent->children.count(); i++) {
+                    Entity* child = entity->parent->children[i];
+                    if (entity == child) {
+                        this->root.push(entity);
+                        entity->parent->children.unstableSwapbackRemove(i);
 
+                        break;
+                    }
+                }
+            } else {
+                bool found = false;
+                for (int i = 0; i < this->root.count(); i++) {
+                    Entity* child = this->root[i];
+                    if (entity == child) {
+                        found = true;
+                    
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    this->root.push(entity);
+                }
+            }
+        }
+
+
+        entity->parent = parent;
+
+        if (parent) {
+            parent->children.push(entity);
+        }
+
+        return true;
     }
 
     Entity* Scene::CreateEntity(const char* name, Entity* parent = nullptr) {

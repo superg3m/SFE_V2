@@ -10,7 +10,7 @@ namespace SFE {
         void Clear();
 
         Entity* CreateEntity(const char* name, Entity* parent = nullptr);
-        void SetParent(Entity* entity, Entity* parent);
+        bool SetParent(Entity* entity, Entity* parent);
 
         template<typename T, typename = typename std::enable_if<std::is_base_of_v<Entity, T>>>
         T* CreateEntity(const char* name, Entity* parent = nullptr) {
@@ -20,6 +20,6 @@ namespace SFE {
             this->entities.push(entity);
         }
         
-        DS::Vector<Entity*> entities;
+        DS::Vector<Entity*> root;
     };
 }
