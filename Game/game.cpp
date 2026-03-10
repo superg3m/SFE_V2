@@ -3,7 +3,17 @@
 #include <iostream>
 
 bool Game::Initalize() {
-	this->scene.CreateEntity<PlayerEntity>("player");
+	this->scene = new SFE::Scene();
+
+	SFE::Entity* camera = this->scene->CreateEntity("camera");
+	camera->AddComponent(new SFE::CameraComponent());
+	camera->position.z = 2.0f;
+
+	this->scene->CreateEntity<PlayerEntity>("player");
+
+	this->scene->main_camera = camera;
+
+	SFE::Engine::GetInstance().SetScene(this->scene);
 
 	return true;
 }
@@ -16,7 +26,7 @@ void Game::Update(float dt) {
 		this->SetShouldClose(true);
 	}
 
-	this->scene.Update(dt);
+	this->scene->Update(dt);
 }
 
 void Game::Shutdown() {

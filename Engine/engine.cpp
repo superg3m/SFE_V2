@@ -86,13 +86,19 @@ namespace SFE {
 
 			this->app->Update(dt);
 
+			int width = 1;
+			int height = 1;
+
+			glfwGetWindowSize(this->window, &width, &height);
+			float aspect = (float)width / (float)height;
+
 			CameraData camera_data;
 			if (this->scene) {
 				if (this->scene->main_camera) {
 					CameraComponent* camera = this->scene->main_camera->GetComponent<CameraComponent>();
 					if (camera) {
 						camera_data.view = camera->GetViewMatrix();
-						camera_data.projection = camera->GetProjectionMatrix();
+						camera_data.projection = camera->GetProjectionMatrix(aspect);
 					}
 				}
 			}

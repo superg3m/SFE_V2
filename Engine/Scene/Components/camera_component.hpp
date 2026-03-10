@@ -9,6 +9,10 @@ namespace SFE {
         int GetTypeID() override { return this->StaticTypeID<CameraComponent>(); }
 
         Math::Mat4 GetViewMatrix();
-        Math::Mat4 GetProjectionMatrix();
+        Math::Mat4 GetProjectionMatrix(float aspect);
+
+        float fov = 60.0f;
+        float near_plane = 0.1f;
+        float far_plane = 1000.0f;
     };
 }

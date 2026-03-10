@@ -7,5 +7,5 @@ struct Game : public SFE::Application {
 
 	
 private:
-	SFE::Scene scene;
+	SFE::Scene* scene;
 };
