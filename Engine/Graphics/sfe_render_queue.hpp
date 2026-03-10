@@ -13,9 +13,14 @@ namespace SFE {
 		Math::Mat4 model;
 	};
 
+	struct CameraData {
+		Math::Mat4 view = Math::Mat4::Identity();
+		Math::Mat4 projection = Math::Mat4::Identity();
+	};
+
 	struct RenderQueue {
 		void Submit(RenderCommand& command);
-		void Draw(GraphicsAPI& graphics);
+		void Draw(GraphicsAPI& graphics, CameraData& camera_data);
 
 	private:
 		DS::Vector<RenderCommand> commands;

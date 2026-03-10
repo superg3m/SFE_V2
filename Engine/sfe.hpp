@@ -14,3 +14,8 @@
 #include "Graphics/sfe_mesh.hpp"
 #include "Graphics/sfe_material.hpp"
 #include "Graphics/sfe_vertex_layout.hpp"
+
+#include "Scene/Components/mesh_component.hpp"
+#include "Scene/component.hpp"
+#include "Scene/entity.hpp"
+#include "Scene/scene.hpp"

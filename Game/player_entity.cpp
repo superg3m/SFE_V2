@@ -3,7 +3,6 @@
 PlayerEntity::PlayerEntity() {
     SFE::GraphicsAPI& graphics = SFE::Engine::GetInstance().GetGraphicsAPI();
 	SFE::Shader* shader = graphics.CreateShader({"../../Shaders/text.vert", "../../Shaders/text.frag"});
-	this->material.setShaderProgram(shader);
 
 	SFE::VertexLayout layout = {
 		{
@@ -35,9 +34,15 @@ PlayerEntity::PlayerEntity() {
 	DS::Vector<unsigned int> indices = {
 		0, 1, 2,
 		0, 2, 3
-	};
+	}; 
 
-	this->mesh = new SFE::Mesh(layout, vertices, indices);
+	SFE::Material* material = new SFE::Material();
+	material->setShaderProgram(shader);
+
+	SFE::Mesh* mesh = new SFE::Mesh(layout, vertices, indices);
+	SFE::MeshComponent* mesh_component = new SFE::MeshComponent(material, mesh);
+
+	this->AddComponent(mesh_component);
 }
 
 void PlayerEntity::Update(float dt) {
@@ -45,7 +50,6 @@ void PlayerEntity::Update(float dt) {
 
     SFE::Engine& engine = SFE::Engine::GetInstance();
 	SFE::InputManager& input = engine.GetInputManager();
-	SFE::RenderQueue& queue = engine.GetRenderQueue();
 
 	const bool SHIFT = input.GetKey(SFE::KEY_SHIFT, SFE::PRESSED|SFE::DOWN);
 	if (SHIFT && input.GetKeyPressed(SFE::KEY_A)) {
@@ -80,12 +84,4 @@ void PlayerEntity::Update(float dt) {
 		this->rotation.z -= 1;
 		this->orientation = Math::Quat::FromEuler(this->rotation);
 	}
-
-	SFE::RenderCommand command = {
-		.mesh = this->mesh,
-		.material = &this->material,
-		.model = this->GetWorldTrasform()
-	};
-
-	queue.Submit(command);
 }

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "../Core/sfe_core.hpp"
+#include "component.hpp"
 
 namespace SFE {
     struct Scene;
@@ -12,9 +13,24 @@ namespace SFE {
         virtual ~Entity() = default;
         virtual void Update(float dt);
 
+        void AddComponent(Component* component);
+
+        template <typename T, typename = typename std::enable_if_t<std::is_base_of_v<Component, T>>>
+        T* GetComponent() {
+            int id = Component::StaticTypeID<T>();
+            for (Component* component : this->components) {
+                if (component->GetTypeID() == id) {
+                    return static_cast<T*>(component);
+                }
+            }
+
+            return nullptr;
+        }
+
         const char* name;
         Entity* parent = nullptr;
         DS::Vector<Entity*> children;
+        DS::Vector<Component*> components;
         bool alive = true;
 
         Math::Mat4 GetLocalTrasform() {

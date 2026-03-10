@@ -1,6 +1,9 @@
 #include "engine.hpp"
 #include "application.hpp"
 
+#include "Scene/component.hpp"
+#include "Scene/Components/camera_component.hpp"
+
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -83,7 +86,19 @@ namespace SFE {
 
 			this->app->Update(dt);
 
-			this->render_queue.Draw(this->graphics);
+			CameraData camera_data;
+			if (this->scene) {
+				if (this->scene->main_camera) {
+					CameraComponent* camera = this->scene->main_camera->GetComponent<CameraComponent>();
+					if (camera) {
+						camera_data.view = camera->GetViewMatrix();
+						camera_data.projection = camera->GetProjectionMatrix();
+					}
+				}
+			}
+
+			this->render_queue.Draw(this->graphics, camera_data);
+
 			glfwSwapBuffers(this->window);
 		}
 	}
@@ -121,5 +136,13 @@ namespace SFE {
 
 	RenderQueue& Engine::GetRenderQueue() {
 		return this->render_queue;
+	}
+
+	Scene* Engine::GetScene() {
+		return this->scene;
+	}
+
+	void Engine::SetScene(Scene* scene) {
+		this->scene = scene;
 	}
 }

@@ -22,5 +22,6 @@ namespace SFE {
         }
         
         DS::Vector<Entity*> root;
+        Entity* main_camera = nullptr;
     };
 }

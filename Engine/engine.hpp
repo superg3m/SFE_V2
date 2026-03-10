@@ -6,6 +6,7 @@
 #include "Graphics/sfe_render_queue.hpp"
 #include "Scene/scene.hpp"
 #include "Scene/entity.hpp"
+
 #include <chrono>
 
 struct GLFWwindow;
@@ -25,6 +26,9 @@ namespace SFE {
 		GraphicsAPI& GetGraphicsAPI();
 		RenderQueue& GetRenderQueue();
 
+		Scene* GetScene();
+		void SetScene(Scene* scene);
+
 	private:
 		Application* app = nullptr;
 		GLFWwindow* window = nullptr;
@@ -39,5 +43,7 @@ namespace SFE {
 		Engine(Engine &&input) = delete;
 		Engine& operator=(Engine &input) = delete;
 		Engine& operator=(Engine &&input) = delete;
+
+		Scene* scene;
 	};
 }

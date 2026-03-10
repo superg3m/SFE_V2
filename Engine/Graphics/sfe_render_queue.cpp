@@ -6,10 +6,15 @@ namespace SFE {
 		this->commands.push(command);
 	}
 
-	void RenderQueue::Draw(GraphicsAPI& graphics) {
+	void RenderQueue::Draw(GraphicsAPI& graphics, CameraData& camera_data) {
 		for (const RenderCommand& command : this->commands) {
 			graphics.BindMaterial(command.material);
-			command.material->shader->setMat4("uModel", command.model);
+			
+			Shader* shader = command.material->shader;
+			shader->setMat4("uModel", command.model);
+			shader->setMat4("uView", camera_data.view);
+			shader->setMat4("uProjection", camera_data.projection);
+
 			graphics.DrawMesh(command.mesh);
 		}
 
