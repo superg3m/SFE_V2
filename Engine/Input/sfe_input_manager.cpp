@@ -14,17 +14,30 @@ namespace SFE {
         }
     }
 
-    void InputManager::UpdateMousePosition(float x, float y) {
-        this->mouse_x = x;
-        this->mouse_y = y;
+    void InputManager::UpdateCurrentMousePosition(Math::Vec2 mouse) {
+        this->current_mouse_position = mouse;
     }
 
-    float InputManager::GetMouseX() { 
-        return this->mouse_x; 
+    void InputManager::UpdateCurrentMousePosition(float x, float y) {
+        this->current_mouse_position.x = x;
+        this->current_mouse_position.y = y;
     }
 
-    float InputManager::GetMouseY() { 
-        return this->mouse_y; 
+    void InputManager::UpdatePreviousMousePosition(Math::Vec2 mouse) {
+        this->previous_mouse_position = mouse;
+    }
+
+    void InputManager::UpdatePreviousMousePosition(float x, float y) {
+        this->previous_mouse_position.x = x;
+        this->previous_mouse_position.y = y;
+    }
+
+    Math::Vec2 InputManager::GetCurrentMousePosition() { 
+        return this->current_mouse_position;
+    }
+
+    Math::Vec2 InputManager::GetPreviousMousePosition() { 
+        return this->previous_mouse_position;
     }
 
     bool InputManager::Initialize(GLFWwindow* window) {
@@ -284,7 +297,9 @@ namespace SFE {
         glfwSetCursorPosCallback(window, [](GLFWwindow* window, double xpos, double ypos) {
             InputManager& input = Engine::GetInstance().GetInputManager();
 
-            input.UpdateMousePosition(static_cast<float>(xpos), static_cast<float>(ypos));
+            input.UpdatePreviousMousePosition(input.GetCurrentMousePosition());
+
+            input.UpdateCurrentMousePosition(static_cast<float>(xpos), static_cast<float>(ypos));
             if (input.cb_mouse_move) {
                 input.cb_mouse_move(window, xpos, ypos);
             }

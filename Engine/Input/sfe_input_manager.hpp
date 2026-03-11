@@ -119,7 +119,10 @@ namespace SFE {
 		bool Initialize(GLFWwindow* window);
 		void Poll();
 		void UpdateInputCode(KeyCode code, bool down);
-		void UpdateMousePosition(float x, float y);
+		void UpdateCurrentMousePosition(float x, float y);
+        void UpdateCurrentMousePosition(Math::Vec2 mouse);
+		void UpdatePreviousMousePosition(float x, float y);
+        void UpdatePreviousMousePosition(Math::Vec2 mouse);
 
 		bool GetKey(KeyCode code, KeyState state);
 		bool GetKeyUp(KeyCode code);
@@ -127,8 +130,8 @@ namespace SFE {
 		bool GetKeyDown(KeyCode code);
 		bool GetKeyReleased(KeyCode code);
 
-		float GetMouseX();
-		float GetMouseY();
+        Math::Vec2 GetCurrentMousePosition();
+        Math::Vec2 GetPreviousMousePosition();
 
 		void CreateProfile(const char* key, CALLBACK callback, bool active = true);
 		void DeleteProfile(const char* key);
@@ -145,8 +148,8 @@ namespace SFE {
         GLFWcursorposfun cb_mouse_move = nullptr;
 
 	private:
-		float mouse_x;
-		float mouse_y;
+        Math::Vec2 current_mouse_position;
+        Math::Vec2 previous_mouse_position;
 
 		InputManager() = default;
 		InputManager(InputManager &input) = delete;

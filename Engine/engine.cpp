@@ -84,6 +84,9 @@ namespace SFE {
 			float dt = std::chrono::duration<float>(current_time - this->previous_time).count();
 			this->previous_time = current_time;
 
+			glClearColor(0.2f, 0.8f, 0.2f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 			this->app->Update(dt);
 
 			int width = 1;
@@ -106,6 +109,8 @@ namespace SFE {
 			this->render_queue.Draw(this->graphics, camera_data);
 
 			glfwSwapBuffers(this->window);
+
+			input.UpdatePreviousMousePosition(input.GetCurrentMousePosition());
 		}
 	}
 	

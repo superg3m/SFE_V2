@@ -9,6 +9,8 @@ bool Game::Initalize() {
 	camera->AddComponent(new SFE::CameraComponent());
 	camera->position.z = 2.0f;
 
+	camera->AddComponent(new SFE::PlayerControllerComponent());
+
 	this->scene->CreateEntity<PlayerEntity>("player");
 
 	this->scene->main_camera = camera;

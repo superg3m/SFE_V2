@@ -20,3 +20,4 @@
 #include "Scene/scene.hpp"
 #include "Scene/Components/camera_component.hpp"
 #include "Scene/Components/mesh_component.hpp"
+#include "Scene/Components/player_controller_component.hpp"

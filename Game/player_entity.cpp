@@ -51,37 +51,31 @@ void PlayerEntity::Update(float dt) {
     SFE::Engine& engine = SFE::Engine::GetInstance();
 	SFE::InputManager& input = engine.GetInputManager();
 
-	const bool SHIFT = input.GetKey(SFE::KEY_SHIFT, SFE::PRESSED|SFE::DOWN);
-	if (SHIFT && input.GetKeyPressed(SFE::KEY_A)) {
-		LOG_DEBUG("DeltaTime: %d", dt);
-	}
+	#if 0
+		if (input.GetKeyDown(SFE::KEY_W)) {
+			this->position.y += 0.01f;
+		}
 
-	glClearColor(0.2f, 0.8f, 0.2f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		if (input.GetKeyDown(SFE::KEY_A)) {
+			this->position.x -= 0.01f;
+		}
 
-    if (input.GetKeyDown(SFE::KEY_W)) {
-		this->position.y += 0.01f;
-	}
+		if (input.GetKeyDown(SFE::KEY_S)) {
+			this->position.y -= 0.01f;
+		}
 
-    if (input.GetKeyDown(SFE::KEY_A)) {
-		this->position.x -= 0.01f;
-	}
+		if (input.GetKeyDown(SFE::KEY_D)) {
+			this->position.x += 0.01f;
+		}
 
-    if (input.GetKeyDown(SFE::KEY_S)) {
-		this->position.y -= 0.01f;
-	}
+		if (input.GetKeyDown(SFE::KEY_LEFT)) {
+			this->rotation.z += 1;
+			this->orientation = Math::Quat::FromEuler(this->rotation);
+		}
 
-    if (input.GetKeyDown(SFE::KEY_D)) {
-		this->position.x += 0.01f;
-	}
-
-    if (input.GetKeyDown(SFE::KEY_LEFT)) {
-		this->rotation.z += 1;
-		this->orientation = Math::Quat::FromEuler(this->rotation);
-	}
-
-    if (input.GetKeyDown(SFE::KEY_RIGHT)) {
-		this->rotation.z -= 1;
-		this->orientation = Math::Quat::FromEuler(this->rotation);
-	}
+		if (input.GetKeyDown(SFE::KEY_RIGHT)) {
+			this->rotation.z -= 1;
+			this->orientation = Math::Quat::FromEuler(this->rotation);
+		}
+	#endif
 }
