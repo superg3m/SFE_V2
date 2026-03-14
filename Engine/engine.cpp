@@ -60,12 +60,13 @@ namespace SFE {
 			return false;
 		}
 
-		InputManager& input = this->GetInputManager();
 		if (!input.Initialize(this->window)) {
 			LOG_ERROR("Failed to initialize input manager\n");
 
 			return false;
 		}
+
+		graphics.Initialize();
 		
 		return this->app->Initalize();
 	}

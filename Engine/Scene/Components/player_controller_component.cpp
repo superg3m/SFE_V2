@@ -28,7 +28,7 @@ namespace SFE {
 		}
 
 		if (input.GetKeyDown(SFE::KEY_A)) {
-			this->owner->position += right * this->move_speed * dt;
+			this->owner->position -= right * this->move_speed * dt;
 		}
 
 		if (input.GetKeyDown(SFE::KEY_S)) {
@@ -36,7 +36,7 @@ namespace SFE {
 		}
 
 		if (input.GetKeyDown(SFE::KEY_D)) {
-			this->owner->position -= right * this->move_speed * dt;
+			this->owner->position += right * this->move_speed * dt;
 		}
     }
 }

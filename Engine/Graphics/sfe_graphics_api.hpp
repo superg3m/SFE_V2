@@ -8,6 +8,7 @@ namespace SFE {
 	struct Mesh;
 
 	struct GraphicsAPI {
+		void Initialize();
 		Shader* CreateShader(DS::Vector<const char*> shader_paths);
 		unsigned int CreateVertexBuffer(DS::Vector<float>& vertices);
 		unsigned int CreateIndexBuffer(DS::Vector<unsigned int>& indices);

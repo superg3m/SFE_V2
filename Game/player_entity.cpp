@@ -25,15 +25,41 @@ PlayerEntity::PlayerEntity() {
 
 	DS::Vector<float> vertices = {
 		//   Position               Color
-		+0.5f, +0.5f, +0.0f,    1.0f, 0.0f, 0.0f,
-		-0.5f, +0.5f, +0.0f,    0.0f, 1.0f, 0.0f,
-		-0.5f, -0.5f, +0.0f,    0.0f, 0.0f, 1.0f,
-		+0.5f, -0.5f, +0.0f,    1.0f, 1.0f, 0.0f
+		+0.5f, +0.5f, +0.5f,    1.0f, 0.0f, 0.0f,
+		-0.5f, +0.5f, +0.5f,    0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, +0.5f,    0.0f, 0.0f, 1.0f,
+		+0.5f, -0.5f, +0.5f,    1.0f, 1.0f, 0.0f,
+
+		+0.5f, +0.5f, -0.5f,    1.0f, 0.0f, 0.0f,
+		-0.5f, +0.5f, -0.5f,    0.0f, 1.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,    0.0f, 0.0f, 1.0f,
+		+0.5f, -0.5f, -0.5f,    1.0f, 1.0f, 0.0f
 	}; 
 
 	DS::Vector<unsigned int> indices = {
+		// Front Face
 		0, 1, 2,
-		0, 2, 3
+		0, 2, 3,
+
+		// Top Face
+		4, 5, 1,
+		4, 1, 0,
+
+		// Right Face
+		4, 0, 3,
+		4, 3, 7,
+
+		// Left Face
+		1, 5, 6,
+		1, 6, 2,
+
+		// Bottom Face
+		3, 2, 6,
+		3, 6, 7,
+
+		// Back Face
+		4, 7, 6,
+		4, 6, 5
 	}; 
 
 	SFE::Material* material = new SFE::Material();

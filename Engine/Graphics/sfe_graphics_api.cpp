@@ -4,6 +4,10 @@
 #include "sfe_mesh.hpp"
 
 namespace SFE {
+	void GraphicsAPI::Initialize() {
+		glEnable(GL_DEPTH_TEST);
+	}
+
 	Shader* GraphicsAPI::CreateShader(DS::Vector<const char*> shader_paths) {
 		return new Shader(shader_paths);
 	}
