@@ -8,10 +8,10 @@ constexpr float EPSILON = 0.0001f;
 #define stringify(entry) #entry
 #define glue(a, b) a##b
 
-#define KB(value) ((size_t)(value) * 1024L)
-#define MB(value) ((size_t)KB(value) * 1024L)
-#define GB(value) ((size_t)MB(value) * 1024L)
-#define OFFSET_OF(type, member) (size_t)(&(((type*)0)->member))
+#define KB(value) ((std::size_t)(value) * 1024L)
+#define MB(value) ((std::size_t)KB(value) * 1024L)
+#define GB(value) ((std::size_t)MB(value) * 1024L)
+#define OFFSET_OF(type, member) (std::size_t)(&(((type*)0)->member))
 #define FIRST_DIGIT(number) ((int)number % 10);
 #define GET_BIT(number, bit_to_check) ((number & (1 << bit_to_check)) >> bit_to_check)
 #define SET_BIT(number, bit_to_set) number |= (1 << bit_to_set);

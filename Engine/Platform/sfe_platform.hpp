@@ -21,7 +21,7 @@ namespace Platform {
      * @param block_until_success
      */
     bool CopyFile(const char* source_path, const char* dest_path, bool block_until_success = true);
-    u8* ReadEntireFile( const char* file_path, size_t& out_file_size, Error& error);
+    u8* ReadEntireFile( const char* file_path, std::size_t& out_file_size, Error& error);
     DLL LoadDLL(const char* dll_path, Error& error);
     DLL freeDLL(DLL dll, Error& error);
     void* GetProcAddress(DLL dll, const char* proc_name, Error& error);

@@ -99,7 +99,7 @@ namespace SFE {
     }
 
     unsigned int Shader::shaderSourceCompile(const char* path) {
-        size_t file_size = 0;
+        std::size_t file_size = 0;
         Error error = Error::SUCCESS;
         GLchar* shader_source = (GLchar*)Platform::ReadEntireFile(path, file_size, error);
         RUNTIME_ASSERT_MSG(error == Error::SUCCESS, "Shader Error: %s\n", path, getErrorString(error));

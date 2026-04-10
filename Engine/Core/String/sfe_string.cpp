@@ -46,7 +46,7 @@ namespace String {
         return buffer;
     }
 
-    void Sprintf(char* buffer, size_t buffer_capacity, u64 &out_buffer_length, const char* fmt, ...) {
+    void Sprintf(char* buffer, std::size_t buffer_capacity, u64 &out_buffer_length, const char* fmt, ...) {
         va_list args, copy_args;
         va_start(args, fmt);
             va_copy(copy_args, args);
@@ -62,7 +62,7 @@ namespace String {
         out_buffer_length = allocation_ret - 1;
     }
 
-    void Sprintf(char* buffer, size_t buffer_capacity, u64 &out_buffer_length, const char* fmt, va_list args) {
+    void Sprintf(char* buffer, std::size_t buffer_capacity, u64 &out_buffer_length, const char* fmt, va_list args) {
         va_list args_copy;
         va_copy(args_copy, args);
         u64 allocation_ret = (u64)vsnprintf(nullptr, 0, fmt, args_copy) + 1; // +1 for null terminator
@@ -210,12 +210,12 @@ namespace String {
         return false;
     }
 
-    void Copy(char* s1, size_t s1_capacity, const char* s2, u64 s2_length) {
+    void Copy(char* s1, std::size_t s1_capacity, const char* s2, u64 s2_length) {
         Memory::Zero(s1, s1_capacity);
         Memory::Copy(s1, s1_capacity, s2, s2_length);
     }
 
-    void Insert(char* str, u64 &str_length_out, size_t str_capacity, const char* to_insert, u64 to_insert_length, u64 index) {
+    void Insert(char* str, u64 &str_length_out, std::size_t str_capacity, const char* to_insert, u64 to_insert_length, u64 index) {
         RUNTIME_ASSERT(str);
         RUNTIME_ASSERT(to_insert);
 
@@ -232,7 +232,7 @@ namespace String {
         str_length_out += to_insert_length;
     }
 
-    void Insert(char* str, u64& str_length_out, size_t str_capacity, char to_insert, u64 index) {
+    void Insert(char* str, u64& str_length_out, std::size_t str_capacity, char to_insert, u64 index) {
         RUNTIME_ASSERT(str);
         RUNTIME_ASSERT(to_insert);
 
@@ -247,11 +247,11 @@ namespace String {
         str_length_out += 1;
     }
 
-    void Append(char* str, u64 &out_str_length, size_t str_capacity, const char* to_append, u64 to_append_length) {
+    void Append(char* str, u64 &out_str_length, std::size_t str_capacity, const char* to_append, u64 to_append_length) {
         String::Insert(str, out_str_length, str_capacity, to_append, to_append_length, out_str_length);
     }
 
-    void Append(char* str, u64 &out_str_length, size_t str_capacity, char to_append) {
+    void Append(char* str, u64 &out_str_length, std::size_t str_capacity, char to_append) {
         String::Insert(str, out_str_length, str_capacity, to_append, out_str_length);
     }
 }

@@ -23,7 +23,7 @@ void MACRO_RUNTIME_ASSERT_MSG(bool expression, const char* function, const char*
         va_start(args, msg);
             va_list args_copy;
             va_copy(args_copy, args);
-                size_t message_size = (size_t)vsnprintf(nullptr, 0, msg, args_copy) + 1; // +1 for null terminator
+                std::size_t message_size = (std::size_t)vsnprintf(nullptr, 0, msg, args_copy) + 1; // +1 for null terminator
                 RUNTIME_ASSERT(message_size < BUFFER_LENGTH);
             va_end(args_copy);
 

@@ -10,8 +10,8 @@
 #define DEFAULT_DS_HASHMAP_CAPACITY 1
 
 namespace DS {
-    typedef u64(HashFunction)(const void*, size_t);
-    typedef bool(EqualFunction)(const void*, size_t, const void*, size_t);
+    typedef u64(HashFunction)(const void*, std::size_t);
+    typedef bool(EqualFunction)(const void*, std::size_t, const void*, std::size_t);
 
     template <typename K, typename V>
     struct Hashmap {
@@ -277,7 +277,7 @@ namespace DS {
             HashmapEntry* old_entries = this->m_entries;
 
             this->m_capacity *= 2;
-            size_t new_allocation_size = (this->m_capacity * sizeof(HashmapEntry));
+            std::size_t new_allocation_size = (this->m_capacity * sizeof(HashmapEntry));
             this->m_entries = (HashmapEntry*)Memory::Malloc(new_allocation_size);
             Memory::Zero(this->m_entries, new_allocation_size);
 

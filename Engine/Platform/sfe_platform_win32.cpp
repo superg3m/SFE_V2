@@ -77,7 +77,7 @@
         }
 
         /*
-        void* win32_malloc(const Memory::BaseAllocator** allocator, size_t allocation_size) {
+        void* win32_malloc(const Memory::BaseAllocator** allocator, std::size_t allocation_size) {
             (void)allocator;
             return VirtualAlloc(nullptr, allocation_size, MEM_COMMIT, PAGE_READWRITE);
         }
@@ -88,7 +88,7 @@
         }
         */
 
-        u8* ReadEntireFile( const char* file_path, size_t& out_file_size, Error& error) {
+        u8* ReadEntireFile( const char* file_path, std::size_t& out_file_size, Error& error) {
             HANDLE file_handle = CreateFileA(
                 file_path, 
                 GENERIC_READ, 
@@ -115,7 +115,7 @@
                 return nullptr;
             }
 
-            size_t file_size = (size_t)large_int.QuadPart;
+            std::size_t file_size = (std::size_t)large_int.QuadPart;
             if (file_size > SIZE_MAX) {
                 LOG_ERROR("File size is bigger than max size: ReadEntireFile(%s)\n", file_path);
                 error = Error::RESOURCE_TOO_BIG;
@@ -136,7 +136,7 @@
                 return nullptr;
             }
 
-            out_file_size = (size_t)file_size;
+            out_file_size = (std::size_t)file_size;
 
             return file_data;
         }

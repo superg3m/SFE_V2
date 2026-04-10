@@ -32,7 +32,7 @@
         }
 
         int CopyFile(const char* source_path, const char* dest_path, int block_until_success) {
-            const size_t BUFFER_SIZE = 4096;
+            const std::size_t BUFFER_SIZE = 4096;
 
             for (;;) {
                 FILE* in = fopen(source_path, "rb");
@@ -51,7 +51,7 @@
                 }
 
                 char buffer[BUFFER_SIZE];
-                size_t bytes;
+                std::size_t bytes;
                 int success = 1;
 
                 while ((bytes = fread(buffer, 1, BUFFER_SIZE, in)) > 0) {
@@ -70,7 +70,7 @@
             }
         }
 
-        u8* ReadEntireFile( const char* file_name, size_t& out_file_size, Error& error) {
+        u8* ReadEntireFile( const char* file_name, std::size_t& out_file_size, Error& error) {
             FILE* file_handle = fopen(file_name, "r");
             if (file_handle == nullptr) {
                 LOG_ERROR("Invalid file_handle, the file_name/path is likely wrong: ReadEntireFile(%s)\n", file_name);
@@ -103,7 +103,7 @@
                 return nullptr;
             }
 
-            u8* file_data = (u8*)Memory::Malloc((size_t)out_file_size + 1); // +1 for null terminator
+            u8* file_data = (u8*)Memory::Malloc((std::size_t)out_file_size + 1); // +1 for null terminator
             if (fread(file_data, out_file_size, 1, file_handle) != 1) {
                 LOG_ERROR("fread() failed: ReadEntireFile(%s)\n", file_name);
                 error = Error::RESOURCE_NOT_FOUND;

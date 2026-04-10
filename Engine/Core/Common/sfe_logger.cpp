@@ -25,7 +25,7 @@ void log_output(LogLevel log_level, const char* message, ...) {
     va_start(args, message);
         va_list args_copy;
         va_copy(args_copy, args);
-            size_t out_message_size = (size_t)vsnprintf(nullptr, 0, message, args_copy) + 1; // +1 for null terminator
+            std::size_t out_message_size = (std::size_t)vsnprintf(nullptr, 0, message, args_copy) + 1; // +1 for null terminator
             RUNTIME_ASSERT(out_message_size < OUT_MESSAGE_BUFFER_LENGTH);
         va_end(args_copy);
 
