@@ -82,16 +82,17 @@ namespace OpenGL {
     // I will probably end up changing this to 
     // u8* vertices, int vertex_count (The advantage of this is Vertex* vertices I can just cast this an its no problem) 
     // total_buffer_size = stride * vertex_count
-    void upload_vertex_data_to_gpu(VAO vao, std::vector<VertexLayoutElement> layout, std::vector<float> vertices, GLenum gl_usage = GL_STATIC_DRAW, std::vector<GLuint> indicies = {}) {
+    VBO create_vbo(VAO vao, std::vector<VertexLayoutElement> layout, u8* vertices, int vertex_count, GLenum gl_usage, std::vector<GLuint> indicies) {
         gl_check_error(glBindVertexArray(vao)); // want to check if already bound
+
+        size_t stride = compute_stride_from_layout(layout);
 
         GLuint vbo;
         gl_check_error(glGenBuffers(1, &vbo));
         gl_check_error(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-        gl_check_error(glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), gl_usage));
+        gl_check_error(glBufferData(GL_ARRAY_BUFFER, vertex_count * stride, vertices, gl_usage));
 
         int location = 0;
-        size_t stride = compute_stride_from_layout(layout);
         for (VertexLayoutElement desc : layout) {
             bind_vertex_attribute(location, desc.instanced, stride, desc);
         }
@@ -99,10 +100,25 @@ namespace OpenGL {
         GLuint ebo;
         gl_check_error(glGenBuffers(1, &ebo));
         gl_check_error(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
-        gl_check_error(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies.size() * sizeof(GLuint), vertices.data(), gl_usage));
+        gl_check_error(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies.size() * sizeof(GLuint), indicies.data(), gl_usage));
+
+        return vbo;
     }
 
-    TextureID load_texture_from_memory(u8* data, int width, int height, int channels, bool pixel_perfect = false) {
+    void update_vbo_data(VBO vbo, GLintptr offset, u8* data, GLsizeiptr data_size, GLuint stride) {
+        #if 0
+            this->bind();
+            void *ptr = gl_check_error(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
+            size_t buffer_size = sizeof(T) * buffer.count();
+            Memory::Copy(ptr, buffer_size, buffer.data(), buffer_size);
+            gl_check_error(glUnmapBuffer(GL_ARRAY_BUFFER));
+        #else
+            gl_check_error(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+            gl_check_error(glBufferSubData(GL_ARRAY_BUFFER, offset, data_size, data));
+        #endif
+    }
+
+    TextureID load_texture_from_memory(u8* data, int width, int height, int channels, bool pixel_perfect) {
         if (!data || width <= 0 || height <= 0 || channels <= 0) {
             // RUNTIME_ASSERT_MSG(false, "TextureLoader | Invalid input data for loadTextureFromMemory!\n");
         }
@@ -145,7 +161,7 @@ namespace OpenGL {
         return texture;
     }
 
-    TextureID load_texture_from_path(std::string path, int &width, int &height, int &channels, bool pixel_perfect = false) {
+    TextureID load_texture_from_path(std::string path, int &width, int &height, int &channels, bool pixel_perfect) {
         // RUNTIME_ASSERT_MSG(platform_file_path_exists(path), "Texture path: '%s' doesn't exist!\n", path);
 
         GLenum MIPMAP_TYPE = pixel_perfect ? GL_NEAREST : GL_LINEAR;
@@ -182,5 +198,218 @@ namespace OpenGL {
                 data.vertex_count
             ));
         }
+    }
+
+    // --- shader ---
+
+    Shader::create(std::vector<const char*> shader_paths) {
+        this->program_id = glCreateProgram();
+        this->shader_paths = shader_paths;
+
+        std::vector<unsigned int> shader_source_ids = std::vector<unsigned int>(shader_paths.size()); 
+        for (const char* path : shader_paths) {
+            unsigned int shader_source_id = this->shaderSourceCompile(path);
+            glAttachShader(this->program_id, shader_source_id);
+            shader_source_ids.push_back(shader_source_id);
+        }
+        glLinkProgram(this->program_id);
+
+        GLint success = false;
+        glGetProgramiv(this->program_id, GL_LINK_STATUS, &success);
+        if (!success) {
+            char info_log[1028] = {0};
+            glGetProgramInfoLog(this->program_id, 512, NULL, info_log);
+            // LOG_ERROR("LINKING_FAILED {%s}\n", shader_paths[0]);
+            // LOG_ERROR("%s -- --------------------------------------------------- --\n", info_log);
+        }
+
+        for (int i = 0; i < shader_source_ids.size(); i++) {
+            glDeleteShader(shader_source_ids[i]);
+        }
+
+        if (this->uniforms.size()) {
+            this->uniforms.clear();
+        }
+
+        GLint uniform_count = 0;
+        glGetProgramiv(this->program_id, GL_ACTIVE_UNIFORMS, &uniform_count);
+        for (int i = 0; i < uniform_count; i++) {
+            GLint size;
+            GLenum type;
+            const GLsizei name_max_size = 256;
+            GLchar name[name_max_size];
+            GLsizei name_length;
+            glGetActiveUniform(this->program_id, (GLuint)i, name_max_size, &name_length, &size, &type, name);
+
+            GLint location = glGetUniformLocation(this->program_id, name);
+            
+            std::string str_key = std::string(name, name_length);
+            UniformDesc value = UniformDesc{type, location};
+            this->uniforms.insert(std::make_pair(str_key, value));
+        }
+    }
+
+    static const char* glEnumToString(GLenum type) {
+        switch (type) {
+            case GL_BOOL:          return "bool";
+            case GL_INT:           return "int";
+            case GL_FLOAT:         return "float";
+            case GL_FLOAT_VEC2:    return "vec2";
+            case GL_FLOAT_VEC3:    return "vec3";
+            case GL_FLOAT_VEC4:    return "vec4";
+            case GL_FLOAT_MAT4:    return "mat4";
+            case GL_SAMPLER_2D:    return "sampler2D";
+            case GL_SAMPLER_CUBE:  return "samplerCube";
+            
+            default:               return "unknown";
+        }
+    }
+
+    GLenum Shader::typeFromPath(std::string shader_source_path) {
+        size_t extension_index = shader_source_path.find_last_of(".");
+        // RUNTIME_ASSERT_MSG(extension_index == string::npos, "Missing extension (.vert, .frag)\n");
+        
+        std::string extension = std::string(shader_source_path.c_str() + extension_index);
+        
+
+
+        if (extension.find(".vert") != std::string::npos) {
+            return GL_VERTEX_SHADER;
+        } else if (extension.find(".frag") != std::string::npos) {
+            return GL_FRAGMENT_SHADER;
+        } else if (extension.find(".gs") != std::string::npos) {
+            return GL_GEOMETRY_SHADER;
+        }
+
+        // RUNTIME_ASSERT_MSG(false, "Unsupported extension: %.*s | Expected: (.vert, .frag, .gs)\n", extension.length, extension.data);
+        return GL_INVALID_ENUM;
+    }
+
+    void Shader::checkCompileError(unsigned int source_id, const char* path) {
+        int success;
+        char info_log[1024];
+        gl_check_error(glGetShaderiv(source_id, GL_COMPILE_STATUS, &success));
+        if (!success) {
+            gl_check_error(glGetShaderInfoLog(source_id, 1024, NULL, info_log));
+            LOG_ERROR("ERROR::SHADER_COMPILATION_ERROR {%s}\n", path);
+            LOG_ERROR("%s -- --------------------------------------------------- --\n", info_log);
+        }
+    }
+
+    unsigned int Shader::shaderSourceCompile(const char* path) {
+        std::size_t file_size = 0;
+        Error error = Error::SUCCESS;
+        GLchar* shader_source = (GLchar*)Platform::ReadEntireFile(path, file_size, error);
+        RUNTIME_ASSERT_MSG(error == Error::SUCCESS, "Shader Error: %s\n", path, getErrorString(error));
+
+        GLenum type = this->typeFromPath(path);
+        unsigned int source_id = glCreateShader(type);
+        glCheckError(glShaderSource(source_id, 1, &shader_source, NULL));
+        glCheckError(glCompileShader(source_id));
+
+        this->checkCompileError(source_id, path);
+
+        Memory::Free(shader_source);
+        return source_id;
+    }
+
+    unsigned int Shader::getUniformLocation(const char* name, GLenum type) {
+        if (this->uniforms.has(name)) {
+            UniformDesc expected = this->uniforms.get(name);
+            if (expected.type != type) {
+                LOG_ERROR("Shader {%s} Uniform: '%s' type missmatch | Expected: %s | Got: %s\n", this->shader_paths[0], name, glEnumToString(expected.type), glEnumToString(type));
+                return (unsigned int)-1;
+            }
+
+            return expected.location;
+        }
+
+        GLint location = glGetUniformLocation(this->program_id, name);
+        if (location >= 0) {
+            this->uniforms.put(name, UniformDesc{type, location}); // this type might be wrong, but theres no great robust way to do arrays that I know of...
+        } else if (location == -1) {
+            LOG_ERROR("Shader {%s} Uniform: '%s' does not exists\n", this->shader_paths[0], name);
+        }
+
+        return location;
+    }
+
+    void Shader::use() const {
+        glUseProgram(this->program_id);
+    }
+
+    // TODO(Jovanni): Make this use the locations instead of string lookups
+    void Shader::setModel(Math::Mat4 &model) {
+        this->use();
+        this->setMat4("uModel", model);
+    }
+
+    void Shader::setView(Math::Mat4 &view) {
+        this->use();
+        this->setMat4("uView", view);
+    }
+
+    void Shader::setProjection(Math::Mat4 &projection) {
+        this->use();
+        this->setMat4("uProjection", projection);
+    }
+
+    void Shader::setBool(const char* name, bool value) {
+        this->use();
+        glCheckError(glUniform1i(this->getUniformLocation(name, GL_BOOL), (int)value));
+    }
+    void Shader::setInt(const char* name, int value) {
+        this->use();
+        glCheckError(glUniform1i(this->getUniformLocation(name, GL_INT), value));
+    }
+    void Shader::setTexture2D(const char* name, int texture_unit, Texture &texture) {
+        RUNTIME_ASSERT(texture.type == TextureSamplerType::SAMPLER2D);
+
+        this->use();
+
+        glCheckError(glActiveTexture(GL_TEXTURE0 + texture_unit));
+        glCheckError(glBindTexture(GL_TEXTURE_2D, texture.id));
+        this->setInt(this->getUniformLocation(name, GL_SAMPLER_2D), texture_unit);
+    }
+    void Shader::setTexture3D(const char* name, int texture_unit, Texture &texture) {
+        RUNTIME_ASSERT(texture.type == TextureSamplerType::CUBEMAP3D);
+
+        this->use();
+
+        glCheckError(glActiveTexture(GL_TEXTURE0 + texture_unit));
+        glCheckError(glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id));
+        this->setInt(this->getUniformLocation(name, GL_SAMPLER_CUBE), texture_unit);
+    }
+    void Shader::setFloat(const char* name, float value) {
+        this->use();
+        glCheckError(glUniform1f(this->getUniformLocation(name, GL_FLOAT), value));
+    }
+    void Shader::setVec2(const char* name, const Math::Vec2& value) {
+        this->use();
+        glCheckError(glUniform2fv(this->getUniformLocation(name, GL_FLOAT_VEC2), 1, &value.x));
+    }
+    void Shader::setVec2(const char* name, float x, float y) {
+        this->use();
+        glCheckError(glUniform2f(this->getUniformLocation(name, GL_FLOAT_VEC2), x, y));
+    }
+    void Shader::setVec3(const char* name, const Math::Vec3& value) {
+        this->use();
+        glCheckError(glUniform3fv(this->getUniformLocation(name, GL_FLOAT_VEC3), 1, &value.x));
+    }
+    void Shader::setVec3(const char* name, float x, float y, float z) {
+        this->use();
+        glCheckError(glUniform3f(this->getUniformLocation(name, GL_FLOAT_VEC3), x, y, z));
+    }
+    void Shader::setVec4(const char* name, const Math::Vec4& value) {
+        this->use();
+        glCheckError(glUniform4fv(this->getUniformLocation(name, GL_FLOAT_VEC4), 1, &value.x));
+    }
+    void Shader::setVec4(const char* name, float x, float y, float z, float w) {
+        this->use();
+        glCheckError(glUniform4f(this->getUniformLocation(name, GL_FLOAT_VEC4), x, y, z, w));
+    }
+    void Shader::setMat4(const char* name, const Math::Mat4& mat) {
+        this->use();
+        glCheckError(glUniformMatrix4fv(this->getUniformLocation(name, GL_FLOAT_MAT4), 1, GL_TRUE, &mat.v[0].x));
     }
 }
