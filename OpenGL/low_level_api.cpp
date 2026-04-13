@@ -1,7 +1,7 @@
 #include "low_level_api.hpp"
 #include <stb/stb_image.h>
 
-void _gl_check_error(const char *file, int line) {
+static void _gl_check_error(const char *file, int line) {
     GLenum errorCode;
     while ((errorCode = glGetError()) != GL_NO_ERROR)
     {
@@ -25,6 +25,52 @@ void _gl_check_error(const char *file, int line) {
     #define gl_check_error(glCall) glCall
 #endif
 
+static void bind_vertex_attribute(int &location, bool instanced, s64 stride, OpenGL::VertexLayoutElement desc) {
+    bool is_integer = (desc.type == OpenGL::BufferStrideTypeInfo::INT) || (desc.type == OpenGL::BufferStrideTypeInfo::IVEC4);
+    bool is_matrix = desc.type == OpenGL::BufferStrideTypeInfo::MAT4;
+    GLenum gl_type  = is_integer ? GL_INT : GL_FLOAT;
+
+    int max_attributes = 0;
+    gl_check_error(glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_attributes));
+    // RUNTIME_ASSERT_MSG(max_attributes > location, "Location outside range");
+
+    if (is_matrix) {
+        for (int i = 0; i < 4; i++) {
+            /*
+            RUNTIME_ASSERT_MSG(max_attributes > location + i,
+                "You are trying to use a location that is outside of the max vertex attributes: %d",
+                max_attributes
+            );
+            */
+
+            gl_check_error(glEnableVertexAttribArray(location + i));
+            gl_check_error(glVertexAttribPointer(location + i, (GLint)OpenGL::BufferStrideTypeInfo::VEC4, GL_FLOAT, false, stride, (void*)(desc.offset + (sizeof(glm::vec4) * i))));
+            gl_check_error(glVertexAttribDivisor(location + i, instanced));
+        }
+
+        location += 4;
+    } else {
+        gl_check_error(glEnableVertexAttribArray(location));
+        if (is_integer) {
+            gl_check_error(glVertexAttribIPointer(location, (GLint)desc.type, gl_type, stride, (void*)desc.offset));
+        } else {
+            gl_check_error(glVertexAttribPointer(location, (GLint)desc.type, gl_type, false, stride, (void*)desc.offset));
+        }
+
+        gl_check_error(glVertexAttribDivisor(location, instanced));
+        location += 1;
+    }
+}
+
+static GLsizeiptr compute_stride_from_layout(std::vector<OpenGL::VertexLayoutElement>& layout) {
+    GLsizeiptr stride = 0;
+    for (OpenGL::VertexLayoutElement desc : layout) {
+        stride += (GLsizeiptr)desc.type * sizeof(float);
+    }
+
+    return stride;
+}
+
 namespace OpenGL {
     VAO create_vao() {
         VAO vao = 0;
@@ -33,76 +79,31 @@ namespace OpenGL {
         return vao;
     }
 
-    void bind_vertex_attribute(int &location, bool instanced, s64 stride, VertexLayoutElement desc) {
-        bool is_integer = (desc.type == BufferStrideTypeInfo::INT) || (desc.type == BufferStrideTypeInfo::IVEC4);
-        bool is_matrix = desc.type == BufferStrideTypeInfo::MAT4;
-        GLenum gl_type  = is_integer ? GL_INT : GL_FLOAT;
-
-        int max_attributes = 0;
-        gl_check_error(glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_attributes));
-        // RUNTIME_ASSERT_MSG(max_attributes > location, "Location outside range");
-
-        if (is_matrix) {
-            for (int i = 0; i < 4; i++) {
-                /*
-                RUNTIME_ASSERT_MSG(max_attributes > location + i,
-                    "You are trying to use a location that is outside of the max vertex attributes: %d",
-                    max_attributes
-                );
-                */
-
-                gl_check_error(glEnableVertexAttribArray(location + i));
-                gl_check_error(glVertexAttribPointer(location + i, (GLint)BufferStrideTypeInfo::VEC4, GL_FLOAT, false, stride, (void*)(desc.offset + (sizeof(glm::vec4) * i))));
-                gl_check_error(glVertexAttribDivisor(location + i, instanced));
-            }
-
-            location += 4;
-        } else {
-            gl_check_error(glEnableVertexAttribArray(location));
-            if (is_integer) {
-                gl_check_error(glVertexAttribIPointer(location, (GLint)desc.type, gl_type, stride, (void*)desc.offset));
-            } else {
-                gl_check_error(glVertexAttribPointer(location, (GLint)desc.type, gl_type, false, stride, (void*)desc.offset));
-            }
-
-            gl_check_error(glVertexAttribDivisor(location, instanced));
-            location += 1;
-        }
-    }
-
-    size_t compute_stride_from_layout(std::vector<VertexLayoutElement>& layout) {
-        size_t stride = 0;
-        for (VertexLayoutElement desc : layout) {
-            stride += (size_t)desc.type * sizeof(float);
-        }
-
-        return stride;
-    }
-
-    // I will probably end up changing this to 
-    // u8* vertices, int vertex_count (The advantage of this is Vertex* vertices I can just cast this an its no problem) 
-    // total_buffer_size = stride * vertex_count
-    VBO create_vbo(VAO vao, std::vector<VertexLayoutElement> layout, u8* vertices, int vertex_count, GLenum gl_usage, std::vector<GLuint> indicies) {
+    void bind_vao(VAO vao) {
         gl_check_error(glBindVertexArray(vao)); // want to check if already bound
+    }
 
-        size_t stride = compute_stride_from_layout(layout);
+    VBO create_vbo(VAO vao, std::vector<VertexLayoutElement> layout, u8* buffer_data, int buffer_count, GLenum gl_usage) {
+        GLsizeiptr stride = compute_stride_from_layout(layout);
 
-        GLuint vbo;
+        VBO vbo;
         gl_check_error(glGenBuffers(1, &vbo));
         gl_check_error(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-        gl_check_error(glBufferData(GL_ARRAY_BUFFER, vertex_count * stride, vertices, gl_usage));
+        gl_check_error(glBufferData(GL_ARRAY_BUFFER, buffer_count * stride, buffer_data, gl_usage));
 
         int location = 0;
         for (VertexLayoutElement desc : layout) {
             bind_vertex_attribute(location, desc.instanced, stride, desc);
         }
 
-        GLuint ebo;
-        gl_check_error(glGenBuffers(1, &ebo));
+        return vbo;
+    }
+
+    EBO create_ebo(std::vector<GLuint> indicies, GLenum gl_usage) {
+        EBO ebo;
+         gl_check_error(glGenBuffers(1, &ebo));
         gl_check_error(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo));
         gl_check_error(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicies.size() * sizeof(GLuint), indicies.data(), gl_usage));
-
-        return vbo;
     }
 
     void update_vbo_data(VBO vbo, GLintptr offset, u8* data, GLsizeiptr data_size, GLuint stride) {
@@ -202,13 +203,15 @@ namespace OpenGL {
 
     // --- shader ---
 
-    Shader::create(std::vector<const char*> shader_paths) {
-        this->program_id = glCreateProgram();
-        this->shader_paths = shader_paths;
+    Shader Shader::create(std::vector<const char*> shader_paths) {
+        Shader ret = {};
+
+        ret.program_id = glCreateProgram();
+        ret.shader_paths = shader_paths;
 
         std::vector<unsigned int> shader_source_ids = std::vector<unsigned int>(shader_paths.size()); 
         for (const char* path : shader_paths) {
-            unsigned int shader_source_id = this->shaderSourceCompile(path);
+            unsigned int shader_source_id = ret.shaderSourceCompile(path);
             glAttachShader(this->program_id, shader_source_id);
             shader_source_ids.push_back(shader_source_id);
         }
@@ -297,6 +300,7 @@ namespace OpenGL {
     }
 
     unsigned int Shader::shaderSourceCompile(const char* path) {
+        /*
         std::size_t file_size = 0;
         Error error = Error::SUCCESS;
         GLchar* shader_source = (GLchar*)Platform::ReadEntireFile(path, file_size, error);
@@ -311,6 +315,9 @@ namespace OpenGL {
 
         Memory::Free(shader_source);
         return source_id;
+        */
+
+       return 0;
     }
 
     unsigned int Shader::getUniformLocation(const char* name, GLenum type) {
@@ -339,77 +346,66 @@ namespace OpenGL {
     }
 
     // TODO(Jovanni): Make this use the locations instead of string lookups
-    void Shader::setModel(Math::Mat4 &model) {
-        this->use();
-        this->setMat4("uModel", model);
+    void Shader::set_model(glm::mat4 &model) {
+        this->set_mat4("uModel", model);
     }
 
-    void Shader::setView(Math::Mat4 &view) {
-        this->use();
-        this->setMat4("uView", view);
+    void Shader::set_view(glm::mat4 &view) {
+        this->set_mat4("uView", view);
     }
 
-    void Shader::setProjection(Math::Mat4 &projection) {
-        this->use();
-        this->setMat4("uProjection", projection);
+    void Shader::set_projection(glm::mat4 &projection) {
+        this->set_mat4("uProjection", projection);
     }
 
-    void Shader::setBool(const char* name, bool value) {
+    void Shader::set_bool(const char* name, bool value) {
         this->use();
-        glCheckError(glUniform1i(this->getUniformLocation(name, GL_BOOL), (int)value));
+        gl_check_error(glUniform1i(this->getUniformLocation(name, GL_BOOL), (int)value));
     }
-    void Shader::setInt(const char* name, int value) {
+    void Shader::set_int(const char* name, int value) {
         this->use();
-        glCheckError(glUniform1i(this->getUniformLocation(name, GL_INT), value));
+        gl_check_error(glUniform1i(this->getUniformLocation(name, GL_INT), value));
     }
-    void Shader::setTexture2D(const char* name, int texture_unit, Texture &texture) {
-        RUNTIME_ASSERT(texture.type == TextureSamplerType::SAMPLER2D);
-
+    void Shader::set_texture(const char* name, int texture_unit, TextureID texture) {
+        // RUNTIME_ASSERT(texture.type == TextureSamplerType::SAMPLER2D);
         this->use();
-
-        glCheckError(glActiveTexture(GL_TEXTURE0 + texture_unit));
-        glCheckError(glBindTexture(GL_TEXTURE_2D, texture.id));
-        this->setInt(this->getUniformLocation(name, GL_SAMPLER_2D), texture_unit);
+        gl_check_error(glUniform1i(this->getUniformLocation(name, GL_SAMPLER_2D), texture_unit));
     }
-    void Shader::setTexture3D(const char* name, int texture_unit, Texture &texture) {
-        RUNTIME_ASSERT(texture.type == TextureSamplerType::CUBEMAP3D);
-
+    void Shader::set_texture_cube(const char* name, int texture_unit, TextureID texture) {
+        // RUNTIME_ASSERT(texture.type == TextureSamplerType::CUBEMAP3D);
         this->use();
-
-        glCheckError(glActiveTexture(GL_TEXTURE0 + texture_unit));
-        glCheckError(glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id));
-        this->setInt(this->getUniformLocation(name, GL_SAMPLER_CUBE), texture_unit);
+        gl_check_error(glUniform1i(this->getUniformLocation(name, GL_SAMPLER_CUBE), texture_unit));
     }
-    void Shader::setFloat(const char* name, float value) {
+    void Shader::set_float(const char* name, float value) {
         this->use();
-        glCheckError(glUniform1f(this->getUniformLocation(name, GL_FLOAT), value));
+        gl_check_error(glUniform1f(this->getUniformLocation(name, GL_FLOAT), value));
     }
-    void Shader::setVec2(const char* name, const Math::Vec2& value) {
+    void Shader::set_vec2(const char* name, const glm::vec2& value) {
         this->use();
-        glCheckError(glUniform2fv(this->getUniformLocation(name, GL_FLOAT_VEC2), 1, &value.x));
+        gl_check_error(glUniform2fv(this->getUniformLocation(name, GL_FLOAT_VEC2), 1, glm::value_ptr(value)));
     }
-    void Shader::setVec2(const char* name, float x, float y) {
+    void Shader::set_vec2(const char* name, float x, float y) {
         this->use();
-        glCheckError(glUniform2f(this->getUniformLocation(name, GL_FLOAT_VEC2), x, y));
+        gl_check_error(glUniform2f(this->getUniformLocation(name, GL_FLOAT_VEC2), x, y));
     }
-    void Shader::setVec3(const char* name, const Math::Vec3& value) {
+    void Shader::set_vec3(const char* name, const glm::vec3& value) {
         this->use();
-        glCheckError(glUniform3fv(this->getUniformLocation(name, GL_FLOAT_VEC3), 1, &value.x));
+        gl_check_error(glUniform3fv(this->getUniformLocation(name, GL_FLOAT_VEC3), 1, glm::value_ptr(value)));
     }
-    void Shader::setVec3(const char* name, float x, float y, float z) {
+    void Shader::set_vec3(const char* name, float x, float y, float z) {
         this->use();
-        glCheckError(glUniform3f(this->getUniformLocation(name, GL_FLOAT_VEC3), x, y, z));
+        gl_check_error(glUniform3f(this->getUniformLocation(name, GL_FLOAT_VEC3), x, y, z));
     }
-    void Shader::setVec4(const char* name, const Math::Vec4& value) {
+    void Shader::set_vec4(const char* name, const glm::vec4& value) {
         this->use();
-        glCheckError(glUniform4fv(this->getUniformLocation(name, GL_FLOAT_VEC4), 1, &value.x));
+        gl_check_error(glUniform4fv(this->getUniformLocation(name, GL_FLOAT_VEC4), 1, glm::value_ptr(value)));
     }
-    void Shader::setVec4(const char* name, float x, float y, float z, float w) {
+    void Shader::set_vec4(const char* name, float x, float y, float z, float w) {
         this->use();
-        glCheckError(glUniform4f(this->getUniformLocation(name, GL_FLOAT_VEC4), x, y, z, w));
+        gl_check_error(glUniform4f(this->getUniformLocation(name, GL_FLOAT_VEC4), x, y, z, w));
     }
-    void Shader::setMat4(const char* name, const Math::Mat4& mat) {
+    void Shader::set_mat4(const char* name, const glm::mat4& mat) {
         this->use();
-        glCheckError(glUniformMatrix4fv(this->getUniformLocation(name, GL_FLOAT_MAT4), 1, GL_TRUE, &mat.v[0].x));
+        gl_check_error(glUniformMatrix4fv(this->getUniformLocation(name, GL_FLOAT_MAT4), 1, GL_FALSE, glm::value_ptr(mat)));
     }
 }

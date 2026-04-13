@@ -8,6 +8,7 @@
 namespace OpenGL {
     typedef GLuint VAO;
     typedef GLuint VBO;
+    typedef GLuint EBO;
     typedef GLuint TextureID;
 
     enum class BufferStrideTypeInfo {
@@ -36,7 +37,9 @@ namespace OpenGL {
     };
 
     VAO create_vao();
-    VBO create_vbo(VAO vao, std::vector<VertexLayoutElement> layout, std::vector<float> vertices, GLenum gl_usage = GL_STATIC_DRAW, std::vector<GLuint> indicies = {});
+    void bind_vao(VAO vao);
+    VBO create_vbo(VAO vao, std::vector<VertexLayoutElement> layout, u8* data, GLsizeiptr data_size, GLenum gl_usage = GL_STATIC_DRAW);
+    EBO create_ebo(std::vector<GLuint> indicies, GLenum gl_usage = GL_STATIC_DRAW)
     TextureID load_texture_from_memory(u8* data, int width, int height, int channels, bool pixel_perfect = false);
     TextureID load_texture_from_path(std::string path, int &width, int &height, int &channels, bool pixel_perfect = false);
     void update_vbo_data(VBO vbo, GLintptr offset, u8* data, GLsizeiptr data_size, GLuint stride);
@@ -52,9 +55,9 @@ namespace OpenGL {
         static Shader create(std::vector<const char*> shader_paths);
 
         void use() const;
-        void setModel(glm::mat4 &model);
-        void setView(glm::mat4 &view);
-        void setProjection(glm::mat4 &projection);
+        void set_model(glm::mat4 &model);
+        void set_view(glm::mat4 &view);
+        void set_projection(glm::mat4 &projection);
 
         void set_bool(const char* name, bool value);
         void set_int(const char* name, int value);
@@ -69,7 +72,7 @@ namespace OpenGL {
         void set_vec4(const char* name, float x, float y, float z, float w);
         void set_mat4(const char* name, const glm::mat4& mat);
     private:
-        std::vector<std::string> shader_paths;
+        std::vector<const char*> shader_paths;
         std::map<std::string, UniformDesc> uniforms;
 
         GLenum typeFromPath(std::string path);
