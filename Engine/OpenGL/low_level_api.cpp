@@ -303,7 +303,7 @@ namespace OpenGL {
             GLint location = glGetUniformLocation(this->program_id, name);
             std::string str_key = std::string(name, name_length);
             UniformDesc value = UniformDesc{type, location};
-            ret.uniforms.insert(std::make_pair(str_key, value));
+            this->uniforms.insert(std::make_pair(str_key, value));
         }
 
         return program_id;
@@ -319,7 +319,7 @@ namespace OpenGL {
     }
 
     void Shader::compile() {
-        ret.uniforms.clear();
+        this->uniforms.clear();
         this->program_id = this->create_shader_program(this->shader_paths);
     }
 
