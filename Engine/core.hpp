@@ -1,7 +1,11 @@
 #pragma once
 
+
 #include <stdint.h>
 #include <stdlib.h>
+#include <string>
+#include <vector>
+#include <map>
 
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
