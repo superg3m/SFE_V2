@@ -1,8 +1,4 @@
-#include "opengl_api.hpp"
-#include <stb/stb_image.h>
-#include <gpu_buffers.hpp>
-#include <texture.hpp>
-#include <geometry.hpp>
+#include <opengl_api.hpp>
 
 namespace OpenGL {
     void render_model(Model& model, Shader* shader) {
