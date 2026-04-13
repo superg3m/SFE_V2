@@ -1,7 +1,7 @@
-#include "low_level_api.hpp"
+#include "opengl_api.hpp"
 #include <stb/stb_image.h>
 
-void _gl_check_error(const char *file, int line) {
+void _GL_CHECK_ERROR(const char *file, int line) {
     GLenum errorCode;
     while ((errorCode = glGetError()) != GL_NO_ERROR)
     {
@@ -323,7 +323,7 @@ namespace OpenGL {
         this->program_id = this->create_shader_program(this->shader_paths);
     }
 
-    static const char* glEnumToString(GLenum type) {
+    static const char* gl_enum_to_string(GLenum type) {
         switch (type) {
             case GL_BOOL:          return "bool";
             case GL_INT:           return "int";
@@ -388,7 +388,7 @@ namespace OpenGL {
         if (this->uniforms.count(name)) {
             UniformDesc expected = this->uniforms[name];
             if (expected.type != type) {
-                LOG_ERROR("Shader {%s} Uniform: '%s' type missmatch | Expected: %s | Got: %s\n", this->shader_paths[0], name, glEnumToString(expected.type), glEnumToString(type));
+                LOG_ERROR("Shader {%s} Uniform: '%s' type missmatch | Expected: %s | Got: %s\n", this->shader_paths[0], name, gl_enum_to_string(expected.type), gl_enum_to_string(type));
                 return (unsigned int)-1;
             }
 

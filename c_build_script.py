@@ -102,7 +102,7 @@ if IS_WINDOWS():
 elif IS_DARWIN():
     inject += ["-Wl,-rpath,@executable_path"]
     libs += [
-        #f"{RELATIVE_GLFW_ROOT}/bin/macos/lib-arm64/libglfw3.a",
+        f"{RELATIVE_GLFW_ROOT}/bin/macos/lib-arm64/libglfw3.a",
         #f"{RELATIVE_ASSIMP_ROOT}/bin/macos/libassimp.dylib",
         "-framework OpenGL",
         "-framework Cocoa",
@@ -113,6 +113,7 @@ elif IS_DARWIN():
 # ---------------------------------------------------------------------------------------
 
 ENGINE_INCLUDES = [
+    RELATIVE_ENGINE_ROOT,
     RELATIVE_ENGINE_ROOT,
     RELATIVE_ENGINE_VENDOR,
     RELATIVE_STB_ROOT,
@@ -127,8 +128,8 @@ GAME_INCLUDES = [
     RELATIVE_ENGINE_VENDOR,
     RELATIVE_STB_ROOT,
     RELATIVE_GLM_ROOT,
-    # RELATIVE_GLFW_ROOT,
-    # f"{RELATIVE_GLAD_ROOT}/include",
+    RELATIVE_GLFW_ROOT,
+    f"{RELATIVE_GLAD_ROOT}/include",
     # f"{RELATIVE_ASSIMP_ROOT}/include",
 ]
 
@@ -165,7 +166,6 @@ manager.build_project()
 
 # -------------------------------- POST BUILD ------------------------------------------
 
-"""
 if IS_WINDOWS():
     if cc.compiler_name == "cl":
         COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-static-ucrt", "glfw3.dll", ABSOLUTE_GAME_BUILD)
@@ -174,5 +174,5 @@ if IS_WINDOWS():
 
     COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/windows", "assimp-vc143-mtd.dll", ABSOLUTE_GAME_BUILD)
 elif IS_DARWIN():
-    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_GAME_BUILD)
-"""
+    #COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_GAME_BUILD)
+    pass
