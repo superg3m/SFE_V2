@@ -300,7 +300,7 @@ namespace OpenGL {
             GLsizei name_length;
             glGetActiveUniform(this->program_id, (GLuint)i, name_max_size, &name_length, &size, &type, name);
 
-            GLint location = glget_uniform_location(this->program_id, name);
+            GLint location = glGetUniformLocation(this->program_id, name);
             std::string str_key = std::string(name, name_length);
             UniformDesc value = UniformDesc{type, location};
             ret.uniforms.insert(std::make_pair(str_key, value));
@@ -395,7 +395,7 @@ namespace OpenGL {
             return expected.location;
         }
 
-        GLint location = glget_uniform_location(this->program_id, name);
+        GLint location = glGetUniformLocation(this->program_id, name);
         if (location >= 0) {
             this->uniforms.insert(std::make_pair(name, UniformDesc{type, location})); // this type might be wrong, but theres no great robust way to do arrays that I know of...
         } else if (location == -1) {
