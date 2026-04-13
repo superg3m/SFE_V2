@@ -71,6 +71,7 @@ RELATIVE_GLFW_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glfw"
 RELATIVE_ASSIMP_ROOT = f"{RELATIVE_ENGINE_VENDOR}/assimp"
 RELATIVE_GLAD_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glad"
 RELATIVE_STB_ROOT = f"{RELATIVE_ENGINE_VENDOR}/stb"
+RELATIVE_GLM_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glm"
 
 RELATIVE_GAME_ROOT = "../../../Game"
 
@@ -90,8 +91,8 @@ if IS_WINDOWS():
         inject += ["-L/ucrt64/lib", "-lassimp"]
 
     libs += [
-        glfw_lib,
-        f"{RELATIVE_ASSIMP_ROOT}/bin/windows/assimp-vc143-mtd.lib",
+        #glfw_lib,
+        #f"{RELATIVE_ASSIMP_ROOT}/bin/windows/assimp-vc143-mtd.lib",
         GET_LIB_FLAG(cc, "Kernel32"),
         GET_LIB_FLAG(cc, "User32"),
         GET_LIB_FLAG(cc, "Gdi32"),
@@ -101,8 +102,8 @@ if IS_WINDOWS():
 elif IS_DARWIN():
     inject += ["-Wl,-rpath,@executable_path"]
     libs += [
-        f"{RELATIVE_GLFW_ROOT}/bin/macos/lib-arm64/libglfw3.a",
-        f"{RELATIVE_ASSIMP_ROOT}/bin/macos/libassimp.dylib",
+        #f"{RELATIVE_GLFW_ROOT}/bin/macos/lib-arm64/libglfw3.a",
+        #f"{RELATIVE_ASSIMP_ROOT}/bin/macos/libassimp.dylib",
         "-framework OpenGL",
         "-framework Cocoa",
         "-framework IOKit",
@@ -112,20 +113,23 @@ elif IS_DARWIN():
 # ---------------------------------------------------------------------------------------
 
 ENGINE_INCLUDES = [
+    RELATIVE_ENGINE_ROOT,
     RELATIVE_ENGINE_VENDOR,
     RELATIVE_STB_ROOT,
     RELATIVE_GLFW_ROOT,
+    RELATIVE_GLM_ROOT,
     f"{RELATIVE_GLAD_ROOT}/include",
-    f"{RELATIVE_ASSIMP_ROOT}/include",
+    # f"{RELATIVE_ASSIMP_ROOT}/include",
 ]
 
 GAME_INCLUDES = [
     RELATIVE_ENGINE_ROOT,
     RELATIVE_ENGINE_VENDOR,
     RELATIVE_STB_ROOT,
-    RELATIVE_GLFW_ROOT,
-    f"{RELATIVE_GLAD_ROOT}/include",
-    f"{RELATIVE_ASSIMP_ROOT}/include",
+    RELATIVE_GLM_ROOT,
+    # RELATIVE_GLFW_ROOT,
+    # f"{RELATIVE_GLAD_ROOT}/include",
+    # f"{RELATIVE_ASSIMP_ROOT}/include",
 ]
 
 # ---------------------------------------------------------------------------------------
@@ -135,14 +139,7 @@ procedures_config = {
         build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
         output_name = "sfe.lib",
         source_files = [
-            f"{RELATIVE_ENGINE_ROOT}/Core/**/*.cpp",
-            f"{RELATIVE_ENGINE_ROOT}/Platform/**/*.cpp",
-            f"{RELATIVE_ENGINE_ROOT}/Input/**/*.cpp",
-            f"{RELATIVE_ENGINE_ROOT}/Graphics/**/*.cpp",
-            f"{RELATIVE_ENGINE_ROOT}/Scene/**/*.cpp",
-            f"{RELATIVE_ENGINE_ROOT}/engine.cpp",
-            f"{RELATIVE_ENGINE_ROOT}/application.cpp",
-            
+            f"{RELATIVE_ENGINE_ROOT}/**/*.cpp",
             f"{RELATIVE_GLAD_ROOT}/src/glad.c",
         ],
         additional_libs = [],
@@ -168,6 +165,7 @@ manager.build_project()
 
 # -------------------------------- POST BUILD ------------------------------------------
 
+"""
 if IS_WINDOWS():
     if cc.compiler_name == "cl":
         COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-static-ucrt", "glfw3.dll", ABSOLUTE_GAME_BUILD)
@@ -177,3 +175,4 @@ if IS_WINDOWS():
     COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/windows", "assimp-vc143-mtd.dll", ABSOLUTE_GAME_BUILD)
 elif IS_DARWIN():
     COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_GAME_BUILD)
+"""
