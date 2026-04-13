@@ -45,6 +45,11 @@ GLFWwindow* GLFW_INIT() {
 int main(int argc, char** argv) {
     GLFWwindow* window = GLFW_INIT();
 
+    // InputSystem input;
+    // input.previous_mouse
+    // input.current_mouse
+    // glm::vec3 delta = input.current - input.previous;
+
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         glClearColor(1, 0, 0, 1);
