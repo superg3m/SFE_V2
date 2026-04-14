@@ -25,12 +25,15 @@ namespace OpenGL {
 
     struct Mesh {
         DrawData data;
-        VertexBufferObject vbo;
-        Material material;
+        int material_index;
     };
 
     struct Model {
         VertexArrayObject vao;
         std::vector<Mesh> meshes;
+        std::vector<Material> materials;
+
+        static Model cube(const char* path, Material material = {});
+        static Model load_from_file(const char* path);
     };
 }

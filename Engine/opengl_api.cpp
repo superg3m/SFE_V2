@@ -5,8 +5,9 @@ namespace OpenGL {
         model.vao.bind();
         for (int i = 0; i < model.meshes.size(); i++) {
             Mesh& mesh = model.meshes[i];
+            Material& material = model.materials[mesh.material_index];
 
-            shader->set_material(mesh.material);
+            shader->set_material(material);
             if (mesh.data.index_count > 0) {
                 gl_check_error(glDrawElementsBaseVertex(
                     mesh.data.draw_type, mesh.data.index_count, GL_UNSIGNED_INT, 

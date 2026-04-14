@@ -13,6 +13,8 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 
 using u8  = uint8_t;
 using u16 = uint16_t;
@@ -26,6 +28,7 @@ using s64 = int64_t;
 
 // --
 
+#define STRINGIFY(entry) #entry
 #define KB(value) ((size_t)(value) * 1024L)
 #define MB(value) ((size_t)KB(value) * 1024L)
 #define GB(value) ((size_t)MB(value) * 1024L)

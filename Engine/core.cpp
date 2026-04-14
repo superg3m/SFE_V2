@@ -1,5 +1,19 @@
 #include "core.hpp"
 
+static const char* ERROR_STRINGS[(int)Error::COUNT] = {
+    STRINGIFY(ERROR_SUCCESS),
+    STRINGIFY(ERROR_RESOURCE_NOT_FOUND),
+    STRINGIFY(ERROR_RESOURCE_TOO_BIG),
+    STRINGIFY(ERROR_NULL_PARAMETER),
+    STRINGIFY(ERROR_INVALID_PARAMETER),
+};
+
+const char* error_get_string(Error error_code) {
+    RUNTIME_ASSERT(((int)error_code >= 0) && ((int)error_code < (int)Error::COUNT));
+
+    return ERROR_STRINGS[(int)error_code];
+}
+
 void LOG_OUTPUT(LogLevel log_level, const char* message, ...) {
     #define OUT_MESSAGE_BUFFER_LENGTH KB(4)
     char out_message[OUT_MESSAGE_BUFFER_LENGTH] = {0};

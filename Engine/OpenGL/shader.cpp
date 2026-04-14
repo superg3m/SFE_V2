@@ -3,22 +3,22 @@
 
 namespace OpenGL {
     GLuint Shader::create_shader_program(std::vector<const char*> shader_paths) {
-        GLuint program_id = glCreateProgram();
+        GLuint shader_program_id = glCreateProgram();
         this->shader_paths = shader_paths;
 
-        std::vector<GLuint> shader_source_ids = std::vector<GLuint>(shader_paths.size()); 
+        std::vector<GLuint> shader_source_ids;
         for (const char* path : shader_paths) {
             GLuint shader_source_id = this->shader_source_compile(path);
-            glAttachShader(program_id, shader_source_id);
+            glAttachShader(shader_program_id, shader_source_id);
             shader_source_ids.push_back(shader_source_id);
         }
-        glLinkProgram(program_id);
+        glLinkProgram(shader_program_id);
 
         GLint success = false;
-        glGetProgramiv(program_id, GL_LINK_STATUS, &success);
+        glGetProgramiv(shader_program_id, GL_LINK_STATUS, &success);
         if (!success) {
             char info_log[1028] = {0};
-            glGetProgramInfoLog(program_id, 512, NULL, info_log);
+            glGetProgramInfoLog(shader_program_id, 512, NULL, info_log);
             LOG_ERROR("LINKING_FAILED {%s}\n", shader_paths[0]);
             LOG_ERROR("%s -- --------------------------------------------------- --\n", info_log);
         }
@@ -28,22 +28,22 @@ namespace OpenGL {
         }
 
         GLint uniform_count = 0;
-        glGetProgramiv(this->program_id, GL_ACTIVE_UNIFORMS, &uniform_count);
+        glGetProgramiv(shader_program_id, GL_ACTIVE_UNIFORMS, &uniform_count);
         for (int i = 0; i < uniform_count; i++) {
             GLint size;
             GLenum type;
             const GLsizei name_max_size = 256;
             GLchar name[name_max_size];
             GLsizei name_length;
-            glGetActiveUniform(this->program_id, (GLuint)i, name_max_size, &name_length, &size, &type, name);
+            glGetActiveUniform(shader_program_id, (GLuint)i, name_max_size, &name_length, &size, &type, name);
 
-            GLint location = glGetUniformLocation(this->program_id, name);
+            GLint location = glGetUniformLocation(shader_program_id, name);
             std::string str_key = std::string(name, name_length);
             UniformDesc value = UniformDesc{type, location};
             this->uniforms.insert(std::make_pair(str_key, value));
         }
 
-        return program_id;
+        return shader_program_id;
     }
 
     Shader Shader::create(std::vector<const char*> shader_paths) {
@@ -191,7 +191,7 @@ namespace OpenGL {
     }
     void Shader::set_vec2(const char* name, const glm::vec2& value) {
         this->use();
-        gl_check_error(glUniform2fv(this->get_uniform_location(name, GL_FLOAT_VEC2), 1, glm::value_ptr(value)));
+        gl_check_error(glUniform2fv(this->get_uniform_location(name, GL_FLOAT_VEC2), 1, &value[0]));
     }
     void Shader::set_vec2(const char* name, float x, float y) {
         this->use();
@@ -199,7 +199,7 @@ namespace OpenGL {
     }
     void Shader::set_vec3(const char* name, const glm::vec3& value) {
         this->use();
-        gl_check_error(glUniform3fv(this->get_uniform_location(name, GL_FLOAT_VEC3), 1, glm::value_ptr(value)));
+        gl_check_error(glUniform3fv(this->get_uniform_location(name, GL_FLOAT_VEC3), 1, &value[0]));
     }
     void Shader::set_vec3(const char* name, float x, float y, float z) {
         this->use();
@@ -207,7 +207,7 @@ namespace OpenGL {
     }
     void Shader::set_vec4(const char* name, const glm::vec4& value) {
         this->use();
-        gl_check_error(glUniform4fv(this->get_uniform_location(name, GL_FLOAT_VEC4), 1, glm::value_ptr(value)));
+        gl_check_error(glUniform4fv(this->get_uniform_location(name, GL_FLOAT_VEC4), 1, &value[0]));
     }
     void Shader::set_vec4(const char* name, float x, float y, float z, float w) {
         this->use();
@@ -215,6 +215,6 @@ namespace OpenGL {
     }
     void Shader::set_mat4(const char* name, const glm::mat4& mat) {
         this->use();
-        gl_check_error(glUniformMatrix4fv(this->get_uniform_location(name, GL_FLOAT_MAT4), 1, GL_FALSE, glm::value_ptr(mat)));
+        gl_check_error(glUniformMatrix4fv(this->get_uniform_location(name, GL_FLOAT_MAT4), 1, GL_FALSE, &mat[0][0]));
     }
 }

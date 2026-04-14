@@ -54,10 +54,10 @@ namespace OpenGL {
         gl_check_error(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->id));
     }
 
-    VertexArrayObject VertexArrayObject::create(std::vector<VertexBufferObject> vbos, std::vector<ElementBufferObject> ebos) {
+    VertexArrayObject VertexArrayObject::create() {
         VertexArrayObject ret = {};
         gl_check_error(glGenVertexArrays(1, &ret.id));
-        ret.bind_buffers(vbos, ebos);
+        ret.bind();
 
         return ret;
     }

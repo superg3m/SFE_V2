@@ -23,6 +23,7 @@ namespace OpenGL {
     };
 
     void bind_vertex_attribute(int &location, bool instanced, stride_t stride, VertexLayoutElement desc);
+    stride_t compute_stride_from_layout(std::vector<VertexLayoutElement>& layout);
 
     struct VertexBufferObject {
         GLuint id;
@@ -36,9 +37,11 @@ namespace OpenGL {
             gl_check_error(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
             gl_check_error(glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(T), buffer.data(), gl_usage));
 
+            stride_t stride = compute_stride_from_layout(layout);
+
             int location = 0;
             for (VertexLayoutElement desc : layout) {
-                bind_vertex_attribute(location, instanced, sizeof(T), desc);
+                bind_vertex_attribute(location, instanced, stride, desc);
             }
 
             return ret;
@@ -81,7 +84,7 @@ namespace OpenGL {
 
     struct VertexArrayObject {
         GLuint id;
-        static VertexArrayObject create(std::vector<VertexBufferObject> vbos, std::vector<ElementBufferObject> ebos = {});
+        static VertexArrayObject create();
         void bind_buffers(std::vector<VertexBufferObject> vbos, std::vector<ElementBufferObject> ebos = {});
         void bind();
     };
