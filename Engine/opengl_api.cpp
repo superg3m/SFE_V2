@@ -24,7 +24,7 @@ namespace OpenGL {
         }
     }
 
-    void render_vao_with_textures(VertexArrayObject vao, DrawData data) {
+    void render_vao(VertexArrayObject vao, DrawData data) {
         vao.bind();
 
         if (data.index_count > 0) {

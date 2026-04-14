@@ -4,6 +4,20 @@
 const int WIDTH = 800;
 const int HEIGHT = 800;
 
+struct ShaderTable {
+    OpenGL::Shader box_shader;
+
+    void initalize() {
+        this->box_shader = OpenGL::Shader::create({"../../Shaders/cube.vert", "../../Shaders/cube.frag"});
+    }
+
+    void compile() {
+        this->box_shader.compile();
+    }
+};
+
+ShaderTable shaders;
+
 GLFWwindow* GLFW_INIT() {
     RUNTIME_ASSERT_MSG(glfwInit(), "Failed to init glfw\n");
 
@@ -95,23 +109,20 @@ int main(int argc, char** argv) {
         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
-    // probably I shouldn't even allow you to create a VBO if you don't have a VAO
+    OpenGL::VertexLayout layout = OpenGL::VertexLayout::create({
+        OpenGL::VertexElement{0, OpenGL::BufferStrideTypeInfo::VEC3},
+        OpenGL::VertexElement{sizeof(glm::vec3), OpenGL::BufferStrideTypeInfo::VEC2}
+    });
+
+    OpenGL::DrawData draw_data = OpenGL::DrawData::create(layout, vertices);
     OpenGL::VertexArrayObject vao = OpenGL::VertexArrayObject::create();
-    std::vector<OpenGL::VertexLayoutElement> layout = {
-        OpenGL::VertexLayoutElement{0, OpenGL::BufferStrideTypeInfo::VEC3},
-        OpenGL::VertexLayoutElement{sizeof(glm::vec3), OpenGL::BufferStrideTypeInfo::VEC2}
-    };
-
-    OpenGL::DrawData draw_data = {};
-    draw_data.vertex_count = vertices.size() / 5;
-    OpenGL::VertexBufferObject vbo = OpenGL::VertexBufferObject::allocate(layout, vertices);
-    OpenGL::Shader shader = OpenGL::Shader::create({"../../Shaders/cube.vert", "../../Shaders/cube.frag"});
-
+    OpenGL::VertexBufferObject vbo = OpenGL::VertexBufferObject::allocate(vao, layout, vertices);
     OpenGL::Texture container_texture = OpenGL::Texture::load_from_file(0, "../../Assets/Textures/container.jpg");
     OpenGL::Texture face_texture = OpenGL::Texture::load_from_file(1, "../../Assets/Textures/awesomeface.png");
 
-    //OpenGL::Model model = OpenGL::Model::cube();
-    // OpenGL::Model model;
+    shaders.initalize();
+
+    // OpenGL::Mesh cube = OpenGL::Mesh::cube();
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -124,13 +135,13 @@ int main(int argc, char** argv) {
         view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 
-        shader.use();
-        shader.set_model(model);
-        shader.set_view(view);
-        shader.set_projection(projection);
-        shader.set_texture("container", container_texture);
-        shader.set_texture("face", face_texture);
-        OpenGL::render_vao_with_textures(vao, draw_data);
+        shaders.box_shader.use();
+        shaders.box_shader.set_model(model);
+        shaders.box_shader.set_view(view);
+        shaders.box_shader.set_projection(projection);
+        shaders.box_shader.set_texture("container", container_texture);
+        shaders.box_shader.set_texture("face", face_texture);
+        OpenGL::render_vao(vao, draw_data);
 
         // OpenGL::render_model(cube_model, &shader);
 
@@ -140,3 +151,36 @@ int main(int argc, char** argv) {
 
     return 0;
 }
+
+/*
+TODO(Jovanni): 
+- [] probably I shouldn't even allow you to create a VBO if you don't have a VAO (since it doesn't work on mac)
+- [] RenderQueue is really smart, every frame an entity with the mesh component will submit itself to the render queue.
+struct RenderCommand {
+    Shader* shader;
+    Mesh* mesh;
+    Material* material; // pointer only to avoid copying
+    glm::mat4 model;
+};
+
+- [] ShaderTable
+
+struct ShaderTable {
+    Shader default_shader;
+    Shader standard_shader; 
+    Shader pbr_shader; 
+    Shader frasnel_shader; 
+
+    // ui shaders
+    Shader ui_shader;
+    // ...
+}
+
+// so you got to specify the shader, mat, and the mesh for a mesh component
+new MeshComponent(shader, mat, mesh)
+
+- [] Remove concept of model an made it so that you Entity* e = load_model(path);
+    - [] heirarchy of meshes
+
+
+*/

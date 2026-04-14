@@ -2,7 +2,7 @@
 #include <gl_error_check.hpp>
 
 namespace OpenGL {
-    void bind_vertex_attribute(int &location, bool instanced, stride_t stride, VertexLayoutElement desc) {
+    void bind_vertex_attribute(int &location, bool instanced, stride_t stride, VertexElement desc) {
         bool is_integer = (desc.type == BufferStrideTypeInfo::INT) || (desc.type == BufferStrideTypeInfo::IVEC4);
         bool is_matrix = desc.type == BufferStrideTypeInfo::MAT4;
         GLenum gl_type  = is_integer ? GL_INT : GL_FLOAT;
@@ -37,13 +37,22 @@ namespace OpenGL {
         }
     }
 
-    stride_t compute_stride_from_layout(std::vector<VertexLayoutElement>& layout) {
+    static stride_t compute_stride_from_elements(std::vector<VertexElement>& layout) {
         stride_t stride = 0;
-        for (VertexLayoutElement desc : layout) {
+        for (VertexElement desc : layout) {
             stride += (stride_t)desc.type * sizeof(float);
         }
 
         return stride;
+    }
+
+    static VertexLayout create(std::vector<VertexElement> elements) {
+        VertexLayout ret = {};
+        ret.stride = compute_stride_from_elements(elements);
+        ret.stride_in_floats = ret.stride / sizeof(float);
+        ret.elements = elements;
+
+        return ret;
     }
 
     void VertexBufferObject::bind() {
@@ -60,17 +69,6 @@ namespace OpenGL {
         ret.bind();
 
         return ret;
-    }
-
-    void VertexArrayObject::bind_buffers(std::vector<VertexBufferObject> vbos, std::vector<ElementBufferObject> ebos) {
-        this->bind();
-        for (VertexBufferObject& vbo : vbos) {
-            vbo.bind();
-        }
-
-        for (ElementBufferObject& ebo : ebos) {
-            ebo.bind();
-        }
     }
 
     // pass like a renderer in here to control the currently bound vao, reduce call overhead
