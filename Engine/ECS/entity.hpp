@@ -11,15 +11,51 @@ T* GetMyComponent<T>() { \
 	return &_##T;        \
 }                        \
 
+struct Transform {
+    glm::vec3 position = glm::vec3(0);
+    glm::quat rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+	glm::vec3 scale    = glm::vec3(0);
+};
+
 struct Entity {
-    u32 id; // the actual index / unique id into an entity array owned by the engine
+    u32 id; // the actual index/unique id into an entity array owned by the engine
 	const char* name;
+    bool alive = true; 
+	bool active = true;
     
 	Entity* parent;
 	std::vector<Entity*> children; 
 	std::map<std::type_index, Component*> components; 
-	bool alive = true; 
-	bool active = true;
+    Transform transform;
+
+    void reparent();
+
+    void set_rotation_euler(glm::vec3 euler) {
+        this->transform.rotation = glm::quat(euler);
+    }
+
+    void set_rotation_euler(float x, float y, float z) {
+        this->transform.rotation = glm::quat(glm::vec3(x, y, z));
+    }
+
+    glm::mat4 get_local_transform() const {
+        glm::mat4 matrix = glm::mat4(1);
+        matrix = glm::translate(matrix, this->transform.position);
+        matrix = matrix * glm::mat4_cast(this->transform.rotation);
+        matrix = glm::scale(matrix, this->transform.scale);
+
+        return matrix;
+    };
+
+    glm::mat4 get_world_transform() const {
+        if (this->parent) {
+            return this->get_world_transform() * this->get_local_transform();
+        }
+        
+        return this->get_local_transform();
+    }
+
+    static Entity* load_gltf(const std::string& path);
 
     template<typename T> 
 	T* GetMyComponent();
