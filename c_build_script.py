@@ -143,6 +143,7 @@ procedures_config = {
         source_files = [
             f"{RELATIVE_ENGINE_ROOT}/**/*.cpp",
             f"{RELATIVE_GLAD_ROOT}/src/glad.c",
+            f"{RELATIVE_STB_ROOT}/stb_image.c",
         ],
         additional_libs = [],
         include_paths = ENGINE_INCLUDES,

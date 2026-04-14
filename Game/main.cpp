@@ -107,6 +107,9 @@ int main(int argc, char** argv) {
     OpenGL::VertexBufferObject vbo = OpenGL::VertexBufferObject::allocate(layout, vertices);
     OpenGL::Shader shader = OpenGL::Shader::create({"../../Shaders/cube.vert", "../../Shaders/cube.frag"});
 
+    OpenGL::Texture container_texture = OpenGL::Texture::load_from_file(0, "../../Assets/Textures/container.jpg");
+    OpenGL::Texture face_texture = OpenGL::Texture::load_from_file(1, "../../Assets/Textures/awesomeface.png");
+
     //OpenGL::Model model = OpenGL::Model::cube();
     // OpenGL::Model model;
 
@@ -125,6 +128,8 @@ int main(int argc, char** argv) {
         shader.set_model(model);
         shader.set_view(view);
         shader.set_projection(projection);
+        shader.set_texture("container", container_texture);
+        shader.set_texture("face", face_texture);
         OpenGL::render_vao_with_textures(vao, draw_data);
 
         // OpenGL::render_model(cube_model, &shader);
