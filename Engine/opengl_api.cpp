@@ -1,6 +1,7 @@
 #include <opengl_api.hpp>
 
 namespace OpenGL {
+    /*
     void render_model(Model& model, Shader* shader) {
         model.vao.bind();
         for (int i = 0; i < model.meshes.size(); i++) {
@@ -23,6 +24,7 @@ namespace OpenGL {
             }
         }
     }
+    */
 
     void render_vao(VertexArrayObject vao, DrawData data) {
         vao.bind();

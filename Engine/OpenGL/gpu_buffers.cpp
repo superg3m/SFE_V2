@@ -46,7 +46,7 @@ namespace OpenGL {
         return stride;
     }
 
-    static VertexLayout create(std::vector<VertexElement> elements) {
+    VertexLayout VertexLayout::create(std::vector<VertexElement> elements) {
         VertexLayout ret = {};
         ret.stride = compute_stride_from_elements(elements);
         ret.stride_in_floats = ret.stride / sizeof(float);

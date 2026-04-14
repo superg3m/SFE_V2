@@ -89,10 +89,12 @@ namespace OpenGL {
             ElementBufferObject ret = {};
             ret.gl_usage = gl_usage;
 
-            vao.bind();
-            gl_check_error(glGenBuffers(1, &ret.id));
-            gl_check_error(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
-            gl_check_error(glBufferData(GL_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), gl_usage));
+            if (indices.size()) {
+                vao.bind();
+                gl_check_error(glGenBuffers(1, &ret.id));
+                gl_check_error(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
+                gl_check_error(glBufferData(GL_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), gl_usage));
+            }
 
             return ret;
         }
