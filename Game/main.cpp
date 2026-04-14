@@ -114,15 +114,20 @@ int main(int argc, char** argv) {
         OpenGL::VertexElement{sizeof(glm::vec3), OpenGL::BufferStrideTypeInfo::VEC2}
     });
 
-    OpenGL::DrawData draw_data = OpenGL::DrawData::create(layout, vertices);
-    OpenGL::VertexArrayObject vao = OpenGL::VertexArrayObject::create();
-    OpenGL::VertexBufferObject vbo = OpenGL::VertexBufferObject::allocate(vao, layout, vertices);
+
     OpenGL::Texture container_texture = OpenGL::Texture::load_from_file(0, "../../Assets/Textures/container.jpg");
     OpenGL::Texture face_texture = OpenGL::Texture::load_from_file(1, "../../Assets/Textures/awesomeface.png");
 
     shaders.initalize();
 
-    // OpenGL::Mesh cube = OpenGL::Mesh::cube();
+    OpenGL::RenderQueue queue;
+    OpenGL::Material material = {};
+    material.set_texture("container", container_texture);
+    material.set_texture("face", face_texture);
+
+    OpenGL::Mesh mesh = OpenGL::Mesh::create(layout, vertices);
+    mesh.meshes.push_back(OpenGL::DrawData::create(layout, vertices));
+    mesh.materials.push_back(material);
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -135,13 +140,21 @@ int main(int argc, char** argv) {
         view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 
-        shaders.box_shader.use();
-        shaders.box_shader.set_model(model);
-        shaders.box_shader.set_view(view);
-        shaders.box_shader.set_projection(projection);
-        shaders.box_shader.set_texture("container", container_texture);
-        shaders.box_shader.set_texture("face", face_texture);
-        OpenGL::render_vao(vao, draw_data);
+        OpenGL::RenderCommand command = {};
+        command.shader = &shaders.box_shader;
+        command.mesh = &mesh;
+        command.model = model;
+        command.view = view;
+        command.projection = projection;
+
+        queue.submit(command);
+
+
+        model = glm::translate(model, glm::vec3(-1, 0, 0));
+        command.model = model;
+        queue.submit(command);
+
+        queue.draw();
 
         // OpenGL::render_model(cube_model, &shader);
 
@@ -154,7 +167,7 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni): 
-- [] probably I shouldn't even allow you to create a VBO if you don't have a VAO (since it doesn't work on mac)
+- [x] probably I shouldn't even allow you to create a VBO if you don't have a VAO (since it doesn't work on mac)
 - [] RenderQueue is really smart, every frame an entity with the mesh component will submit itself to the render queue.
 struct RenderCommand {
     Shader* shader;

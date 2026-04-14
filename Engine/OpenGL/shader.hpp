@@ -41,40 +41,40 @@ namespace OpenGL {
         // TODO(Jovanni): this is so fucking slow but for now its ok I will switch to my own hashmap later
         // TODO(Jovanni): this is so fucking slow but for now its ok I will switch to my own hashmap later
         // TODO(Jovanni): this is so fucking slow but for now its ok I will switch to my own hashmap later
-        void set_material(Material& material) {
-            for (const auto [k, v] : material.boolean_uniforms) {
+        void set_material(Material* material) {
+            for (const auto [k, v] : material->boolean_uniforms) {
                 this->set_bool(k.c_str(), v);
             }
 
-            for (const auto [k, v] : material.integer_uniforms) {
+            for (const auto [k, v] : material->integer_uniforms) {
                 this->set_int(k.c_str(), v);
             }
 
-            for (const auto [k, v] : material.float_uniforms) {
+            for (const auto [k, v] : material->float_uniforms) {
                 this->set_float(k.c_str(), v);
             }
 
-            for (const auto [k, v] : material.sampler2d_uniforms) {
+            for (const auto [k, v] : material->sampler2d_uniforms) {
                 this->set_texture(k.c_str(), v);
             }
 
-            for (const auto [k, v] : material.cubemap_uniforms) {
+            for (const auto [k, v] : material->cubemap_uniforms) {
                 this->set_texture_cube(k.c_str(), v);
             }
 
-            for (const auto [k, v] : material.vector2_uniforms) {
+            for (const auto [k, v] : material->vector2_uniforms) {
                 this->set_vec2(k.c_str(), v);
             }
 
-            for (const auto [k, v] : material.vector3_uniforms) {
+            for (const auto [k, v] : material->vector3_uniforms) {
                 this->set_vec3(k.c_str(), v);
             }
 
-            for (const auto [k, v] : material.vector4_uniforms) {
+            for (const auto [k, v] : material->vector4_uniforms) {
                 this->set_vec4(k.c_str(), v);
             }
 
-            for (const auto [k, v] : material.mat4_uniforms) {
+            for (const auto [k, v] : material->mat4_uniforms) {
                 this->set_mat4(k.c_str(), v);
             }
         }

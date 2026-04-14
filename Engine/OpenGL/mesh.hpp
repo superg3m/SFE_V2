@@ -21,15 +21,17 @@ namespace OpenGL {
         GLuint index_count = 0;
         u32 base_vertex  = 0; // starting offset to next vertex in the vertex buffer
         u32 base_index   = 0; // offset to next index in the index buffer
+        u32 material_index = 0;
 
         template<typename T>
-        static DrawData create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<GLuint> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0) {
+        static DrawData create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<GLuint> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0, u32 material_index = 0) {
             DrawData ret = {};
             ret.draw_type = draw_type;
             ret.vertex_count = vertex_data.size() / layout.stride_in_floats;
             ret.index_count = indices.size();
             ret.base_vertex  = base_vertex;
             ret.base_index   = base_index;
+            ret.material_index = material_index;
 
             return ret;
         }
@@ -40,21 +42,23 @@ namespace OpenGL {
         VertexArrayObject vao;
         VertexBufferObject vbo;
         ElementBufferObject ebo;
-        DrawData data;
+        std::vector<DrawData> meshes;
+        std::vector<Material> materials;
 
         template<typename T>
-        static Mesh create(VertexLayout& layout, const std::vector<T>& vertex_data, std::vector<GLuint> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0) {
+        static Mesh create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<GLuint> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0) {
             Mesh ret = {};
             ret.vao = VertexArrayObject::create();
             ret.vbo = VertexBufferObject::allocate(ret.vao, layout, vertex_data);
             ret.ebo = ElementBufferObject::allocate(ret.vao, indices);
-            ret.data = DrawData::create(layout, vertex_data, indices, draw_type, base_vertex, base_index);
-
+            
             return ret;
         }
 
         // TODO(Complete this): actually maybe not because this is pretty much an entity thing?
         static Mesh load_from_file(const char* path) {
+            // basically this is one vao one vbo and every single mesh in the model 
+
             return Mesh{};
         }
     };
