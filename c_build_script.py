@@ -112,20 +112,11 @@ elif IS_DARWIN():
 
 # ---------------------------------------------------------------------------------------
 
-ENGINE_INCLUDES = [
-    RELATIVE_ENGINE_ROOT,
-    f"{RELATIVE_ENGINE_ROOT}/OpenGL",
-    RELATIVE_ENGINE_VENDOR,
-    RELATIVE_STB_ROOT,
-    RELATIVE_GLFW_ROOT,
-    RELATIVE_GLM_ROOT,
-    f"{RELATIVE_GLAD_ROOT}/include",
-    # f"{RELATIVE_ASSIMP_ROOT}/include",
-]
 
-GAME_INCLUDES = [
+INCLUDES = [
     RELATIVE_ENGINE_ROOT,
     f"{RELATIVE_ENGINE_ROOT}/OpenGL",
+    f"{RELATIVE_ENGINE_ROOT}/ECS",
     RELATIVE_ENGINE_VENDOR,
     RELATIVE_STB_ROOT,
     RELATIVE_GLM_ROOT,
@@ -146,7 +137,7 @@ procedures_config = {
             f"{RELATIVE_STB_ROOT}/stb_image.c",
         ],
         additional_libs = [],
-        include_paths = ENGINE_INCLUDES,
+        include_paths = INCLUDES,
         compiler_inject_into_args=[]
     ),
 
@@ -158,7 +149,7 @@ procedures_config = {
         ],
         additional_libs = libs,
         compile_time_defines=[],
-        include_paths = GAME_INCLUDES,
+        include_paths = INCLUDES,
         compiler_inject_into_args=inject
     )
 }

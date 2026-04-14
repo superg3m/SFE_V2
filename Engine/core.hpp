@@ -26,6 +26,17 @@ using s16 = int16_t;
 using s32 = int32_t;
 using s64 = int64_t;
 
+struct Timer { 
+    bool should_tick;
+    float elapsed; 
+    float duration; 
+
+    static Timer create();
+    void start(float duration);
+    bool tick(float dt);
+    void stop();
+};
+
 // --
 
 #define STRINGIFY(entry) #entry

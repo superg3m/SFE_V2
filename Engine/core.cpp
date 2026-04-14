@@ -1,5 +1,33 @@
 #include "core.hpp"
 
+Timer Timer::create() {
+    Timer timer = {};
+    timer.should_tick = false;
+    timer.elapsed = 0.0;
+    timer.duration = 0.0;
+
+    return timer;
+}
+
+void Timer::start(float duration) {
+    this->should_tick = true;
+    this->elapsed = 0.0f;
+    this->duration = duration;
+}
+
+bool Timer::tick(float dt) {
+    if (!this->should_tick) return false;
+
+    this->elapsed = this->elapsed + dt;
+    return this->elapsed <= this->duration;
+}
+
+void Timer::stop() {
+    this->should_tick = false;
+    this->elapsed = 0.0f;
+    this->duration = 0.0f;
+}
+
 static const char* ERROR_STRINGS[(int)Error::COUNT] = {
     STRINGIFY(ERROR_SUCCESS),
     STRINGIFY(ERROR_RESOURCE_NOT_FOUND),

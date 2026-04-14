@@ -196,4 +196,73 @@ new MeshComponent(shader, mat, mesh)
     - [] heirarchy of meshes
 
 
+- [] Entitiy stuff!
+    - Use an id for the color picking convert the id into a color
+    - entities should be stored in a static array for now
+    - if you want to make an entity you need to ask the engine->create_entity()
+         this will set the id/index, and other tsuff and return to you a pointer to an Entity
+
+    - To ensure some dederminism Entities need to update their children
+    - Components will just be a vector or hashmap on the actutal entity
+
+    class GameObject {
+    public:
+        virtual ~GameObject() = default;
+        virtual void Update(float deltaTime);
+        const std::string& GetName() const;
+        void SetName(const std::string& name);
+        GameObject* GetParent();
+        bool SetParent(GameObject* parent);
+        Scene* GetScene();
+        bool IsAlive() const;
+        void MarkForDestroy();
+
+        void AddComponent(Component* component);
+        template<typename T, typename = typename std::enable_if_t<std::is_base_of_v<Component, T>>>
+        T* GetComponent()
+        {
+            size_t typeId = Component::StaticTypeId<T>();
+
+            for (auto& component : m_components)
+            {
+                if (component->GetTypeId() == typeId)
+                {
+                    return static_cast<T*>(component.get());
+                }
+            }
+
+            return nullptr;
+        }
+
+        const glm::vec3& GetPosition() const;
+        glm::vec3 GetWorldPosition() const;
+        void SetPosition(const glm::vec3& pos);
+
+        const glm::quat& GetRotation() const;
+        void SetRotation(const glm::quat& rot);
+
+        const glm::vec3& GetScale() const;
+        void SetScale(const glm::vec3& scale);
+
+        glm::mat4 GetLocalTransform() const;
+        glm::mat4 GetWorldTransform() const;
+
+        static GameObject* LoadGLTF(const std::string& path);
+
+    protected:
+        GameObject() = default;
+
+    private:
+        std::string m_name;
+        GameObject* m_parent = nullptr;
+        Scene* m_scene = nullptr;
+        std::vector<std::unique_ptr<GameObject>> m_children;
+        std::vector<std::unique_ptr<Component>> m_components;
+        bool m_isAlive = true;
+        glm::vec3 m_position = glm::vec3(0.0f);
+        glm::quat m_rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+        glm::vec3 m_scale = glm::vec3(1.0f);
+
+        friend class Scene;
+    };
 */
