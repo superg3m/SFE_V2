@@ -2,7 +2,53 @@
 #include <core.hpp>
 
 namespace OpenGL {
-    // void Mesh::load_mesh_from_assimp_scene
+    static AABB calculate_aabb(const std::vector<Vertex>& vertices, int base_vertex, int vertex_count) {
+        float x_min = FLT_MAX;
+        float y_min = FLT_MAX;
+        float z_min = FLT_MAX;
+
+        float x_max = FLT_MIN;
+        float y_max = FLT_MIN;
+        float z_max = FLT_MIN;
+        for (int i = base_vertex; i < base_vertex + vertex_count; i++) {
+            const Vertex v = vertices[i];
+            float x = v.aPosition.x;
+            float y = v.aPosition.y;
+            float z = v.aPosition.z;
+
+            if (x_min > x) {
+                x_min = x;
+            } else if (x_max < x) {
+                x_max = x;
+            }
+
+            if (y_min > y) {
+                y_min = y;
+            } else if (y_max < y) {
+                y_max = y;
+            }
+
+            if (z_min > z) {
+                z_min = z;
+            } else if (z_max < z) {
+                z_max = z;
+            }
+        }
+
+        glm::vec3 center  = glm::vec3(
+            (x_max + x_min) / 2.0f,
+            (y_max + y_min) / 2.0f,
+            (z_max + z_min) / 2.0f
+        );
+
+        glm::vec3 extents = glm::vec3(
+            (x_max - x_min) / 2.0f,
+            (y_max - y_min) / 2.0f,
+            (z_max - z_min) / 2.0f
+        );
+
+        return AABB::from_center_extents(center, extents);
+    }
 
     static inline glm::mat4 convert_assimp_matrix_to_glm(const aiMatrix4x4& from) {
 		glm::mat4 to;
@@ -218,6 +264,11 @@ namespace OpenGL {
             {OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3},
             {OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2},
         });
+
+        this->aabb = calculate_aabb(this->vertices, 0, this->vertices.size());
+        for (MeshEntry& entry : meshes) {
+            entry.aabb = calculate_aabb(this->vertices, entry.base_vertex, entry.vertex_count);
+        }
 
         this->vao = VertexArrayObject::create();
         this->vbo = VertexBufferObject::allocate(this->vao, layout, this->vertices);

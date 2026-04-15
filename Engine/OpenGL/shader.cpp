@@ -133,9 +133,8 @@ namespace OpenGL {
         }
 
         GLint location = glGetUniformLocation(this->program_id, name);
-        if (location >= 0) {
-            this->uniforms.insert(std::make_pair(name, UniformDesc{type, location})); // this type might be wrong, but theres no great robust way to do arrays that I know of...
-        } else if (location == -1) {
+        this->uniforms.insert(std::make_pair(name, UniformDesc{type, location})); // this type might be wrong, but theres no great robust way to do arrays that I know of...
+        if (location == -1) {
             LOG_ERROR("Shader {%s} Uniform: '%s' does not exists\n", this->shader_paths[0], name);
         }
 

@@ -32,18 +32,11 @@ using s16 = int16_t;
 using s32 = int32_t;
 using s64 = int64_t;
 
-struct Timer { 
-    bool should_tick;
-    float elapsed; 
-    float duration; 
-
-    static Timer create();
-    void start(float duration);
-    bool tick(float dt);
-    void stop();
-};
-
 // --
+constexpr float PI = 3.14159265359f;
+constexpr float TAU = PI * 2;
+constexpr float G = 0.0000000000667430f;
+constexpr float EPSILON = 0.0001f;
 
 #define STRINGIFY(entry) #entry
 #define KB(value) ((size_t)(value) * 1024L)
@@ -53,6 +46,15 @@ struct Timer {
 #define UNUSED(a) (void)a
 #define INTERNAL_FUNCTION static
 #define LOCAL_PERSIST static
+
+#define NEAR_ZERO(x) (fabs(x) <= EPSILON)
+#define NEAR_EQUAL(a, b) (fabs((a) - (b)) <= EPSILON)
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define CLAMP(value, min_value, max_value) (MIN(MAX(value, min_value), max_value))
+#define SQUARED(a) ((a) * (a))
+#define DEGREES_TO_RAD(degrees) ((degrees)*(PI/180))
+#define RAD_TO_DEGREES(rad) ((rad)*(180/PI))
 
 #if defined(_WIN32)
     #define PLATFORM_WINDOWS
@@ -85,6 +87,94 @@ struct Timer {
 #endif
 
 // --
+
+struct Timer { 
+    bool should_tick;
+    float elapsed; 
+    float duration; 
+
+    static Timer create();
+    void start(float duration);
+    bool tick(float dt);
+    void stop();
+};
+
+struct AABB {
+    glm::vec3 min;
+    glm::vec3 max;
+
+    static AABB from_center_extents(glm::vec3 center, glm::vec3 extents) {
+        return AABB(center - extents, center + extents);
+    }
+
+    static bool intersection(AABB aabb, glm::vec3 p0, glm::vec3 p1) {
+        float tmin = -10000;
+        float tmax = 10000;
+    
+        // X coordinate
+        if (fabsf(p1.x) > EPSILON) {
+            float t1 = (aabb.min.x - p0.x) / p1.x;
+            float t2 = (aabb.max.x - p0.x) / p1.x;
+    
+            tmin = MAX(tmin, MIN(t1, t2));
+            tmax = MIN(tmax, MAX(t1, t2));
+        }
+    
+        // Y coordinate
+        if (fabs(p1.y) > EPSILON) {
+            float t1 = (aabb.min.y - p0.y) / p1.y;
+            float t2 = (aabb.max.y - p0.y) / p1.y;
+    
+            tmin = MAX(tmin, MIN(t1, t2));
+            tmax = MIN(tmax, MAX(t1, t2));
+        }
+    
+        // Z coordinate
+        if (fabs(p1.z) > EPSILON) {
+            float t1 = (aabb.min.z - p0.z) / p1.z;
+            float t2 = (aabb.max.z - p0.z) / p1.z;
+    
+            tmin = MAX(tmin, MIN(t1, t2));
+            tmax = MIN(tmax, MAX(t1, t2));
+        }
+    
+        if (tmax > tmin && tmax > 0.0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    static AABB create(glm::vec3 min, glm::vec3 max) {
+        AABB ret = {};
+        ret.min = min;
+        ret.max = max;
+
+        return ret;
+    }
+
+    static AABB create(float min_x, float min_y, float min_z, float max_x, float max_y, float max_z) {
+        AABB ret = {};
+        ret.min.x = min_x;
+        ret.min.y = min_y;
+        ret.min.z = min_z;
+
+        ret.max.x = max_x;
+        ret.max.y = max_y;
+        ret.max.z = max_z;
+
+        return ret;
+    }
+
+    glm::vec3 get_center() {
+        glm::vec3 extents = this->get_extents();
+        return glm::vec3(min.x + extents.x, min.y + extents.y, min.z + extents.z);
+    }
+
+    glm::vec3 get_extents() {
+        return (max - min) * 0.5f;
+    }
+};
 
 enum class Error : int {
     SUCCESS = 0,

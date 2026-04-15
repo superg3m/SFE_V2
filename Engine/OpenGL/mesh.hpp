@@ -22,6 +22,7 @@ namespace OpenGL {
         u32 base_vertex  = 0; // starting offset to next vertex in the vertex buffer
         u32 base_index   = 0; // offset to next index in the index buffer
         u32 material_index = 0;
+        AABB aabb;
 
         template<typename T>
         static MeshEntry create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<GLuint> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0, u32 material_index = 0) {
@@ -44,6 +45,7 @@ namespace OpenGL {
         ElementBufferObject ebo;
         std::vector<MeshEntry> meshes;
         std::vector<Material> materials;
+        AABB aabb;
 
         template<typename T>
         static Mesh create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<GLuint> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0) {

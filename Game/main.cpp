@@ -4,6 +4,16 @@
 const int WIDTH = 800;
 const int HEIGHT = 800;
 
+struct TextureTable {
+    OpenGL::Texture face;
+    OpenGL::Texture container;
+
+    void initalize() {
+        this->face = OpenGL::Texture::load_from_file(1, "../../Assets/Textures/awesomeface.png");
+        this->container = OpenGL::Texture::load_from_file(1, "../../Assets/Textures/container.jpg");
+    }
+};
+
 struct ShaderTable {
     OpenGL::Shader box_shader;
     OpenGL::Shader model_shader;
@@ -19,6 +29,7 @@ struct ShaderTable {
     }
 };
 
+TextureTable textures;
 ShaderTable shaders;
 
 GLFWwindow* GLFW_INIT() {
@@ -67,74 +78,11 @@ int main(int argc, char** argv) {
     // input.previous_mouse
     // input.current_mouse
     // glm::vec3 delta = input.current - input.previous;
-
-    std::vector<float> vertices = {
-        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,   1, 1, 1,   1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 0.0f,
-
-        -0.5f, -0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,   1, 1, 1,   0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f
-    };
-
-    OpenGL::VertexLayout layout = OpenGL::VertexLayout::create({
-        OpenGL::VertexElement{0, OpenGL::BufferStrideTypeInfo::VEC3},
-        OpenGL::VertexElement{sizeof(glm::vec3), OpenGL::BufferStrideTypeInfo::VEC3},
-        OpenGL::VertexElement{sizeof(glm::vec3) * 2, OpenGL::BufferStrideTypeInfo::VEC2}
-    });
-
-
-    OpenGL::Texture container_texture = OpenGL::Texture::load_from_file(0, "../../Assets/Textures/container.jpg");
-    OpenGL::Texture face_texture = OpenGL::Texture::load_from_file(1, "../../Assets/Textures/awesomeface.png");
-
     shaders.initalize();
+    textures.initalize();
 
     OpenGL::RenderQueue queue;
-    // OpenGL::Material material = {};
-    // material.set_texture("diffuse_texture", container_texture);
-    // material.set_texture("face", face_texture);
-    // OpenGL::Mesh mesh = OpenGL::Mesh::create(layout, vertices);
-    // mesh.meshes.push_back(OpenGL::MeshEntry::create(layout, vertices));
-    // mesh.materials.push_back(material);
-
     OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file("../../Assets/Models/backpack/backpack.obj"); // OpenGL::Mesh::create(layout, vertices);
-    // backpack_mesh.meshes.push_back(OpenGL::MeshEntry::create(layout, vertices));
-    // backpack_mesh.materials.push_back(material);
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -166,10 +114,12 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni): 
+- [] Render aabbs for both the main mesh and the submeshes!
+- [] Start shifting the responsibility on the entity system
 - [] REMOVE ALL OPENGL DOGSHIT TYPES just use u32 and be done with it haha
 - [] Initialize everything with {} and also default params on the struct members!
-- [] Load models with assimp (animations too eventually)
-- [] so you don't span missing uniform, in the map insert have a like errored bool and then don't report after the first time
+- [x] Load models with assimp 
+- [] load animations with assimp
 
 SRT : THIS IS IMPORTANT!!!
 Column vector | (GLM): T * R * S	| S → R → T
@@ -178,7 +128,7 @@ Row vector    | (GM):  S * R * T	| S → R → T
 // so you got to specify the shader, mat, and the mesh for a mesh component
 new MeshComponent(shader, mat, mesh)
 
-- [] Remove concept of model an made it so that you Entity* e = load_model(path);
+- [] Remove concept of model an made it so that you Entity* e = Entity::load_model(path);
     - [] heirarchy of meshes
 
 
