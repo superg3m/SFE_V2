@@ -5,7 +5,16 @@
 #include <texture.hpp>
 
 namespace OpenGL {
+    /*
     struct Material {
+        sampler2D diffuse_texture
+        float opacity;
+    }
+    */
+
+    struct Material {
+        static constexpr const char* DIFFUSE_TEXTURE = "diffuse_texture"; // texture unit = aiTextureType_DIFFUSE
+
         std::map<std::string, bool> boolean_uniforms;
         std::map<std::string, int> integer_uniforms;
         std::map<std::string, float> float_uniforms;

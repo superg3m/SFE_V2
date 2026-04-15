@@ -16,6 +16,12 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+#include <stb_image.h>
+
 using u8  = uint8_t;
 using u16 = uint16_t;
 using u32 = uint32_t;

@@ -91,8 +91,8 @@ if IS_WINDOWS():
         inject += ["-L/ucrt64/lib", "-lassimp"]
 
     libs += [
-        #glfw_lib,
-        #f"{RELATIVE_ASSIMP_ROOT}/bin/windows/assimp-vc143-mtd.lib",
+        glfw_lib,
+        f"{RELATIVE_ASSIMP_ROOT}/bin/windows/assimp-vc143-mtd.lib",
         GET_LIB_FLAG(cc, "Kernel32"),
         GET_LIB_FLAG(cc, "User32"),
         GET_LIB_FLAG(cc, "Gdi32"),
@@ -103,7 +103,7 @@ elif IS_DARWIN():
     inject += ["-Wl,-rpath,@executable_path"]
     libs += [
         f"{RELATIVE_GLFW_ROOT}/bin/macos/lib-arm64/libglfw3.a",
-        #f"{RELATIVE_ASSIMP_ROOT}/bin/macos/libassimp.dylib",
+        f"{RELATIVE_ASSIMP_ROOT}/bin/macos/libassimp.dylib",
         "-framework OpenGL",
         "-framework Cocoa",
         "-framework IOKit",
@@ -122,7 +122,7 @@ INCLUDES = [
     RELATIVE_GLM_ROOT,
     RELATIVE_GLFW_ROOT,
     f"{RELATIVE_GLAD_ROOT}/include",
-    # f"{RELATIVE_ASSIMP_ROOT}/include",
+    f"{RELATIVE_ASSIMP_ROOT}/include",
 ]
 
 # ---------------------------------------------------------------------------------------
@@ -167,5 +167,4 @@ if IS_WINDOWS():
 
     COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/windows", "assimp-vc143-mtd.dll", ABSOLUTE_GAME_BUILD)
 elif IS_DARWIN():
-    #COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_GAME_BUILD)
-    pass
+    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_GAME_BUILD)

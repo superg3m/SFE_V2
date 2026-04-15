@@ -6,13 +6,16 @@ const int HEIGHT = 800;
 
 struct ShaderTable {
     OpenGL::Shader box_shader;
+    OpenGL::Shader model_shader;
 
     void initalize() {
         this->box_shader = OpenGL::Shader::create({"../../Shaders/cube.vert", "../../Shaders/cube.frag"});
+        this->model_shader = OpenGL::Shader::create({"../../Shaders/model.vert", "../../Shaders/model.frag"});
     }
 
     void compile() {
         this->box_shader.compile();
+        this->model_shader.compile();
     }
 };
 
@@ -66,52 +69,53 @@ int main(int argc, char** argv) {
     // glm::vec3 delta = input.current - input.previous;
 
     std::vector<float> vertices = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,   1, 1, 1,   1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 0.0f,
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,   1, 1, 1,   0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
 
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
 
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
 
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+        -0.5f,  0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,   1, 1, 1,   1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,   1, 1, 1,   1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,   1, 1, 1,   0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,   1, 1, 1,   0.0f, 1.0f
     };
 
     OpenGL::VertexLayout layout = OpenGL::VertexLayout::create({
         OpenGL::VertexElement{0, OpenGL::BufferStrideTypeInfo::VEC3},
-        OpenGL::VertexElement{sizeof(glm::vec3), OpenGL::BufferStrideTypeInfo::VEC2}
+        OpenGL::VertexElement{sizeof(glm::vec3), OpenGL::BufferStrideTypeInfo::VEC3},
+        OpenGL::VertexElement{sizeof(glm::vec3) * 2, OpenGL::BufferStrideTypeInfo::VEC2}
     });
 
 
@@ -121,13 +125,16 @@ int main(int argc, char** argv) {
     shaders.initalize();
 
     OpenGL::RenderQueue queue;
-    OpenGL::Material material = {};
-    material.set_texture("container", container_texture);
-    material.set_texture("face", face_texture);
+    // OpenGL::Material material = {};
+    // material.set_texture("diffuse_texture", container_texture);
+    // material.set_texture("face", face_texture);
+    // OpenGL::Mesh mesh = OpenGL::Mesh::create(layout, vertices);
+    // mesh.meshes.push_back(OpenGL::MeshEntry::create(layout, vertices));
+    // mesh.materials.push_back(material);
 
-    OpenGL::Mesh mesh = OpenGL::Mesh::create(layout, vertices);
-    mesh.meshes.push_back(OpenGL::DrawData::create(layout, vertices));
-    mesh.materials.push_back(material);
+    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file("../../Assets/Models/backpack/backpack.obj"); // OpenGL::Mesh::create(layout, vertices);
+    // backpack_mesh.meshes.push_back(OpenGL::MeshEntry::create(layout, vertices));
+    // backpack_mesh.materials.push_back(material);
 
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -137,26 +144,18 @@ int main(int argc, char** argv) {
         glm::mat4 view          = glm::mat4(1.0f);
         glm::mat4 projection    = glm::mat4(1.0f);
         model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
-        view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -8.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 
         OpenGL::RenderCommand command = {};
-        command.shader = &shaders.box_shader;
-        command.mesh = &mesh;
+        command.shader = &shaders.model_shader;
+        command.mesh = &backpack_mesh;
         command.model = model;
         command.view = view;
         command.projection = projection;
 
         queue.submit(command);
-
-
-        model = glm::translate(model, glm::vec3(-1, 0, 0));
-        command.model = model;
-        queue.submit(command);
-
         queue.draw();
-
-        // OpenGL::render_model(cube_model, &shader);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -167,27 +166,14 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni): 
-- [x] probably I shouldn't even allow you to create a VBO if you don't have a VAO (since it doesn't work on mac)
-- [] RenderQueue is really smart, every frame an entity with the mesh component will submit itself to the render queue.
-struct RenderCommand {
-    Shader* shader;
-    Mesh* mesh;
-    Material* material; // pointer only to avoid copying
-    glm::mat4 model;
-};
+- [] REMOVE ALL OPENGL DOGSHIT TYPES just use u32 and be done with it haha
+- [] Initialize everything with {} and also default params on the struct members!
+- [] Load models with assimp (animations too eventually)
+- [] so you don't span missing uniform, in the map insert have a like errored bool and then don't report after the first time
 
-- [] ShaderTable
-
-struct ShaderTable {
-    Shader default_shader;
-    Shader standard_shader; 
-    Shader pbr_shader; 
-    Shader frasnel_shader; 
-
-    // ui shaders
-    Shader ui_shader;
-    // ...
-}
+SRT : THIS IS IMPORTANT!!!
+Column vector | (GLM): T * R * S	| S → R → T
+Row vector    | (GM):  S * R * T	| S → R → T
 
 // so you got to specify the shader, mat, and the mesh for a mesh component
 new MeshComponent(shader, mat, mesh)
@@ -204,65 +190,4 @@ new MeshComponent(shader, mat, mesh)
 
     - To ensure some dederminism Entities need to update their children
     - Components will just be a vector or hashmap on the actutal entity
-
-    class GameObject {
-    public:
-        virtual ~GameObject() = default;
-        virtual void Update(float deltaTime);
-        const std::string& GetName() const;
-        void SetName(const std::string& name);
-        GameObject* GetParent();
-        bool SetParent(GameObject* parent);
-        Scene* GetScene();
-        bool IsAlive() const;
-        void MarkForDestroy();
-
-        void AddComponent(Component* component);
-        template<typename T, typename = typename std::enable_if_t<std::is_base_of_v<Component, T>>>
-        T* GetComponent()
-        {
-            size_t typeId = Component::StaticTypeId<T>();
-
-            for (auto& component : m_components)
-            {
-                if (component->GetTypeId() == typeId)
-                {
-                    return static_cast<T*>(component.get());
-                }
-            }
-
-            return nullptr;
-        }
-
-        const glm::vec3& GetPosition() const;
-        glm::vec3 GetWorldPosition() const;
-        void SetPosition(const glm::vec3& pos);
-
-        const glm::quat& GetRotation() const;
-        void SetRotation(const glm::quat& rot);
-
-        const glm::vec3& GetScale() const;
-        void SetScale(const glm::vec3& scale);
-
-        glm::mat4 GetLocalTransform() const;
-        glm::mat4 GetWorldTransform() const;
-
-        static GameObject* LoadGLTF(const std::string& path);
-
-    protected:
-        GameObject() = default;
-
-    private:
-        std::string m_name;
-        GameObject* m_parent = nullptr;
-        Scene* m_scene = nullptr;
-        std::vector<std::unique_ptr<GameObject>> m_children;
-        std::vector<std::unique_ptr<Component>> m_components;
-        bool m_isAlive = true;
-        glm::vec3 m_position = glm::vec3(0.0f);
-        glm::quat m_rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-        glm::vec3 m_scale = glm::vec3(1.0f);
-
-        friend class Scene;
-    };
 */

@@ -78,7 +78,7 @@ namespace OpenGL {
 
     GLenum Shader::type_from_path(std::string shader_source_path) {
         size_t extension_index = shader_source_path.find_last_of(".");
-        // RUNTIME_ASSERT_MSG(extension_index == string::npos, "Missing extension (.vert, .frag)\n");
+        RUNTIME_ASSERT_MSG(extension_index != std::string::npos, "Missing extension (.vert, .frag)\n");
         
         std::string extension = std::string(shader_source_path.c_str() + extension_index);
         if (extension.find(".vert") != std::string::npos) {

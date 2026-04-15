@@ -1,5 +1,4 @@
 #include <texture.hpp>
-#include <stb_image.h>
 #include <gl_error_check.hpp>
 
 namespace OpenGL {
