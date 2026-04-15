@@ -13,7 +13,7 @@ namespace OpenGL {
     */
 
     struct Material {
-        static constexpr const char* DIFFUSE_TEXTURE = "diffuse_texture"; // texture unit = aiTextureType_DIFFUSE
+        static constexpr const char* DIFFUSE_TEXTURE = "uDiffuseTexture"; // texture unit = aiTextureType_DIFFUSE
 
         std::map<std::string, bool> boolean_uniforms;
         std::map<std::string, int> integer_uniforms;

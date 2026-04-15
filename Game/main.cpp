@@ -121,6 +121,15 @@ TODO(Jovanni):
 - [x] Load models with assimp 
 - [] load animations with assimp
 
+SkyBoxComponent 
+OpenGL::RenderCommand command = {};
+command.shader = &shaders.model_shader;
+command.mesh = &backpack_mesh;
+command.model = identity;
+command.view = glm::mat4(glm::mat3(view)); // remove translation
+command.projection = projection;
+
+
 SRT : THIS IS IMPORTANT!!!
 Column vector | (GLM): T * R * S	| S → R → T
 Row vector    | (GM):  S * R * T	| S → R → T
