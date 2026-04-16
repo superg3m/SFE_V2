@@ -122,6 +122,9 @@ int main(int argc, char** argv) {
 /*
 TODO(Jovanni):
 - [] Render aabbs for both the main mesh and the submeshes!
+- [] entity manager, should have like all the entities[], should have:
+    std::vector<Entity*> QueryComponentList<MeshComponent>() 
+    std::vector<Entity*> QuerySetComponentList<MeshComponent, GravityComponent...>()
 - [] Start shifting the responsibility on the entity system
 - [] Need to really think about how the hierarchy stuff is gonna owrk witih rendering
     - the reason this is a difficult problem is because you want to use the offset into the VBO
