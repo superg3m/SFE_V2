@@ -166,15 +166,6 @@ struct AABB {
         return ret;
     }
 
-    glm::mat4 to_matrix_transform(glm::quat rotation = glm::quat(1, 0, 0, 0)) {
-        glm::mat4 transform = glm::mat4(1);
-        transform = glm::translate(transform, this->get_center());
-        transform = transform * glm::mat4_cast(rotation);
-        transform = glm::scale(transform, this->get_extents() * 1.005f); // scale to stop z-fighting
-
-        return transform;
-    }
-
     glm::vec3 get_center() {
         glm::vec3 extents = this->get_extents();
         return glm::vec3(min.x + extents.x, min.y + extents.y, min.z + extents.z);

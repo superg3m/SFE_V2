@@ -102,9 +102,9 @@ int main(int argc, char** argv) {
     materials.initalize();
 
     OpenGL::RenderQueue queue = OpenGL::RenderQueue::create(&render_state);
-    // OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
-    OpenGL::Mesh cube_mesh = OpenGL::Mesh::cube();
-    OpenGL::Mesh defafult_aabb_mesh = OpenGL::Mesh::AABB();
+    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
+    // OpenGL::Mesh cube_mesh = OpenGL::Mesh::cube();
+    OpenGL::Mesh backpack_aabb_mesh = OpenGL::Mesh::AABB(backpack_mesh.aabb);
 
     while (!glfwWindowShouldClose(window)) {
         gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
@@ -115,33 +115,22 @@ int main(int argc, char** argv) {
         glm::mat4 projection    = glm::mat4(1.0f);
         glm::quat rotation = glm::angleAxis((float)glfwGetTime() / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
         model = model * glm::mat4_cast(rotation);
+        model = glm::scale(model, glm::vec3((sin((float)glfwGetTime()) + 2), 1, 1));
         view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 
-        OpenGL::RenderCommandOpaque command = {};
         {
-            command.vao = &cube_mesh.vao;
-            command.entry = &cube_mesh.meshes[0];
-            command.material = &materials.uniform_color_red;
+            OpenGL::RenderCommandOpaque command = {};
+            command.vao = &backpack_aabb_mesh.vao;
+            command.entry = &backpack_aabb_mesh.meshes[0];
+            command.material = &materials.uniform_color_green;
             command.model = model;
             command.view = view;
             command.projection = projection;
             queue.submit(command);
         }
-
-        {
-            command.vao = &defafult_aabb_mesh.vao;
-            command.entry = &defafult_aabb_mesh.meshes[0];
-            command.material = &materials.uniform_color_green;
-            command.model = cube_mesh.aabb.to_matrix_transform(rotation);
-            command.view = view;
-            command.projection = projection;
-            queue.submit(command);
-        }
-
-        /*
         for (OpenGL::MeshEntry& entry : backpack_mesh.meshes) {
-            command = {};
+            OpenGL::RenderCommandOpaque command = {};
             command.vao = &backpack_mesh.vao;
             command.entry = &entry;
             command.material = &backpack_mesh.materials[entry.material_index];
@@ -150,7 +139,6 @@ int main(int argc, char** argv) {
             command.projection = projection;
             queue.submit(command);
         }
-        */
         
         queue.draw();
 

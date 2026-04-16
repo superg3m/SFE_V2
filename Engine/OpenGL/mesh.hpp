@@ -115,30 +115,55 @@ namespace OpenGL {
             return ret;
         }
 
-        static Mesh AABB() {
+        static Mesh AABB(AABB aabb) {
+            // glm::vec3 center = aabb.getCenter();
+            glm::vec3 extents = aabb.get_extents();
+            float length = extents.x * 2.0f;
+            float height = extents.y * 2.0f;
+            float width  = extents.z * 2.0f;
+
+            // bottom and top
+            //  4          2
+            //  ------------
+            //  |          |
+            //  |          |
+            //  |          |
+            //  ------------
+            //  0          1
+
+            glm::vec3 bottom_0 = aabb.min;
+            glm::vec3 bottom_1 = glm::vec3(aabb.min.x + length, aabb.min.y, aabb.min.z);
+            glm::vec3 bottom_2 = glm::vec3(aabb.min.x + length, aabb.min.y, aabb.min.z + width);
+            glm::vec3 bottom_3 = glm::vec3(aabb.min.x, aabb.min.y, aabb.min.z + width);
+
+            glm::vec3 top_0 = glm::vec3(aabb.min.x, aabb.min.y + height, aabb.min.z);
+            glm::vec3 top_1 = glm::vec3(aabb.min.x + length, aabb.min.y + height, aabb.min.z);
+            glm::vec3 top_2 = aabb.max;
+            glm::vec3 top_3 = glm::vec3(aabb.min.x, aabb.min.y + height, aabb.min.z + width);
+
             std::vector<Vertex> aabb_vertices = {
                 // Bottom face
-                Vertex{glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-                Vertex{glm::vec3( 1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-                Vertex{glm::vec3( 1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-                Vertex{glm::vec3(-1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(bottom_0), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(bottom_1), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(bottom_1), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(bottom_2), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(bottom_2), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(bottom_3), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(bottom_3), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(bottom_0), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
 
-                // Top face
-                Vertex{glm::vec3(-1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-                Vertex{glm::vec3( 1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-                Vertex{glm::vec3( 1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-                Vertex{glm::vec3(-1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                // Top glm::vec3(face
+                Vertex{glm::vec3(top_0), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(top_1), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(top_1), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(top_2), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(top_2), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(top_3), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(top_3), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(top_0), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
 
                 // Vertical edges
-                Vertex{glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-                Vertex{glm::vec3( 1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-                Vertex{glm::vec3( 1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
-                Vertex{glm::vec3(-1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(bottom_0), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(top_0), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(bottom_1), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(top_1), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(bottom_2), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(top_2), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(bottom_3), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(top_3), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
             };
 
             Mesh ret;
             ret.vertices = aabb_vertices;
-            ret.meshes.push_back(MeshEntry::create(VertexLayout::PNT(), aabb_vertices, {}, GL_LINES));  
+            ret.meshes.push_back(MeshEntry::create(VertexLayout::PNT(), ret.vertices, ret.indices, GL_LINES));  
             ret.setup();
 
             return ret;
