@@ -62,8 +62,8 @@ GLFWwindow* GLFW_INIT() {
     glfwSwapInterval(1);
     // glfwSetInputMode(window, GLFW_CURSOR, mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 
-    gl_check_error(glEnable(GL_MULTISAMPLE));
-    gl_check_error(glEnable(GL_DEPTH_TEST));
+    gl_error_check(glEnable(GL_MULTISAMPLE));
+    gl_error_check(glEnable(GL_DEPTH_TEST));
     // glEnable(GL_CULL_FACE);
     // glCullFace(GL_FRONT); 
     // glEnable(GL_FRAMEBUFFER_SRGB);
@@ -74,6 +74,8 @@ GLFWwindow* GLFW_INIT() {
 int main(int argc, char** argv) {
     GLFWwindow* window = GLFW_INIT();
 
+    OpenGL::RenderState render_state = {};
+
     // InputSystem input;
     // input.previous_mouse
     // input.current_mouse
@@ -81,12 +83,12 @@ int main(int argc, char** argv) {
     shaders.initalize();
     textures.initalize();
 
-    OpenGL::RenderQueue queue;
-    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file("../../Assets/Models/backpack/backpack.obj"); // OpenGL::Mesh::create(layout, vertices);
+    OpenGL::RenderQueue queue = OpenGL::RenderQueue::create(&render_state);
+    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&shaders.model_shader, "../../Assets/Models/backpack/backpack.obj"); // OpenGL::Mesh::create(layout, vertices);
 
     while (!glfwWindowShouldClose(window)) {
-        gl_check_error(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
-        gl_check_error(glClearColor(0.2, 0.2, 0.2, 1));
+        gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
+        gl_error_check(glClearColor(0.2, 0.2, 0.2, 1));
 
         glm::mat4 model         = glm::mat4(1.0f);
         glm::mat4 view          = glm::mat4(1.0f);
@@ -97,7 +99,6 @@ int main(int argc, char** argv) {
 
         for (OpenGL::MeshEntry& entry : backpack_mesh.meshes) {
             OpenGL::RenderCommandOpaque command = {};
-            command.shader = &shaders.model_shader;
             command.vao = &backpack_mesh.vao;
             command.entry = &entry;
             command.material = &backpack_mesh.materials[entry.material_index];
@@ -120,9 +121,9 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni):
-- [x] Rename some stuff thats annoying for example VAO and VBO (its a lot of typing...)
-- [] REMOVE ALL OPENGL DOGSHIT TYPES just use u32 and be done with it haha
 - [] RenderState (store like active vao, are you in wireframe mode, are you depth testing and so on)
+- [] Material group instead of doing std::vector<Material> materials
+    you will have one MaterialGroup and then in there you have std::map<int, std::map<const char*, BindingValue>> bindings;
 - [] Start shifting the responsibility on the entity system
 - [] Render aabbs for both the main mesh and the submeshes!
 - [] Need to really think about how the hierarchy stuff is gonna owrk witih rendering
@@ -177,13 +178,13 @@ TODO(Jovanni):
             }
         
             if (entry.index_count > 0) {
-                gl_check_error(glDrawElementsBaseVertex(
+                gl_error_check(glDrawElementsBaseVertex(
                     entry.draw_type, entry.index_count, GL_UNSIGNED_INT, 
                     (void*)(sizeof(unsigned int) * entry.base_index), 
                     entry.base_vertex
                 ));
             } else {
-                gl_check_error(glDrawArrays(
+                gl_error_check(glDrawArrays(
                     entry.draw_type,
                     entry.base_vertex,
                     entry.vertex_count

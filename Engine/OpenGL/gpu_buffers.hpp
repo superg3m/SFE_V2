@@ -48,9 +48,9 @@ namespace OpenGL {
 
 
             vao.bind();
-            gl_check_error(glGenBuffers(1, &ret.id));
-            gl_check_error(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
-            gl_check_error(glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(T), buffer.data(), gl_usage));
+            gl_error_check(glGenBuffers(1, &ret.id));
+            gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
+            gl_error_check(glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(T), buffer.data(), gl_usage));
 
             int location = 0;
             for (VertexElement desc : layout.elements) {
@@ -68,13 +68,13 @@ namespace OpenGL {
             this->bind();
 
             #if 0
-                void *ptr = gl_check_error(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
+                void *ptr = gl_error_check(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
                 size_t buffer_size = sizeof(T) * buffer.count();
                 Memory::Copy(ptr, buffer_size, buffer.data(), buffer_size);
-                gl_check_error(glUnmapBuffer(GL_ARRAY_BUFFER));
+                gl_error_check(glUnmapBuffer(GL_ARRAY_BUFFER));
             #else
-                gl_check_error(glBindBuffer(GL_ARRAY_BUFFER, this->id));
-                gl_check_error(glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(T) * buffer.count(), buffer.data()));
+                gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, this->id));
+                gl_error_check(glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(T) * buffer.count(), buffer.data()));
             #endif
         }
 
@@ -90,9 +90,9 @@ namespace OpenGL {
 
             if (indices.size()) {
                 vao.bind();
-                gl_check_error(glGenBuffers(1, &ret.id));
-                gl_check_error(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ret.id));
-                gl_check_error(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(u32), indices.data(), gl_usage));
+                gl_error_check(glGenBuffers(1, &ret.id));
+                gl_error_check(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ret.id));
+                gl_error_check(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(u32), indices.data(), gl_usage));
             }
 
             return ret;

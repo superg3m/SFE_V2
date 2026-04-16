@@ -5,6 +5,7 @@
 #include <texture.hpp>
 
 namespace OpenGL {
+    struct Shader;
     enum class BindingValueType {
         BOOL,
         INTEGER,
@@ -35,6 +36,14 @@ namespace OpenGL {
     struct Material {
         static constexpr const char* DIFFUSE_TEXTURE = "uDiffuseTexture"; // texture unit = aiTextureType_DIFFUSE
 
+        static Material create(Shader* shader) {
+            Material ret = {};
+            ret.shader = shader;
+
+            return ret;
+        }
+
+        Shader* shader = nullptr;
         std::map<std::string, BindingValue> bindings;
 
         void set_bool(const char* name, bool value);

@@ -58,7 +58,7 @@ namespace OpenGL {
         }
 
         // TODO(Complete this): actually maybe not because this is pretty much an entity thing?
-        static Mesh load_from_file(std::string path);
+        static Mesh load_from_file(Shader* shader, std::string path);
 
     private:
         std::vector<Vertex> vertices;

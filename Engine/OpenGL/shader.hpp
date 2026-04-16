@@ -8,6 +8,7 @@
 #include <material.hpp>
 
 namespace OpenGL {
+    struct RenderState;
     struct UniformDesc {
         GLenum type;
         int location;
@@ -19,7 +20,7 @@ namespace OpenGL {
         static Shader create(std::vector<const char*> shader_paths);
         void compile();
 
-        void use() const;
+        void use(RenderState* render_state) const;
         void set_model(glm::mat4 &model);
         void set_view(glm::mat4 &view);
         void set_projection(glm::mat4 &projection);
@@ -61,7 +62,7 @@ namespace OpenGL {
                     } break;
 
                     case BindingValueType::CUBEMAP: {
-                        this->set_texture_cube(k.c_str(), v.cubemap_binding);
+                        this->set_texture_cube( k.c_str(), v.cubemap_binding);
                     } break;
 
                     case BindingValueType::VECTOR2: {

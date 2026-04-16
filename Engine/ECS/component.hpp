@@ -73,7 +73,6 @@ struct PlayerControllerComponent : public Component {
 struct MeshComponent : public Component {
 	using Component::Component;
 
-	OpenGL::Shader* shader = nullptr;
 	OpenGL::VAO* vao = nullptr;
 	OpenGL::MeshEntry* entry = nullptr;
 	OpenGL::Material* material = nullptr;

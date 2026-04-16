@@ -181,7 +181,7 @@ namespace OpenGL {
         }
     }
 
-    Mesh Mesh::load_from_file(std::string path) {
+    Mesh Mesh::load_from_file(Shader* shader, std::string path) {
         Mesh ret = {};
         Assimp::Importer importer;
         unsigned int assimp_flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;
@@ -211,6 +211,7 @@ namespace OpenGL {
         std::string directory = path.substr(0, index);
         for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
             const aiMaterial* ai_material = scene->mMaterials[i];
+            ret.materials[i].shader = shader;
 
             /*
             aiColor4D ambient_color(0.0f, 0.0f, 0.0f, 0.0f);

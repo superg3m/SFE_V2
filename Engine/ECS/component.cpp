@@ -24,7 +24,6 @@ void MeshComponent::update(float dt) {
     glm::mat4 projection    = glm::mat4(1.0f);
 
     OpenGL::RenderCommandOpaque command = {};
-    command.shader = this->shader;
     command.vao = this->vao;
     command.entry = this->entry;
     command.material = this->material;

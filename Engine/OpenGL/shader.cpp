@@ -1,5 +1,6 @@
 #include <shader.hpp>
 #include <gl_error_check.hpp>
+#include <render_state.hpp>
 
 namespace OpenGL {
     u32 Shader::create_shader_program(std::vector<const char*> shader_paths) {
@@ -96,9 +97,9 @@ namespace OpenGL {
     void Shader::check_compile_error(unsigned int source_id, const char* path) {
         int success;
         char info_log[1024];
-        gl_check_error(glGetShaderiv(source_id, GL_COMPILE_STATUS, &success));
+        gl_error_check(glGetShaderiv(source_id, GL_COMPILE_STATUS, &success));
         if (!success) {
-            gl_check_error(glGetShaderInfoLog(source_id, 1024, NULL, info_log));
+            gl_error_check(glGetShaderInfoLog(source_id, 1024, NULL, info_log));
             LOG_ERROR("ERROR::SHADER_COMPILATION_ERROR {%s}\n", path);
             LOG_ERROR("%s -- --------------------------------------------------- --\n", info_log);
         }
@@ -112,8 +113,8 @@ namespace OpenGL {
 
         GLenum type = this->type_from_path(path);
         unsigned int source_id = glCreateShader(type);
-        gl_check_error(glShaderSource(source_id, 1, &shader_source, NULL));
-        gl_check_error(glCompileShader(source_id));
+        gl_error_check(glShaderSource(source_id, 1, &shader_source, NULL));
+        gl_error_check(glCompileShader(source_id));
 
         this->check_compile_error(source_id, path);
         free(shader_source);
@@ -141,8 +142,8 @@ namespace OpenGL {
         return location;
     }
 
-    void Shader::use() const {
-        glUseProgram(this->program_id);
+    void Shader::use(RenderState* render_state) const {
+        render_state->bind_shader_program_or_use_cached(this->program_id);
     }
 
     // TODO(Jovanni): Make this use the locations instead of string lookups
@@ -159,61 +160,49 @@ namespace OpenGL {
     }
 
     void Shader::set_bool(const char* name, bool value) {
-        this->use();
-        gl_check_error(glUniform1i(this->get_uniform_location(name, GL_BOOL), (int)value));
+        gl_error_check(glUniform1i(this->get_uniform_location(name, GL_BOOL), (int)value));
     }
     void Shader::set_int(const char* name, int value) {
-        this->use();
-        gl_check_error(glUniform1i(this->get_uniform_location(name, GL_INT), value));
+        gl_error_check(glUniform1i(this->get_uniform_location(name, GL_INT), value));
     }
     void Shader::set_texture(const char* name, Texture texture) {
         RUNTIME_ASSERT(texture.type == TextureSamplerType::SAMPLER_2D);
 
-        gl_check_error(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
-        gl_check_error(glBindTexture(GL_TEXTURE_2D, texture.id));
+        gl_error_check(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
+        gl_error_check(glBindTexture(GL_TEXTURE_2D, texture.id));
 
-        this->use();
-        gl_check_error(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_2D), texture.texture_unit));
+        gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_2D), texture.texture_unit));
     }
-    void Shader::set_texture_cube(const char* name, Texture texture) {
+    void Shader::set_texture_cube( const char* name, Texture texture) {
         RUNTIME_ASSERT(texture.type == TextureSamplerType::CUBEMAP_3D);
 
-        gl_check_error(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
-        gl_check_error(glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id));
+        gl_error_check(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
+        gl_error_check(glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id));
 
-        this->use();
-        gl_check_error(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_CUBE), texture.texture_unit));
+        gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_CUBE), texture.texture_unit));
     }
     void Shader::set_float(const char* name, float value) {
-        this->use();
-        gl_check_error(glUniform1f(this->get_uniform_location(name, GL_FLOAT), value));
+        gl_error_check(glUniform1f(this->get_uniform_location(name, GL_FLOAT), value));
     }
     void Shader::set_vec2(const char* name, const glm::vec2& value) {
-        this->use();
-        gl_check_error(glUniform2fv(this->get_uniform_location(name, GL_FLOAT_VEC2), 1, &value[0]));
+        gl_error_check(glUniform2fv(this->get_uniform_location(name, GL_FLOAT_VEC2), 1, &value[0]));
     }
     void Shader::set_vec2(const char* name, float x, float y) {
-        this->use();
-        gl_check_error(glUniform2f(this->get_uniform_location(name, GL_FLOAT_VEC2), x, y));
+        gl_error_check(glUniform2f(this->get_uniform_location(name, GL_FLOAT_VEC2), x, y));
     }
     void Shader::set_vec3(const char* name, const glm::vec3& value) {
-        this->use();
-        gl_check_error(glUniform3fv(this->get_uniform_location(name, GL_FLOAT_VEC3), 1, &value[0]));
+        gl_error_check(glUniform3fv(this->get_uniform_location(name, GL_FLOAT_VEC3), 1, &value[0]));
     }
     void Shader::set_vec3(const char* name, float x, float y, float z) {
-        this->use();
-        gl_check_error(glUniform3f(this->get_uniform_location(name, GL_FLOAT_VEC3), x, y, z));
+        gl_error_check(glUniform3f(this->get_uniform_location(name, GL_FLOAT_VEC3), x, y, z));
     }
     void Shader::set_vec4(const char* name, const glm::vec4& value) {
-        this->use();
-        gl_check_error(glUniform4fv(this->get_uniform_location(name, GL_FLOAT_VEC4), 1, &value[0]));
+        gl_error_check(glUniform4fv(this->get_uniform_location(name, GL_FLOAT_VEC4), 1, &value[0]));
     }
     void Shader::set_vec4(const char* name, float x, float y, float z, float w) {
-        this->use();
-        gl_check_error(glUniform4f(this->get_uniform_location(name, GL_FLOAT_VEC4), x, y, z, w));
+        gl_error_check(glUniform4f(this->get_uniform_location(name, GL_FLOAT_VEC4), x, y, z, w));
     }
     void Shader::set_mat4(const char* name, const glm::mat4& mat) {
-        this->use();
-        gl_check_error(glUniformMatrix4fv(this->get_uniform_location(name, GL_FLOAT_MAT4), 1, GL_FALSE, &mat[0][0]));
+        gl_error_check(glUniformMatrix4fv(this->get_uniform_location(name, GL_FLOAT_MAT4), 1, GL_FALSE, &mat[0][0]));
     }
 }

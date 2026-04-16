@@ -8,7 +8,7 @@ namespace OpenGL {
         GLenum gl_type  = is_integer ? GL_INT : GL_FLOAT;
 
         int max_attributes = 0;
-        gl_check_error(glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_attributes));
+        gl_error_check(glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &max_attributes));
         RUNTIME_ASSERT_MSG(max_attributes > location, "Location outside range");
 
         if (is_matrix) {
@@ -18,21 +18,21 @@ namespace OpenGL {
                     max_attributes
                 );
 
-                gl_check_error(glEnableVertexAttribArray(location + i));
-                gl_check_error(glVertexAttribPointer(location + i, (int)BufferStrideTypeInfo::VEC4, GL_FLOAT, false, stride, (void*)(desc.offset + (sizeof(glm::vec4) * i))));
-                gl_check_error(glVertexAttribDivisor(location + i, instanced));
+                gl_error_check(glEnableVertexAttribArray(location + i));
+                gl_error_check(glVertexAttribPointer(location + i, (int)BufferStrideTypeInfo::VEC4, GL_FLOAT, false, stride, (void*)(desc.offset + (sizeof(glm::vec4) * i))));
+                gl_error_check(glVertexAttribDivisor(location + i, instanced));
             }
 
             location += 4;
         } else {
-            gl_check_error(glEnableVertexAttribArray(location));
+            gl_error_check(glEnableVertexAttribArray(location));
             if (is_integer) {
-                gl_check_error(glVertexAttribIPointer(location, (int)desc.type, gl_type, stride, (void*)desc.offset));
+                gl_error_check(glVertexAttribIPointer(location, (int)desc.type, gl_type, stride, (void*)desc.offset));
             } else {
-                gl_check_error(glVertexAttribPointer(location, (int)desc.type, gl_type, false, stride, (void*)desc.offset));
+                gl_error_check(glVertexAttribPointer(location, (int)desc.type, gl_type, false, stride, (void*)desc.offset));
             }
 
-            gl_check_error(glVertexAttribDivisor(location, instanced));
+            gl_error_check(glVertexAttribDivisor(location, instanced));
             location += 1;
         }
     }
@@ -56,16 +56,16 @@ namespace OpenGL {
     }
 
     void VBO::bind() {
-        gl_check_error(glBindBuffer(GL_ARRAY_BUFFER, this->id));
+        gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, this->id));
     }
 
     void EBO::bind() {
-        gl_check_error(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->id));
+        gl_error_check(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->id));
     }
 
     VAO VAO::create() {
         VAO ret = {};
-        gl_check_error(glGenVertexArrays(1, &ret.id));
+        gl_error_check(glGenVertexArrays(1, &ret.id));
         ret.bind();
 
         return ret;
@@ -73,6 +73,6 @@ namespace OpenGL {
 
     // pass like a renderer in here to control the currently bound vao, reduce call overhead
     void VAO::bind() {
-        gl_check_error(glBindVertexArray(this->id)); // want to check if already bound
+        gl_error_check(glBindVertexArray(this->id)); // want to check if already bound
     }
 }

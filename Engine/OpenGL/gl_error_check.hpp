@@ -3,11 +3,11 @@
 #include <glad/glad.h>
 #include <core.hpp>
 
-void _GL_CHECK_ERROR(const char* file, int line);
+void _GL_ERROR_CHECK(const char* file, int line);
 
-#define GL_ERROR_CHECK
-#if defined(GL_ERROR_CHECK)
-    #define gl_check_error(glCall) glCall; _GL_CHECK_ERROR(__FILE__, __LINE__) 
+#define ENABLE_GL_ERROR_CHECK
+#if defined(ENABLE_GL_ERROR_CHECK)
+    #define gl_error_check(glCall) glCall; _GL_ERROR_CHECK(__FILE__, __LINE__) 
 #else
-    #define gl_check_error(glCall) glCall
+    #define gl_error_check(glCall) glCall
 #endif

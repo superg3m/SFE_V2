@@ -45,12 +45,12 @@ namespace OpenGL {
         GLenum MIPMAP_TYPE = pixel_perfect ? GL_NEAREST : GL_LINEAR;
 
         TextureID texture = 0;
-        gl_check_error(glGenTextures(1, &texture));
-        gl_check_error(glBindTexture(GL_TEXTURE_2D, texture));
-        gl_check_error(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
-        gl_check_error(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
-        gl_check_error(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, MIPMAP_TYPE));
-        gl_check_error(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, MIPMAP_TYPE));
+        gl_error_check(glGenTextures(1, &texture));
+        gl_error_check(glBindTexture(GL_TEXTURE_2D, texture));
+        gl_error_check(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+        gl_error_check(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+        gl_error_check(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, MIPMAP_TYPE));
+        gl_error_check(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, MIPMAP_TYPE));
 
         GLenum internal_format = 0;
         GLenum pixel_format = 0;
@@ -72,8 +72,8 @@ namespace OpenGL {
             RUNTIME_ASSERT_MSG(false, "Unsupported channel count");
         }
 
-        gl_check_error(glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, pixel_format, GL_UNSIGNED_BYTE, data));
-        gl_check_error(glGenerateMipmap(GL_TEXTURE_2D));
+        gl_error_check(glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, pixel_format, GL_UNSIGNED_BYTE, data));
+        gl_error_check(glGenerateMipmap(GL_TEXTURE_2D));
 
         if (texture == 0) {
             RUNTIME_ASSERT_MSG(false, "TextureLoader | id is invalid for memory texture!\n");
@@ -85,7 +85,7 @@ namespace OpenGL {
         ret.width = width;
         ret.height = height;
 
-        gl_check_error(glBindTexture(GL_TEXTURE_2D, 0));
+        gl_error_check(glBindTexture(GL_TEXTURE_2D, 0));
 
         return ret;
     }
@@ -93,13 +93,13 @@ namespace OpenGL {
     // {right, left, top, bottom, front, back}
     Texture Texture::load_cube_map(TextureUnit texture_unit, std::vector<const char*> texture_paths) {
         TextureID texture = 0;
-        gl_check_error(glGenTextures(1, &texture));
-        gl_check_error(glBindTexture(GL_TEXTURE_CUBE_MAP, texture));
-        gl_check_error(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-        gl_check_error(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        gl_check_error(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-        gl_check_error(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-        gl_check_error(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+        gl_error_check(glGenTextures(1, &texture));
+        gl_error_check(glBindTexture(GL_TEXTURE_CUBE_MAP, texture));
+        gl_error_check(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        gl_error_check(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        gl_error_check(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+        gl_error_check(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+        gl_error_check(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
 
         unsigned char *data = nullptr;  
         for(int i = 0; i < texture_paths.size(); i++) {
@@ -119,7 +119,7 @@ namespace OpenGL {
             }
 
             if (data) {
-                gl_check_error(glTexImage2D(
+                gl_error_check(glTexImage2D(
                     GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
                     0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data
                 ));
@@ -135,7 +135,7 @@ namespace OpenGL {
         ret.id = texture;
         ret.type = TextureSamplerType::CUBEMAP_3D;
 
-        gl_check_error(glBindTexture(GL_TEXTURE_CUBE_MAP, 0));
+        gl_error_check(glBindTexture(GL_TEXTURE_CUBE_MAP, 0));
 
         return ret;
     }
