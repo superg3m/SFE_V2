@@ -2,6 +2,16 @@
 #include <core.hpp>
 
 struct Entity;
+namespace OpenGL {
+	struct Mesh;
+	struct MeshEntry;
+
+	struct Shader;
+	struct Material;
+	struct RenderQueue;
+	struct VertexArrayObject;
+}
+
 struct Component {
 	Entity* owner = nullptr;
 	Component(int i) {}
@@ -19,15 +29,6 @@ protected:
 	static int next_component_id;
 };
 
-struct MeshComponent : public Component {
-	using Component::Component;
-
-	bool should_render = false;
-
-    MeshComponent(Entity* owner, bool should_render);
-	void update(float dt) override;
-};
-
 struct HealthComponent : public Component {
 	using Component::Component;
 
@@ -39,7 +40,6 @@ struct HealthComponent : public Component {
 
 	void Damage(int dmg);
 };
-
 
 struct StatusComponent : public Component {
 	using Component::Component;
@@ -67,6 +67,25 @@ struct PlayerControllerComponent : public Component {
 	using Component::Component;
 
     PlayerControllerComponent(Entity* owner);
+    void update(float dt) override;
+};
+
+struct MeshComponent : public Component {
+	using Component::Component;
+
+	OpenGL::Shader* shader = nullptr;
+	OpenGL::VertexArrayObject* vao = nullptr;
+	OpenGL::MeshEntry* entry = nullptr;
+	OpenGL::Material* material = nullptr;
+	OpenGL::RenderQueue* queue;
+
+	bool should_render_mesh = true;
+	bool render_mesh_wireframe = false;
+
+	// OpenGL::Mesh* aabb_mesh;
+	// bool should_render_mesh_aabb = false;
+
+    MeshComponent(Entity* owner, OpenGL::RenderQueue* queue, OpenGL::Shader* shader, OpenGL::VertexArrayObject* vao, OpenGL::MeshEntry* entry, OpenGL::Material* material);
     void update(float dt) override;
 };
 

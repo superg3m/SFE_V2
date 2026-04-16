@@ -95,14 +95,20 @@ int main(int argc, char** argv) {
         view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -8.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 
-        OpenGL::RenderCommand command = {};
-        command.shader = &shaders.model_shader;
-        command.mesh = &backpack_mesh;
-        command.model = model;
-        command.view = view;
-        command.projection = projection;
+        for (OpenGL::MeshEntry& entry : backpack_mesh.meshes) {
+            OpenGL::RenderCommandOpaque command = {};
+            command.shader = &shaders.model_shader;
+            command.vao = &backpack_mesh.vao;
+            command.entry = &entry;
+            command.material = &backpack_mesh.materials[entry.material_index];
 
-        queue.submit(command);
+            command.model = model;
+            command.view = view;
+            command.projection = projection;
+
+            queue.submit(command);
+        }
+        
         queue.draw();
 
         glfwSwapBuffers(window);
@@ -113,10 +119,80 @@ int main(int argc, char** argv) {
 }
 
 /*
-TODO(Jovanni): 
-- [] Render aabbs for both the main mesh and the submeshes!
+TODO(Jovanni):
+- [] Rename some stuff thats annoying for example VertexArrayObject and VertexBufferObject (its a lot of typing...)
 - [] Start shifting the responsibility on the entity system
+- [] Render aabbs for both the main mesh and the submeshes!
 - [] REMOVE ALL OPENGL DOGSHIT TYPES just use u32 and be done with it haha
+- [] Need to really think about how the hierarchy stuff is gonna owrk witih rendering
+    - the reason this is a difficult problem is because you want to use the offset into the VBO
+    because thats just much faster you don't have to bind and rebind a different vao every draw call.
+    However in order for this to work i need to standardize how the mesh command actually does things.
+
+    1. BIG TRADEOFF Is because htis is a hot function it sucks to have this be called so often 
+    when it doesn't do that much work in here, but maybe the overhead of hte actual call instruction is
+    neglegable compared to calling into opengl?
+
+    struct MeshComponent : public Component {
+        using Component::Component;
+
+        OpenGL::VertexArrayObject* vao;
+        OpenGL::MeshEntry* entry;
+        OpenGL::Material* material;
+        OpenGL::Shader* shader;
+        OpenGL::RenderQueue* queue;
+
+        bool should_render_mesh = true;
+        bool render_mesh_wireframe = false;
+
+        // OpenGL::Mesh* aabb_mesh;
+        // bool should_render_mesh_aabb = false;
+
+        MeshComponent(Entity* owner, OpenGL::RenderQueue* queue, OpenGL::Mesh* mesh);
+        void update(float dt) override;
+    };
+
+    void draw() {
+        for (RenderCommandOpaque& command : this->commands) {
+            Shader* shader = command.shader;
+            VertexArrayObject* vao = command.vao;  // instead of mesh
+            Material* material = command.material; // instead of mesh
+            MeshEntry* entry = command.entry; // instead of mesh
+
+            // this needs some OpenGL::RenderState so I don't call into the opengl code if I don't have to
+            glPolygonMode(GL_FRONT_AND_BACK, command.render_mesh_wireframe ? GL_LINE : GL_FILL);
+
+            vao->bind();
+            shader->use();
+
+            glm::mat4 view = active_camera.get_view_matrix()
+            glm::mat4 projection = active_camera.get_projection_matrix()
+
+            shader->set_model(command.model);
+            shader->set_view(view);
+            shader->set_projection(projection);
+            if (material) {
+                command.shader->set_material(material);
+            }
+        
+            if (entry.index_count > 0) {
+                gl_check_error(glDrawElementsBaseVertex(
+                    entry.draw_type, entry.index_count, GL_UNSIGNED_INT, 
+                    (void*)(sizeof(unsigned int) * entry.base_index), 
+                    entry.base_vertex
+                ));
+            } else {
+                gl_check_error(glDrawArrays(
+                    entry.draw_type,
+                    entry.base_vertex,
+                    entry.vertex_count
+                ));
+            }
+        }
+
+        this->commands.clear();
+    }
+
 - [] Initialize everything with {} and also default params on the struct members!
 - [x] Load models with assimp 
 - [] load animations with assimp
