@@ -26,6 +26,7 @@ namespace OpenGL {
         u32 stride_in_floats; // stride / sizeof(float)
         std::vector<VertexElement> elements;
 
+        static VertexLayout& PNT();
         static VertexLayout create(std::vector<VertexElement> elements);
     };
 

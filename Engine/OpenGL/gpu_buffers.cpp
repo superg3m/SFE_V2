@@ -1,5 +1,6 @@
 #include <gpu_buffers.hpp>
 #include <gl_error_check.hpp>
+#include <mesh.hpp>
 
 namespace OpenGL {
     void bind_vertex_attribute(int &location, bool instanced, u32 stride, VertexElement desc) {
@@ -53,6 +54,16 @@ namespace OpenGL {
         ret.elements = elements;
 
         return ret;
+    }
+
+    VertexLayout& VertexLayout::PNT() {
+        static VertexLayout layout = VertexLayout::create({
+            {OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3},
+            {OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3},
+            {OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2},
+        });
+
+        return layout;
     }
 
     void VBO::bind() {

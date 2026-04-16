@@ -260,19 +260,13 @@ namespace OpenGL {
     }
 
     void Mesh::setup() {
-        VertexLayout layout = VertexLayout::create({
-            {OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3},
-            {OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3},
-            {OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2},
-        });
-
         this->aabb = calculate_aabb(this->vertices, 0, this->vertices.size());
         for (MeshEntry& entry : meshes) {
             entry.aabb = calculate_aabb(this->vertices, entry.base_vertex, entry.vertex_count);
         }
 
         this->vao = VAO::create();
-        this->vbo = VBO::allocate(this->vao, layout, this->vertices);
+        this->vbo = VBO::allocate(this->vao, VertexLayout::PNT(), this->vertices);
         this->ebo = EBO::allocate(this->vao, this->indices);
     }
 }

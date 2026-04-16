@@ -28,7 +28,7 @@ namespace OpenGL {
         static MeshEntry create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0, u32 material_index = 0) {
             MeshEntry ret = {};
             ret.draw_type = draw_type;
-            ret.vertex_count = vertex_data.size() / layout.stride_in_floats;
+            ret.vertex_count = (vertex_data.size() * sizeof(T)) / layout.stride;
             ret.index_count = indices.size();
             ret.base_vertex  = base_vertex;
             ret.base_index   = base_index;
@@ -54,6 +54,93 @@ namespace OpenGL {
             ret.vbo = VBO::allocate(ret.vao, layout, vertex_data);
             ret.ebo = EBO::allocate(ret.vao, indices);
             
+            return ret;
+        }
+
+        static Mesh cube() {
+            std::vector<Vertex> cube_vertices = {
+                // Front face
+                Vertex{glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(0, 0, -1), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 1.0f, -1.0f, -1.0f), glm::vec3(0, 0, -1), glm::vec2(1, 0)},
+                Vertex{glm::vec3( 1.0f,  1.0f, -1.0f), glm::vec3(0, 0, -1), glm::vec2(1, 1)},
+                Vertex{glm::vec3(-1.0f,  1.0f, -1.0f), glm::vec3(0, 0, -1), glm::vec2(0, 1)},
+
+                // Back face
+                Vertex{glm::vec3(-1.0f, -1.0f, 1.0f), glm::vec3(0, 0, 1), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 1.0f, -1.0f, 1.0f), glm::vec3(0, 0, 1), glm::vec2(1, 0)},
+                Vertex{glm::vec3( 1.0f,  1.0f, 1.0f), glm::vec3(0, 0, 1), glm::vec2(1, 1)},
+                Vertex{glm::vec3(-1.0f,  1.0f, 1.0f), glm::vec3(0, 0, 1), glm::vec2(0, 1)},
+
+                // Left face
+                Vertex{glm::vec3(-1.0f, -1.0f,  1.0f), glm::vec3(-1, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(-1, 0, 0), glm::vec2(1, 0)},
+                Vertex{glm::vec3(-1.0f,  1.0f, -1.0f), glm::vec3(-1, 0, 0), glm::vec2(1, 1)},
+                Vertex{glm::vec3(-1.0f,  1.0f,  1.0f), glm::vec3(-1, 0, 0), glm::vec2(0, 1)},
+
+                // Right face
+                Vertex{glm::vec3( 1.0f, -1.0f, -1.0f), glm::vec3(1, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 1.0f, -1.0f,  1.0f), glm::vec3(1, 0, 0), glm::vec2(1, 0)},
+                Vertex{glm::vec3( 1.0f,  1.0f,  1.0f), glm::vec3(1, 0, 0), glm::vec2(1, 1)},
+                Vertex{glm::vec3( 1.0f,  1.0f, -1.0f), glm::vec3(1, 0, 0), glm::vec2(0, 1)},
+
+                // Bottom face
+                Vertex{glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(0, -1, 0), glm::vec2(0, 1)},
+                Vertex{glm::vec3( 1.0f, -1.0f, -1.0f), glm::vec3(0, -1, 0), glm::vec2(1, 1)},
+                Vertex{glm::vec3( 1.0f, -1.0f,  1.0f), glm::vec3(0, -1, 0), glm::vec2(1, 0)},
+                Vertex{glm::vec3(-1.0f, -1.0f,  1.0f), glm::vec3(0, -1, 0), glm::vec2(0, 0)},
+
+                // Top face
+                Vertex{glm::vec3(-1.0f,  1.0f, -1.0f), glm::vec3(0, 1, 0), glm::vec2(0, 1)},
+                Vertex{glm::vec3( 1.0f,  1.0f, -1.0f), glm::vec3(0, 1, 0), glm::vec2(1, 1)},
+                Vertex{glm::vec3( 1.0f,  1.0f,  1.0f), glm::vec3(0, 1, 0), glm::vec2(1, 0)},
+                Vertex{glm::vec3(-1.0f,  1.0f,  1.0f), glm::vec3(0, 1, 0), glm::vec2(0, 0)},
+            };
+
+            std::vector<unsigned int> cube_indices = {
+                0,  1,  2,  2,  3,  0,  // Front
+                4,  5,  6,  6,  7,  4,  // Back
+                8,  9,  10, 10, 11, 8,  // Left
+                12, 13, 14, 14, 15, 12, // Right
+                16, 17, 18, 18, 19, 16, // Bottom
+                20, 21, 22, 22, 23, 20  // Top
+            };
+
+
+            Mesh ret;
+            ret.vertices = cube_vertices;
+            ret.indices = cube_indices;
+            ret.meshes.push_back(MeshEntry::create(VertexLayout::PNT(), ret.vertices, ret.indices, GL_TRIANGLES));  
+            ret.setup();
+
+            return ret;
+        }
+
+        static Mesh AABB() {
+            std::vector<Vertex> aabb_vertices = {
+                // Bottom face
+                Vertex{glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(-1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+
+                // Top face
+                Vertex{glm::vec3(-1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(-1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+
+                // Vertical edges
+                Vertex{glm::vec3(-1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 1.0f, -1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, 1.0f, -1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(-1.0f, -1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-1.0f, 1.0f,  1.0f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+            };
+
+            Mesh ret;
+            ret.vertices = aabb_vertices;
+            ret.meshes.push_back(MeshEntry::create(VertexLayout::PNT(), aabb_vertices, {}, GL_LINES));  
+            ret.setup();
+
             return ret;
         }
 

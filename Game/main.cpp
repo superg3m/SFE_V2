@@ -17,10 +17,12 @@ struct TextureTable {
 struct ShaderTable {
     OpenGL::Shader box_shader;
     OpenGL::Shader model_shader;
+    OpenGL::Shader color_uniform_shader;
 
     void initalize() {
         this->box_shader = OpenGL::Shader::create({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
         this->model_shader = OpenGL::Shader::create({"../../Assets/Shaders/model.vert", "../../Assets/Shaders/model.frag"});
+        this->color_uniform_shader = OpenGL::Shader::create({"../../Assets/Shaders/uniform.vert", "../../Assets/Shaders/uniform.frag"});
     }
 
     void compile() {
@@ -29,8 +31,23 @@ struct ShaderTable {
     }
 };
 
+
 TextureTable textures;
 ShaderTable shaders;
+
+struct MaterialTable {
+    OpenGL::Material uniform_color_green;
+    OpenGL::Material uniform_color_red;
+    void initalize() {
+        this->uniform_color_green = OpenGL::Material::create(&shaders.color_uniform_shader);
+        this->uniform_color_green.set_vec3("uColor", 0, 1, 0);
+
+        this->uniform_color_red = OpenGL::Material::create(&shaders.color_uniform_shader);
+        this->uniform_color_red.set_vec3("uColor", 1, 0, 0);
+    }
+};
+
+MaterialTable materials;
 
 GLFWwindow* GLFW_INIT() {
     RUNTIME_ASSERT_MSG(glfwInit(), "Failed to init glfw\n");
@@ -82,9 +99,12 @@ int main(int argc, char** argv) {
     // glm::vec3 delta = input.current - input.previous;
     shaders.initalize();
     textures.initalize();
+    materials.initalize();
 
     OpenGL::RenderQueue queue = OpenGL::RenderQueue::create(&render_state);
-    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&shaders.model_shader, "../../Assets/Models/backpack/backpack.obj"); // OpenGL::Mesh::create(layout, vertices);
+    // OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
+    OpenGL::Mesh cube_mesh = OpenGL::Mesh::cube();
+    OpenGL::Mesh defafult_aabb_mesh = OpenGL::Mesh::AABB();
 
     while (!glfwWindowShouldClose(window)) {
         gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
@@ -93,22 +113,44 @@ int main(int argc, char** argv) {
         glm::mat4 model         = glm::mat4(1.0f);
         glm::mat4 view          = glm::mat4(1.0f);
         glm::mat4 projection    = glm::mat4(1.0f);
-        model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
-        view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -8.0f));
+        glm::quat rotation = glm::angleAxis((float)glfwGetTime() / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = model * glm::mat4_cast(rotation);
+        view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 
-        for (OpenGL::MeshEntry& entry : backpack_mesh.meshes) {
-            OpenGL::RenderCommandOpaque command = {};
-            command.vao = &backpack_mesh.vao;
-            command.entry = &entry;
-            command.material = &backpack_mesh.materials[entry.material_index];
-
+        OpenGL::RenderCommandOpaque command = {};
+        {
+            command.vao = &cube_mesh.vao;
+            command.entry = &cube_mesh.meshes[0];
+            command.material = &materials.uniform_color_red;
             command.model = model;
             command.view = view;
             command.projection = projection;
-
             queue.submit(command);
         }
+
+        {
+            command.vao = &defafult_aabb_mesh.vao;
+            command.entry = &defafult_aabb_mesh.meshes[0];
+            command.material = &materials.uniform_color_green;
+            command.model = cube_mesh.aabb.to_matrix_transform(rotation);
+            command.view = view;
+            command.projection = projection;
+            queue.submit(command);
+        }
+
+        /*
+        for (OpenGL::MeshEntry& entry : backpack_mesh.meshes) {
+            command = {};
+            command.vao = &backpack_mesh.vao;
+            command.entry = &entry;
+            command.material = &backpack_mesh.materials[entry.material_index];
+            command.model = model;
+            command.view = view;
+            command.projection = projection;
+            queue.submit(command);
+        }
+        */
         
         queue.draw();
 
@@ -121,7 +163,9 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni):
-- [] Render aabbs for both the main mesh and the submeshes!
+- [] maybe get materials out of Mesh and have it just be a global table
+    material_index = g_materials.size() + i
+- [] Render aabbs for both the main mesh and the submeshes! (This is a good question!)
 - [] entity manager, should have like all the entities[], should have:
     std::vector<Entity*> QueryComponentList<MeshComponent>() 
     std::vector<Entity*> QuerySetComponentList<MeshComponent, GravityComponent...>()
