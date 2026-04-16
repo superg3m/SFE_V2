@@ -42,40 +42,44 @@ namespace OpenGL {
         // TODO(Jovanni): this is so fucking slow but for now its ok I will switch to my own hashmap later
         // TODO(Jovanni): this is so fucking slow but for now its ok I will switch to my own hashmap later
         void set_material(Material* material) {
-            for (const auto [k, v] : material->boolean_uniforms) {
-                this->set_bool(k.c_str(), v);
-            }
+            for (const auto [k, v] : material->bindings) {
+                switch (v.type) {
+                    case BindingValueType::BOOL: {
+                        this->set_bool(k.c_str(), v.boolean_binding);
+                    } break;
 
-            for (const auto [k, v] : material->integer_uniforms) {
-                this->set_int(k.c_str(), v);
-            }
+                    case BindingValueType::INTEGER: {
+                        this->set_int(k.c_str(), v.integer_binding);
+                    } break;
 
-            for (const auto [k, v] : material->float_uniforms) {
-                this->set_float(k.c_str(), v);
-            }
+                    case BindingValueType::FLOAT: {
+                        this->set_float(k.c_str(), v.float_binding);
+                    } break;
 
-            for (const auto [k, v] : material->sampler2d_uniforms) {
-                this->set_texture(k.c_str(), v);
-            }
+                    case BindingValueType::SAMPLER_2D: {
+                        this->set_texture(k.c_str(), v.sampler2d_binding);
+                    } break;
 
-            for (const auto [k, v] : material->cubemap_uniforms) {
-                this->set_texture_cube(k.c_str(), v);
-            }
+                    case BindingValueType::CUBEMAP: {
+                        this->set_texture_cube(k.c_str(), v.cubemap_binding);
+                    } break;
 
-            for (const auto [k, v] : material->vector2_uniforms) {
-                this->set_vec2(k.c_str(), v);
-            }
+                    case BindingValueType::VECTOR2: {
+                        this->set_vec2(k.c_str(), v.vector2_binding);
+                    } break;
 
-            for (const auto [k, v] : material->vector3_uniforms) {
-                this->set_vec3(k.c_str(), v);
-            }
+                    case BindingValueType::VECTOR3: {
+                        this->set_vec3(k.c_str(), v.vector3_binding);
+                    } break;
 
-            for (const auto [k, v] : material->vector4_uniforms) {
-                this->set_vec4(k.c_str(), v);
-            }
+                    case BindingValueType::VECTOR4: {
+                        this->set_vec4(k.c_str(), v.vector4_binding);
+                    } break;
 
-            for (const auto [k, v] : material->mat4_uniforms) {
-                this->set_mat4(k.c_str(), v);
+                    case BindingValueType::MAT4: {
+                        this->set_mat4(k.c_str(), v.mat4_binding);
+                    } break;
+                }
             }
         }
     private:
