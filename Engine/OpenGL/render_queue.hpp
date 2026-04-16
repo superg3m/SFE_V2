@@ -39,7 +39,7 @@ namespace OpenGL {
         }
 
         void submit(RenderCommandSkybox command) {
-            this->skybox_commands.push_back(command);
+            // this->skybox_commands.push_back(command);
         }
 
         void draw_entry_commands() {
