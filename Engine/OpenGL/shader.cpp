@@ -2,19 +2,19 @@
 #include <gl_error_check.hpp>
 
 namespace OpenGL {
-    GLuint Shader::create_shader_program(std::vector<const char*> shader_paths) {
-        GLuint shader_program_id = glCreateProgram();
+    u32 Shader::create_shader_program(std::vector<const char*> shader_paths) {
+        u32 shader_program_id = glCreateProgram();
         this->shader_paths = shader_paths;
 
-        std::vector<GLuint> shader_source_ids;
+        std::vector<u32> shader_source_ids;
         for (const char* path : shader_paths) {
-            GLuint shader_source_id = this->shader_source_compile(path);
+            u32 shader_source_id = this->shader_source_compile(path);
             glAttachShader(shader_program_id, shader_source_id);
             shader_source_ids.push_back(shader_source_id);
         }
         glLinkProgram(shader_program_id);
 
-        GLint success = false;
+        int success = false;
         glGetProgramiv(shader_program_id, GL_LINK_STATUS, &success);
         if (!success) {
             char info_log[1028] = {0};
@@ -27,17 +27,17 @@ namespace OpenGL {
             glDeleteShader(shader_source_ids[i]);
         }
 
-        GLint uniform_count = 0;
+        int uniform_count = 0;
         glGetProgramiv(shader_program_id, GL_ACTIVE_UNIFORMS, &uniform_count);
         for (int i = 0; i < uniform_count; i++) {
-            GLint size;
+            int size;
             GLenum type;
             const GLsizei name_max_size = 256;
             GLchar name[name_max_size];
             GLsizei name_length;
-            glGetActiveUniform(shader_program_id, (GLuint)i, name_max_size, &name_length, &size, &type, name);
+            glGetActiveUniform(shader_program_id, (u32)i, name_max_size, &name_length, &size, &type, name);
 
-            GLint location = glGetUniformLocation(shader_program_id, name);
+            int location = glGetUniformLocation(shader_program_id, name);
             std::string str_key = std::string(name, name_length);
             UniformDesc value = UniformDesc{type, location};
             this->uniforms.insert(std::make_pair(str_key, value));
@@ -132,7 +132,7 @@ namespace OpenGL {
             return expected.location;
         }
 
-        GLint location = glGetUniformLocation(this->program_id, name);
+        int location = glGetUniformLocation(this->program_id, name);
         this->uniforms.insert(std::make_pair(name, UniformDesc{type, location})); // this type might be wrong, but theres no great robust way to do arrays that I know of...
         if (location == -1) {
             LOG_ERROR("Shader {%s} Uniform: '%s' does not exists\n", this->shader_paths[0], name);

@@ -10,7 +10,7 @@
 namespace OpenGL {
     struct UniformDesc {
         GLenum type;
-        GLint location;
+        int location;
     };
 
     struct Shader {
@@ -86,7 +86,7 @@ namespace OpenGL {
         std::vector<const char*> shader_paths;
         std::map<std::string, UniformDesc> uniforms;
 
-        GLuint create_shader_program(std::vector<const char*> shader_paths);
+        u32 create_shader_program(std::vector<const char*> shader_paths);
         GLenum type_from_path(std::string path);
         void check_compile_error(unsigned int source_id, const char* path);
         unsigned int shader_source_compile(const char* path);

@@ -5,7 +5,6 @@
 #include <gl_error_check.hpp>
 
 namespace OpenGL {
-    typedef GLuint stride_t;
     enum class BufferStrideTypeInfo {
         BOOL = 1,
         INT = 1,
@@ -23,23 +22,23 @@ namespace OpenGL {
     };
 
     struct VertexLayout {
-        stride_t stride;
+        u32 stride;
         u32 stride_in_floats; // stride / sizeof(float)
         std::vector<VertexElement> elements;
 
         static VertexLayout create(std::vector<VertexElement> elements);
     };
 
-    void bind_vertex_attribute(int &location, bool instanced, stride_t stride, VertexElement desc);
+    void bind_vertex_attribute(int &location, bool instanced, u32 stride, VertexElement desc);
 
     struct VAO {
-        GLuint id;
+        u32 id;
         static VAO create();
         void bind();
     };
 
     struct VBO {
-        GLuint id;
+        u32 id;
         GLenum gl_usage;
         VertexLayout layout;
         template<typename T>
@@ -62,7 +61,7 @@ namespace OpenGL {
         }
 
         template<typename T>
-        void update_buffer(VAO& vao, std::vector<T>& buffer, GLsizeiptr offset = 0) {
+        void update_buffer(VAO& vao, std::vector<T>& buffer, s64 offset = 0) {
             RUNTIME_ASSERT(gl_usage == GL_DYNAMIC_DRAW);
 
             vao.bind();
@@ -83,9 +82,9 @@ namespace OpenGL {
     };
 
     struct EBO {
-        GLuint id;
+        u32 id;
         GLenum gl_usage;
-        static EBO allocate(VAO& vao, std::vector<GLuint>& indices, GLenum gl_usage = GL_STATIC_DRAW) {
+        static EBO allocate(VAO& vao, std::vector<u32>& indices, GLenum gl_usage = GL_STATIC_DRAW) {
             EBO ret = {};
             ret.gl_usage = gl_usage;
 
@@ -93,7 +92,7 @@ namespace OpenGL {
                 vao.bind();
                 gl_check_error(glGenBuffers(1, &ret.id));
                 gl_check_error(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ret.id));
-                gl_check_error(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), gl_usage));
+                gl_check_error(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(u32), indices.data(), gl_usage));
             }
 
             return ret;

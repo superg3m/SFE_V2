@@ -17,15 +17,15 @@ namespace OpenGL {
 
     struct MeshEntry {
         GLenum draw_type = GL_TRIANGLES;
-        GLuint vertex_count = 0;
-        GLuint index_count = 0;
+        u32 vertex_count = 0;
+        u32 index_count = 0;
         u32 base_vertex  = 0; // starting offset to next vertex in the vertex buffer
         u32 base_index   = 0; // offset to next index in the index buffer
         u32 material_index = 0;
         AABB aabb;
 
         template<typename T>
-        static MeshEntry create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<GLuint> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0, u32 material_index = 0) {
+        static MeshEntry create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0, u32 material_index = 0) {
             MeshEntry ret = {};
             ret.draw_type = draw_type;
             ret.vertex_count = vertex_data.size() / layout.stride_in_floats;
@@ -48,7 +48,7 @@ namespace OpenGL {
         AABB aabb;
 
         template<typename T>
-        static Mesh create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<GLuint> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0) {
+        static Mesh create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0) {
             Mesh ret = {};
             ret.vao = VAO::create();
             ret.vbo = VBO::allocate(ret.vao, layout, vertex_data);
@@ -62,7 +62,7 @@ namespace OpenGL {
 
     private:
         std::vector<Vertex> vertices;
-        std::vector<GLuint> indices;
+        std::vector<u32> indices;
         void process_node(aiNode* node, const aiScene* scene, glm::mat4 parent_transform);
         MeshEntry process_mesh(aiMesh* ai_mesh, const aiScene* scene, glm::mat4 parent_transform);
         void setup();

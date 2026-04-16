@@ -2,7 +2,7 @@
 #include <gl_error_check.hpp>
 
 namespace OpenGL {
-    void bind_vertex_attribute(int &location, bool instanced, stride_t stride, VertexElement desc) {
+    void bind_vertex_attribute(int &location, bool instanced, u32 stride, VertexElement desc) {
         bool is_integer = (desc.type == BufferStrideTypeInfo::INT) || (desc.type == BufferStrideTypeInfo::IVEC4);
         bool is_matrix = desc.type == BufferStrideTypeInfo::MAT4;
         GLenum gl_type  = is_integer ? GL_INT : GL_FLOAT;
@@ -19,7 +19,7 @@ namespace OpenGL {
                 );
 
                 gl_check_error(glEnableVertexAttribArray(location + i));
-                gl_check_error(glVertexAttribPointer(location + i, (GLint)BufferStrideTypeInfo::VEC4, GL_FLOAT, false, stride, (void*)(desc.offset + (sizeof(glm::vec4) * i))));
+                gl_check_error(glVertexAttribPointer(location + i, (int)BufferStrideTypeInfo::VEC4, GL_FLOAT, false, stride, (void*)(desc.offset + (sizeof(glm::vec4) * i))));
                 gl_check_error(glVertexAttribDivisor(location + i, instanced));
             }
 
@@ -27,9 +27,9 @@ namespace OpenGL {
         } else {
             gl_check_error(glEnableVertexAttribArray(location));
             if (is_integer) {
-                gl_check_error(glVertexAttribIPointer(location, (GLint)desc.type, gl_type, stride, (void*)desc.offset));
+                gl_check_error(glVertexAttribIPointer(location, (int)desc.type, gl_type, stride, (void*)desc.offset));
             } else {
-                gl_check_error(glVertexAttribPointer(location, (GLint)desc.type, gl_type, false, stride, (void*)desc.offset));
+                gl_check_error(glVertexAttribPointer(location, (int)desc.type, gl_type, false, stride, (void*)desc.offset));
             }
 
             gl_check_error(glVertexAttribDivisor(location, instanced));
@@ -37,10 +37,10 @@ namespace OpenGL {
         }
     }
 
-    static stride_t compute_stride_from_elements(std::vector<VertexElement>& layout) {
-        stride_t stride = 0;
+    static u32 compute_stride_from_elements(std::vector<VertexElement>& layout) {
+        u32 stride = 0;
         for (VertexElement desc : layout) {
-            stride += (stride_t)desc.type * sizeof(float);
+            stride += (u32)desc.type * sizeof(float);
         }
 
         return stride;

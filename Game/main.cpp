@@ -62,8 +62,8 @@ GLFWwindow* GLFW_INIT() {
     glfwSwapInterval(1);
     // glfwSetInputMode(window, GLFW_CURSOR, mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 
-    glEnable(GL_MULTISAMPLE);
-    glEnable(GL_DEPTH_TEST);
+    gl_check_error(glEnable(GL_MULTISAMPLE));
+    gl_check_error(glEnable(GL_DEPTH_TEST));
     // glEnable(GL_CULL_FACE);
     // glCullFace(GL_FRONT); 
     // glEnable(GL_FRAMEBUFFER_SRGB);
@@ -85,8 +85,8 @@ int main(int argc, char** argv) {
     OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file("../../Assets/Models/backpack/backpack.obj"); // OpenGL::Mesh::create(layout, vertices);
 
     while (!glfwWindowShouldClose(window)) {
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.2, 0.2, 0.2, 1);
+        gl_check_error(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
+        gl_check_error(glClearColor(0.2, 0.2, 0.2, 1));
 
         glm::mat4 model         = glm::mat4(1.0f);
         glm::mat4 view          = glm::mat4(1.0f);
