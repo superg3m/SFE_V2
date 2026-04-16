@@ -152,12 +152,15 @@ int main(int argc, char** argv) {
 /*
 TODO(Jovanni):
 - [] maybe get materials out of Mesh and have it just be a global table
+    - THIS WILL BE THE KEY TO TEH HASHMAP: "../../Assets/Models/backpack/material/" + i
     material_index = g_materials.size() + i
+- [] imgui, imguizmo
 - [] Render aabbs for both the main mesh and the submeshes! (This is a good question!)
 - [] entity manager, should have like all the entities[], should have:
     std::vector<Entity*> QueryComponentList<MeshComponent>() 
     std::vector<Entity*> QuerySetComponentList<MeshComponent, GravityComponent...>()
 - [] Start shifting the responsibility on the entity system
+- [] Entity Picking
 - [] Need to really think about how the hierarchy stuff is gonna owrk witih rendering
     - the reason this is a difficult problem is because you want to use the offset into the VBO
     because thats just much faster you don't have to bind and rebind a different vao every draw call.
