@@ -120,11 +120,11 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni):
-- [] Rename some stuff thats annoying for example VAO and VBO (its a lot of typing...)
+- [x] Rename some stuff thats annoying for example VAO and VBO (its a lot of typing...)
+- [] REMOVE ALL OPENGL DOGSHIT TYPES just use u32 and be done with it haha
 - [] RenderState (store like active vao, are you in wireframe mode, are you depth testing and so on)
 - [] Start shifting the responsibility on the entity system
 - [] Render aabbs for both the main mesh and the submeshes!
-- [] REMOVE ALL OPENGL DOGSHIT TYPES just use u32 and be done with it haha
 - [] Need to really think about how the hierarchy stuff is gonna owrk witih rendering
     - the reason this is a difficult problem is because you want to use the offset into the VBO
     because thats just much faster you don't have to bind and rebind a different vao every draw call.
