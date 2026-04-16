@@ -40,9 +40,9 @@ namespace OpenGL {
 
     // mesh is just geometry the actual material is something you submit with it
     struct Mesh {
-        VertexArrayObject vao;
-        VertexBufferObject vbo;
-        ElementBufferObject ebo;
+        VAO vao;
+        VBO vbo;
+        EBO ebo;
         std::vector<MeshEntry> meshes;
         std::vector<Material> materials;
         AABB aabb;
@@ -50,9 +50,9 @@ namespace OpenGL {
         template<typename T>
         static Mesh create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<GLuint> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0) {
             Mesh ret = {};
-            ret.vao = VertexArrayObject::create();
-            ret.vbo = VertexBufferObject::allocate(ret.vao, layout, vertex_data);
-            ret.ebo = ElementBufferObject::allocate(ret.vao, indices);
+            ret.vao = VAO::create();
+            ret.vbo = VBO::allocate(ret.vao, layout, vertex_data);
+            ret.ebo = EBO::allocate(ret.vao, indices);
             
             return ret;
         }
@@ -70,7 +70,7 @@ namespace OpenGL {
 
     /*
     struct Model {
-        VertexArrayObject vao;
+        VAO vao;
         std::vector<Mesh> meshes;
         std::vector<Material> materials;
 

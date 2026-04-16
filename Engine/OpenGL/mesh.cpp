@@ -270,8 +270,8 @@ namespace OpenGL {
             entry.aabb = calculate_aabb(this->vertices, entry.base_vertex, entry.vertex_count);
         }
 
-        this->vao = VertexArrayObject::create();
-        this->vbo = VertexBufferObject::allocate(this->vao, layout, this->vertices);
-        this->ebo = ElementBufferObject::allocate(this->vao, this->indices);
+        this->vao = VAO::create();
+        this->vbo = VBO::allocate(this->vao, layout, this->vertices);
+        this->ebo = EBO::allocate(this->vao, this->indices);
     }
 }

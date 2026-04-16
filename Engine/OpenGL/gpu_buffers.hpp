@@ -32,19 +32,19 @@ namespace OpenGL {
 
     void bind_vertex_attribute(int &location, bool instanced, stride_t stride, VertexElement desc);
 
-    struct VertexArrayObject {
+    struct VAO {
         GLuint id;
-        static VertexArrayObject create();
+        static VAO create();
         void bind();
     };
 
-    struct VertexBufferObject {
+    struct VBO {
         GLuint id;
         GLenum gl_usage;
         VertexLayout layout;
         template<typename T>
-        static VertexBufferObject allocate(VertexArrayObject& vao, VertexLayout layout, std::vector<T>& buffer, GLenum gl_usage = GL_STATIC_DRAW, bool instanced = false) {
-            VertexBufferObject ret = {};
+        static VBO allocate(VAO& vao, VertexLayout layout, std::vector<T>& buffer, GLenum gl_usage = GL_STATIC_DRAW, bool instanced = false) {
+            VBO ret = {};
             ret.gl_usage = gl_usage;
 
 
@@ -62,7 +62,7 @@ namespace OpenGL {
         }
 
         template<typename T>
-        void update_buffer(VertexArrayObject& vao, std::vector<T>& buffer, GLsizeiptr offset = 0) {
+        void update_buffer(VAO& vao, std::vector<T>& buffer, GLsizeiptr offset = 0) {
             RUNTIME_ASSERT(gl_usage == GL_DYNAMIC_DRAW);
 
             vao.bind();
@@ -82,11 +82,11 @@ namespace OpenGL {
         void bind();
     };
 
-    struct ElementBufferObject {
+    struct EBO {
         GLuint id;
         GLenum gl_usage;
-        static ElementBufferObject allocate(VertexArrayObject& vao, std::vector<GLuint>& indices, GLenum gl_usage = GL_STATIC_DRAW) {
-            ElementBufferObject ret = {};
+        static EBO allocate(VAO& vao, std::vector<GLuint>& indices, GLenum gl_usage = GL_STATIC_DRAW) {
+            EBO ret = {};
             ret.gl_usage = gl_usage;
 
             if (indices.size()) {

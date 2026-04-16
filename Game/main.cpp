@@ -120,7 +120,8 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni):
-- [] Rename some stuff thats annoying for example VertexArrayObject and VertexBufferObject (its a lot of typing...)
+- [] Rename some stuff thats annoying for example VAO and VBO (its a lot of typing...)
+- [] RenderState (store like active vao, are you in wireframe mode, are you depth testing and so on)
 - [] Start shifting the responsibility on the entity system
 - [] Render aabbs for both the main mesh and the submeshes!
 - [] REMOVE ALL OPENGL DOGSHIT TYPES just use u32 and be done with it haha
@@ -136,7 +137,7 @@ TODO(Jovanni):
     struct MeshComponent : public Component {
         using Component::Component;
 
-        OpenGL::VertexArrayObject* vao;
+        OpenGL::VAO* vao;
         OpenGL::MeshEntry* entry;
         OpenGL::Material* material;
         OpenGL::Shader* shader;
@@ -155,7 +156,7 @@ TODO(Jovanni):
     void draw() {
         for (RenderCommandOpaque& command : this->commands) {
             Shader* shader = command.shader;
-            VertexArrayObject* vao = command.vao;  // instead of mesh
+            VAO* vao = command.vao;  // instead of mesh
             Material* material = command.material; // instead of mesh
             MeshEntry* entry = command.entry; // instead of mesh
 

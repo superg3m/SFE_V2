@@ -55,16 +55,16 @@ namespace OpenGL {
         return ret;
     }
 
-    void VertexBufferObject::bind() {
+    void VBO::bind() {
         gl_check_error(glBindBuffer(GL_ARRAY_BUFFER, this->id));
     }
 
-    void ElementBufferObject::bind() {
+    void EBO::bind() {
         gl_check_error(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->id));
     }
 
-    VertexArrayObject VertexArrayObject::create() {
-        VertexArrayObject ret = {};
+    VAO VAO::create() {
+        VAO ret = {};
         gl_check_error(glGenVertexArrays(1, &ret.id));
         ret.bind();
 
@@ -72,7 +72,7 @@ namespace OpenGL {
     }
 
     // pass like a renderer in here to control the currently bound vao, reduce call overhead
-    void VertexArrayObject::bind() {
+    void VAO::bind() {
         gl_check_error(glBindVertexArray(this->id)); // want to check if already bound
     }
 }

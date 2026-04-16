@@ -9,7 +9,7 @@ namespace OpenGL {
 	struct Shader;
 	struct Material;
 	struct RenderQueue;
-	struct VertexArrayObject;
+	struct VAO;
 }
 
 struct Component {
@@ -74,7 +74,7 @@ struct MeshComponent : public Component {
 	using Component::Component;
 
 	OpenGL::Shader* shader = nullptr;
-	OpenGL::VertexArrayObject* vao = nullptr;
+	OpenGL::VAO* vao = nullptr;
 	OpenGL::MeshEntry* entry = nullptr;
 	OpenGL::Material* material = nullptr;
 	OpenGL::RenderQueue* queue;
@@ -85,7 +85,7 @@ struct MeshComponent : public Component {
 	// OpenGL::Mesh* aabb_mesh;
 	// bool should_render_mesh_aabb = false;
 
-    MeshComponent(Entity* owner, OpenGL::RenderQueue* queue, OpenGL::Shader* shader, OpenGL::VertexArrayObject* vao, OpenGL::MeshEntry* entry, OpenGL::Material* material);
+    MeshComponent(Entity* owner, OpenGL::RenderQueue* queue, OpenGL::Shader* shader, OpenGL::VAO* vao, OpenGL::MeshEntry* entry, OpenGL::Material* material);
     void update(float dt) override;
 };
 

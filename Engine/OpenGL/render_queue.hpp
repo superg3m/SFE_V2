@@ -7,7 +7,7 @@
 namespace OpenGL {
     struct RenderCommandOpaque {
         Shader* shader = nullptr;
-        VertexArrayObject* vao = nullptr;
+        VAO* vao = nullptr;
         MeshEntry* entry = nullptr;
         Material* material = nullptr;
 
@@ -40,7 +40,7 @@ namespace OpenGL {
         void draw_entry_commands() {
             for (RenderCommandOpaque& command : this->opaque_commands) {
                 Shader* shader = command.shader;
-                VertexArrayObject* vao = command.vao;  // instead of mesh
+                VAO* vao = command.vao;  // instead of mesh
                 Material* material = command.material; // instead of mesh
                 MeshEntry* entry = command.entry; // instead of mesh
 

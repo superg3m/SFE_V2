@@ -26,7 +26,7 @@ namespace OpenGL {
     }
     */
 
-    void render_vao(VertexArrayObject vao, MeshEntry data) {
+    void render_vao(VAO vao, MeshEntry data) {
         vao.bind();
 
         if (data.index_count > 0) {
