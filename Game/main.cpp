@@ -78,6 +78,8 @@ struct Engine {
     OpenGL::RenderState render_state;
     OpenGL::MaterialTable material_table;
 
+    Scene active_scene;
+
     bool init() {
         this->window = GLFW_INIT();
         if (!this->window) {
@@ -98,6 +100,10 @@ struct Engine {
         this->queue = OpenGL::RenderQueue::create(&this->render_state);
 
         return true;
+    }
+
+    void update(float dt) {
+        active_scene.update(dt);
     }
 };
 
