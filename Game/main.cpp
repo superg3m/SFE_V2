@@ -31,23 +31,10 @@ struct ShaderTable {
     }
 };
 
-
+OpenGL::MaterialTable material_table;
 TextureTable textures;
 ShaderTable shaders;
 
-struct MaterialTable {
-    OpenGL::Material uniform_color_green;
-    OpenGL::Material uniform_color_red;
-    void initalize() {
-        this->uniform_color_green = OpenGL::Material::create(&shaders.color_uniform_shader);
-        this->uniform_color_green.set_vec3("uColor", 0, 1, 0);
-
-        this->uniform_color_red = OpenGL::Material::create(&shaders.color_uniform_shader);
-        this->uniform_color_red.set_vec3("uColor", 1, 0, 0);
-    }
-};
-
-MaterialTable materials;
 
 GLFWwindow* GLFW_INIT() {
     RUNTIME_ASSERT_MSG(glfwInit(), "Failed to init glfw\n");
@@ -133,7 +120,16 @@ int main(int argc, char** argv) {
     // glm::vec3 delta = input.current - input.previous;
     shaders.initalize();
     textures.initalize();
-    materials.initalize();
+
+
+    OpenGL::Material uniform_color_green = OpenGL::Material::create(&shaders.color_uniform_shader);
+    uniform_color_green.set_vec3("uColor", 0, 1, 0);
+
+    OpenGL::Material uniform_color_red = OpenGL::Material::create(&shaders.color_uniform_shader);
+    uniform_color_red.set_vec3("uColor", 1, 0, 0);
+
+    material_table.add_material(uniform_color_green);
+    material_table.add_material(uniform_color_red);
 
     bool imgui_success = initalize_imgui(window);
     if (!imgui_success) {
@@ -141,7 +137,7 @@ int main(int argc, char** argv) {
     }
 
     OpenGL::RenderQueue queue = OpenGL::RenderQueue::create(&render_state);
-    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
+    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&material_table, &shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
     // OpenGL::Mesh cube_mesh = OpenGL::Mesh::cube();
 
     OpenGL::Mesh default_aabb_mesh = OpenGL::Mesh::AABB();
@@ -164,7 +160,7 @@ int main(int argc, char** argv) {
             OpenGL::RenderCommandOpaque command = {};
             command.vao = &default_aabb_mesh.vao;
             command.entry = &default_aabb_mesh.meshes[0];
-            command.material = &materials.uniform_color_green;
+            command.material = &uniform_color_green;
             command.model = model * backpack_mesh.aabb.to_transform_matrix4();
             command.view = view;
             command.projection = projection;
@@ -174,7 +170,7 @@ int main(int argc, char** argv) {
             OpenGL::RenderCommandOpaque command = {};
             command.vao = &backpack_mesh.vao;
             command.entry = &entry;
-            command.material = &backpack_mesh.materials[entry.material_index];
+            command.material = &material_table.materials[entry.material_index];
             command.model = model;
             command.view = view;
             command.projection = projection;
@@ -183,7 +179,7 @@ int main(int argc, char** argv) {
             command = {};
             command.vao = &default_aabb_mesh.vao;
             command.entry = &default_aabb_mesh.meshes[0];
-            command.material = &materials.uniform_color_green;
+            command.material = &uniform_color_green;
             command.model = model * entry.aabb.to_transform_matrix4();
             command.view = view;
             command.projection = projection;

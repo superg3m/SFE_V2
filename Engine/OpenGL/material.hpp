@@ -59,4 +59,13 @@ namespace OpenGL {
         void set_vec4(const char* name, float x, float y, float z, float w);
         void set_mat4(const char* name, const glm::mat4& mat);
     };
+
+    struct MaterialTable {
+        std::vector<Material> materials;
+        u32 add_material(Material& material) {
+            u32 ret = this->materials.size();
+            this->materials.push_back(material);
+            return ret;
+        }
+    };
 }

@@ -44,7 +44,6 @@ namespace OpenGL {
         VBO vbo;
         EBO ebo;
         std::vector<MeshEntry> meshes;
-        std::vector<Material> materials;
         AABB aabb;
 
         template<typename T>
@@ -199,13 +198,13 @@ namespace OpenGL {
         }
 
         // TODO(Complete this): actually maybe not because this is pretty much an entity thing?
-        static Mesh load_from_file(Shader* shader, std::string path);
+        static Mesh load_from_file(MaterialTable* material_table, Shader* shader, std::string path);
 
     private:
         std::vector<Vertex> vertices;
         std::vector<u32> indices;
-        void process_node(aiNode* node, const aiScene* scene, glm::mat4 parent_transform);
-        MeshEntry process_mesh(aiMesh* ai_mesh, const aiScene* scene, glm::mat4 parent_transform);
+        void process_node(MaterialTable* material_table, u32 base_material_index, aiNode* node, const aiScene* scene, glm::mat4 parent_transform);
+        MeshEntry process_mesh(MaterialTable* material_table, u32 base_material_index, aiMesh* ai_mesh, const aiScene* scene, glm::mat4 parent_transform);
         void setup();
     };
 
