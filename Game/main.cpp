@@ -115,8 +115,8 @@ int main(int argc, char** argv) {
         glm::mat4 model         = glm::mat4(1.0f);
         glm::mat4 view          = glm::mat4(1.0f);
         glm::mat4 projection    = glm::mat4(1.0f);
-        // glm::quat rotation = glm::angleAxis((float)glfwGetTime() / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-        // model = model * glm::mat4_cast(rotation);
+        glm::quat rotation = glm::angleAxis((float)glfwGetTime() / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = model * glm::mat4_cast(rotation);
         model = glm::scale(model, glm::vec3((sin((float)glfwGetTime()) + 2), 1, 1));
         view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
