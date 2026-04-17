@@ -72,6 +72,7 @@ RELATIVE_ASSIMP_ROOT = f"{RELATIVE_ENGINE_VENDOR}/assimp"
 RELATIVE_GLAD_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glad"
 RELATIVE_STB_ROOT = f"{RELATIVE_ENGINE_VENDOR}/stb"
 RELATIVE_GLM_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glm"
+RELATIVE_IMGUI_ROOT = f"{RELATIVE_ENGINE_VENDOR}/imgui"
 
 RELATIVE_GAME_ROOT = "../../../Game"
 
@@ -123,6 +124,7 @@ INCLUDES = [
     RELATIVE_GLFW_ROOT,
     f"{RELATIVE_GLAD_ROOT}/include",
     f"{RELATIVE_ASSIMP_ROOT}/include",
+    RELATIVE_IMGUI_ROOT,
 ]
 
 # ---------------------------------------------------------------------------------------

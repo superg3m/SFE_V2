@@ -87,6 +87,40 @@ GLFWwindow* GLFW_INIT() {
     return window;
 }
 
+bool show_demo_window = false;
+
+void render_gui() {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+    ImGuizmo::BeginFrame();
+        ImGui::Begin("Inspector");
+            ImGui::Checkbox("Demo Window", &show_demo_window);
+        ImGui::End();
+
+        if (show_demo_window) {
+            ImGui::ShowDemoWindow(&show_demo_window);
+        }
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+bool initalize_imgui(GLFWwindow* window) {
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    bool success = ImGui_ImplGlfw_InitForOpenGL(window, true);
+    if (!success) {
+        LOG_ERROR("[IMGUI ERROR]: ImGui_ImplGlfw_InitForOpenGL() Failed\n");
+    }
+
+    success = ImGui_ImplOpenGL3_Init("#version 330");
+    if (!success) {
+        LOG_ERROR("[IMGUI ERROR]: ImGui_ImplOpenGL3_Init(#version 330) Failed\n");
+    }
+
+    return success;
+}
+
 int main(int argc, char** argv) {
     GLFWwindow* window = GLFW_INIT();
 
@@ -100,6 +134,11 @@ int main(int argc, char** argv) {
     shaders.initalize();
     textures.initalize();
     materials.initalize();
+
+    bool imgui_success = initalize_imgui(window);
+    if (!imgui_success) {
+        return -1;
+    }
 
     OpenGL::RenderQueue queue = OpenGL::RenderQueue::create(&render_state);
     OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
@@ -152,6 +191,7 @@ int main(int argc, char** argv) {
         }
         
         queue.draw();
+        render_gui();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
