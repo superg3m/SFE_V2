@@ -30,6 +30,12 @@ struct Entity {
 
     void reparent(); // TODO(Jovanni): yeah gotta write this...
 
+    void update(float dt) {
+        for (const auto [k, v] : this->components) {
+            v->update(dt);
+        }
+    }
+
     void set_rotation_euler(glm::vec3 euler) {
         this->transform.rotation = glm::quat(euler);
     }

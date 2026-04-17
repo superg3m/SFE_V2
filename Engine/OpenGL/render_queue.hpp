@@ -169,8 +169,5 @@ namespace OpenGL {
             // this->draw_skybox_commands();
             // this->draw_transparent_commands();
         }
-
-    private:
-        RenderQueue() = default;
     };
 }

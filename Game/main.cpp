@@ -31,11 +31,6 @@ struct ShaderTable {
     }
 };
 
-OpenGL::MaterialTable material_table;
-TextureTable textures;
-ShaderTable shaders;
-
-
 GLFWwindow* GLFW_INIT() {
     RUNTIME_ASSERT_MSG(glfwInit(), "Failed to init glfw\n");
 
@@ -74,76 +69,95 @@ GLFWwindow* GLFW_INIT() {
     return window;
 }
 
-bool show_demo_window = false;
+struct Engine {
+    GLFWwindow* window;
+    OpenGL::RenderQueue queue;
+    OpenGL::RenderState render_state;
+    OpenGL::MaterialTable material_table;
+    TextureTable textures;
+    ShaderTable shaders;
 
-void render_gui() {
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
-    ImGuizmo::BeginFrame();
-        ImGui::Begin("Inspector");
-            ImGui::Checkbox("Demo Window", &show_demo_window);
-        ImGui::End();
-
-        if (show_demo_window) {
-            ImGui::ShowDemoWindow(&show_demo_window);
+    bool init() {
+        this->window = GLFW_INIT();
+        if (!this->window) {
+            return false;
         }
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
 
-bool initalize_imgui(GLFWwindow* window) {
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    bool success = ImGui_ImplGlfw_InitForOpenGL(window, true);
-    if (!success) {
-        LOG_ERROR("[IMGUI ERROR]: ImGui_ImplGlfw_InitForOpenGL() Failed\n");
+        this->render_state.set_depth_test_or_use_cached(true);
+        shaders.initalize();
+        textures.initalize();
+
+        OpenGL::Material uniform_color_green = OpenGL::Material::create(&shaders.color_uniform_shader);
+        uniform_color_green.set_vec3("uColor", 0, 1, 0);
+
+        OpenGL::Material uniform_color_red = OpenGL::Material::create(&shaders.color_uniform_shader);
+        uniform_color_red.set_vec3("uColor", 1, 0, 0);
+
+        material_table.add_material("uniform_color_green", uniform_color_green);
+        material_table.add_material("uniform_color_red", uniform_color_red);
+
+        this->queue = OpenGL::RenderQueue::create(&this->render_state);
+
+        return true;
+    }
+};
+
+struct Editor {
+    bool show_demo_window = false;
+
+    bool init(Engine* engine) {
+        IMGUI_CHECKVERSION();
+        ImGui::CreateContext();
+        if (!ImGui_ImplGlfw_InitForOpenGL(engine->window, true)) {
+            LOG_ERROR("[IMGUI ERROR]: ImGui_ImplGlfw_InitForOpenGL() Failed\n");
+            return false;
+        }
+
+        if (!ImGui_ImplOpenGL3_Init("#version 330")) {
+            LOG_ERROR("[IMGUI ERROR]: ImGui_ImplOpenGL3_Init(#version 330) Failed\n");
+            return false;
+        }
+
+        return true;
     }
 
-    success = ImGui_ImplOpenGL3_Init("#version 330");
-    if (!success) {
-        LOG_ERROR("[IMGUI ERROR]: ImGui_ImplOpenGL3_Init(#version 330) Failed\n");
-    }
+    void render() {
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGuizmo::BeginFrame();
+            ImGui::Begin("Inspector");
+                ImGui::Checkbox("Demo Window", &this->show_demo_window);
+            ImGui::End();
 
-    return success;
-}
+            if (this->show_demo_window) {
+                ImGui::ShowDemoWindow(&this->show_demo_window);
+            }
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    }
+};
 
 int main(int argc, char** argv) {
-    GLFWwindow* window = GLFW_INIT();
-
-    OpenGL::RenderState render_state = {};
-    render_state.set_depth_test_or_use_cached(true);
-
     // InputSystem input;
     // input.previous_mouse
     // input.current_mouse
     // glm::vec3 delta = input.current - input.previous;
-    shaders.initalize();
-    textures.initalize();
 
-
-    OpenGL::Material uniform_color_green = OpenGL::Material::create(&shaders.color_uniform_shader);
-    uniform_color_green.set_vec3("uColor", 0, 1, 0);
-
-    OpenGL::Material uniform_color_red = OpenGL::Material::create(&shaders.color_uniform_shader);
-    uniform_color_red.set_vec3("uColor", 1, 0, 0);
-
-    material_table.add_material(uniform_color_green);
-    material_table.add_material(uniform_color_red);
-
-    bool imgui_success = initalize_imgui(window);
-    if (!imgui_success) {
+    Engine engine = {};
+    if (!engine.init()) {
         return -1;
     }
 
-    OpenGL::RenderQueue queue = OpenGL::RenderQueue::create(&render_state);
-    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&material_table, &shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
-    // OpenGL::Mesh cube_mesh = OpenGL::Mesh::cube();
+    Editor editor = {};
+    if (!editor.init(&engine)) {
+        return -1;
+    }
 
+    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&engine.material_table, &engine.shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
     OpenGL::Mesh default_aabb_mesh = OpenGL::Mesh::AABB();
-    // OpenGL::Mesh backpack_aabb_mesh = OpenGL::Mesh::AABB(backpack_mesh.aabb);
 
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(engine.window)) {
         gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
         gl_error_check(glClearColor(0.2, 0.2, 0.2, 1));
 
@@ -160,36 +174,36 @@ int main(int argc, char** argv) {
             OpenGL::RenderCommandOpaque command = {};
             command.vao = &default_aabb_mesh.vao;
             command.entry = &default_aabb_mesh.meshes[0];
-            command.material = &uniform_color_green;
+            command.material = &engine.material_table.manifest_materials["uniform_color_green"];
             command.model = model * backpack_mesh.aabb.to_transform_matrix4();
             command.view = view;
             command.projection = projection;
-            queue.submit(command);
+            engine.queue.submit(command);
         }
         for (OpenGL::MeshEntry& entry : backpack_mesh.meshes) {
             OpenGL::RenderCommandOpaque command = {};
             command.vao = &backpack_mesh.vao;
             command.entry = &entry;
-            command.material = &material_table.materials[entry.material_index];
+            command.material = &engine.material_table.materials[entry.material_index];
             command.model = model;
             command.view = view;
             command.projection = projection;
-            queue.submit(command);
+            engine.queue.submit(command);
 
             command = {};
             command.vao = &default_aabb_mesh.vao;
             command.entry = &default_aabb_mesh.meshes[0];
-            command.material = &uniform_color_green;
+            command.material = &engine.material_table.manifest_materials["uniform_color_green"];
             command.model = model * entry.aabb.to_transform_matrix4();
             command.view = view;
             command.projection = projection;
-            queue.submit(command);
+            engine.queue.submit(command);
         }
         
-        queue.draw();
-        render_gui();
+        engine.queue.draw();
+        editor.render();
 
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(engine.window);
         glfwPollEvents();
     }
 
@@ -200,16 +214,17 @@ int main(int argc, char** argv) {
 TODO(Jovanni):
 - [X] Mesh should just have VAO, Entries
 - [] entity manager, should have like all the entities[256], should have:
+    Entity* create_entity() // give you a return &entites[next++]
+    // realisitically this hsould give you a handle but one thing at a time batman
+    std::vector<Entity*> QueryComponentList<MeshComponent>() 
+    std::vector<Entity*> QuerySetComponentList<MeshComponent, GravityComponent...>()
+- [] Entity reparent()
 - [] Scene
 - [] active camera
 
 - [] imgui, imguizmo
 - [] Render aabbs for both the main mesh and the submeshes! (This is a good question!)
-- [] entity manager, should have like all the entities[256], should have:
-    Entity* create_entity() // give you a return &entites[next++]
-    // realisitically this hsould give you a handle but one thing at a time batman
-    std::vector<Entity*> QueryComponentList<MeshComponent>() 
-    std::vector<Entity*> QuerySetComponentList<MeshComponent, GravityComponent...>()
+
 - [] Start shifting the responsibility on the entity system
 - [] Entity Picking
 - [] Need to really think about how the hierarchy stuff is gonna owrk witih rendering

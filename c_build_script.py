@@ -115,16 +115,18 @@ elif IS_DARWIN():
 
 
 INCLUDES = [
-    RELATIVE_ENGINE_ROOT,
+    f"{RELATIVE_ENGINE_ROOT}",
     f"{RELATIVE_ENGINE_ROOT}/OpenGL",
     f"{RELATIVE_ENGINE_ROOT}/ECS",
-    RELATIVE_ENGINE_VENDOR,
-    RELATIVE_STB_ROOT,
-    RELATIVE_GLM_ROOT,
-    RELATIVE_GLFW_ROOT,
+    f"{RELATIVE_ENGINE_ROOT}/Scene",
+
+    f"{RELATIVE_ENGINE_VENDOR}",
+    f"{RELATIVE_STB_ROOT}",
+    f"{RELATIVE_GLM_ROOT}",
+    f"{RELATIVE_GLFW_ROOT}",
+    f"{RELATIVE_IMGUI_ROOT}",
     f"{RELATIVE_GLAD_ROOT}/include",
     f"{RELATIVE_ASSIMP_ROOT}/include",
-    RELATIVE_IMGUI_ROOT,
 ]
 
 # ---------------------------------------------------------------------------------------

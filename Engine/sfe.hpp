@@ -6,6 +6,8 @@
 #include <opengl.hpp>
 #include <component.hpp>
 #include <entity.hpp>
+#include <entity_manager.hpp>
+#include <scene.hpp>
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>

@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <algorithm>
 
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>

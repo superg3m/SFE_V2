@@ -62,10 +62,16 @@ namespace OpenGL {
 
     struct MaterialTable {
         std::vector<Material> materials;
+        std::map<std::string, Material> manifest_materials;
         u32 add_material(Material& material) {
             u32 ret = this->materials.size();
             this->materials.push_back(material);
             return ret;
+        }
+
+        void add_material(std::string key, Material& material) {
+            RUNTIME_ASSERT(!this->manifest_materials.count(key));
+            this->manifest_materials[key] = material;
         }
     };
 }
