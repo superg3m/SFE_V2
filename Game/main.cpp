@@ -202,12 +202,14 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni):
-- [] entity manager, should have like all the entities[256], should have:
-- [] Scene
-- [] active camera
+- [] Mesh should just have VAO, Entries
 - [] maybe get materials out of Mesh and have it just be a global table
     - THIS WILL BE THE KEY TO TEH HASHMAP: "../../Assets/Models/backpack/material/" + i
     material_index = g_materials.size() + i
+- [] entity manager, should have like all the entities[256], should have:
+- [] Scene
+- [] active camera
+
 - [] imgui, imguizmo
 - [] Render aabbs for both the main mesh and the submeshes! (This is a good question!)
 - [] entity manager, should have like all the entities[256], should have:
