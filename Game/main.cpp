@@ -31,6 +31,9 @@ struct ShaderTable {
     }
 };
 
+TextureTable textures;
+ShaderTable shaders;
+
 GLFWwindow* GLFW_INIT() {
     RUNTIME_ASSERT_MSG(glfwInit(), "Failed to init glfw\n");
 
@@ -74,8 +77,6 @@ struct Engine {
     OpenGL::RenderQueue queue;
     OpenGL::RenderState render_state;
     OpenGL::MaterialTable material_table;
-    TextureTable textures;
-    ShaderTable shaders;
 
     bool init() {
         this->window = GLFW_INIT();
@@ -84,8 +85,6 @@ struct Engine {
         }
 
         this->render_state.set_depth_test_or_use_cached(true);
-        shaders.initalize();
-        textures.initalize();
 
         OpenGL::Material uniform_color_green = OpenGL::Material::create(&shaders.color_uniform_shader);
         uniform_color_green.set_vec3("uColor", 0, 1, 0);
@@ -154,7 +153,10 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&engine.material_table, &engine.shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
+    shaders.initalize();
+    textures.initalize();
+
+    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&engine.material_table, &shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
     OpenGL::Mesh default_aabb_mesh = OpenGL::Mesh::AABB();
 
     while (!glfwWindowShouldClose(engine.window)) {
