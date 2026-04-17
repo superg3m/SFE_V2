@@ -156,7 +156,9 @@ TODO(Jovanni):
     material_index = g_materials.size() + i
 - [] imgui, imguizmo
 - [] Render aabbs for both the main mesh and the submeshes! (This is a good question!)
-- [] entity manager, should have like all the entities[], should have:
+- [] entity manager, should have like all the entities[256], should have:
+    Entity* create_entity() // give you a return &entites[next++]
+    // realisitically this hsould give you a handle but one thing at a time batman
     std::vector<Entity*> QueryComponentList<MeshComponent>() 
     std::vector<Entity*> QuerySetComponentList<MeshComponent, GravityComponent...>()
 - [] Start shifting the responsibility on the entity system
