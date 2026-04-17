@@ -166,9 +166,19 @@ struct AABB {
         return ret;
     }
 
+    glm::mat4 to_transform_matrix4() {
+        glm::vec3 scale = this->max - this->min;
+        glm::vec3 center = this->get_center();
+        glm::mat4 transform = glm::mat4(1.0f);
+        transform = glm::translate(transform, center);
+        transform = glm::scale(transform, scale);
+
+        return transform;
+    }
+
     glm::vec3 get_center() {
-        glm::vec3 extents = this->get_extents();
-        return glm::vec3(min.x + extents.x, min.y + extents.y, min.z + extents.z);
+        // glm::vec3 extents = this->get_extents();
+        return (max + min) * 0.5f; // glm::vec3(min.x + extents.x, min.y + extents.y, min.z + extents.z);
     }
 
     glm::vec3 get_extents() {

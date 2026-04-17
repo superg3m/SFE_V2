@@ -169,6 +169,35 @@ namespace OpenGL {
             return ret;
         }
 
+        static Mesh AABB() {
+            std::vector<Vertex> aabb_vertices = {
+                // Bottom face
+                Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+
+                // Top glm::vec3(face
+                Vertex{glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 0.5f, 0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 0.5f, 0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 0.5f, 0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 0.5f, 0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-0.5f, 0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(-0.5f, 0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+
+                // Vertical edges
+                Vertex{glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 0.5f, 0.5f, -0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3( 0.5f, 0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+                Vertex{glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)}, Vertex{glm::vec3(-0.5f, 0.5f,  0.5f), glm::vec3(0, 0, 0), glm::vec2(0, 0)},
+            };
+
+            Mesh ret;
+            ret.vertices = aabb_vertices;
+            ret.meshes.push_back(MeshEntry::create(VertexLayout::PNT(), ret.vertices, ret.indices, GL_LINES));  
+            ret.setup();
+
+            return ret;
+        }
+
         // TODO(Complete this): actually maybe not because this is pretty much an entity thing?
         static Mesh load_from_file(Shader* shader, std::string path);
 

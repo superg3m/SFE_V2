@@ -104,7 +104,9 @@ int main(int argc, char** argv) {
     OpenGL::RenderQueue queue = OpenGL::RenderQueue::create(&render_state);
     OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
     // OpenGL::Mesh cube_mesh = OpenGL::Mesh::cube();
-    OpenGL::Mesh backpack_aabb_mesh = OpenGL::Mesh::AABB(backpack_mesh.aabb);
+
+    OpenGL::Mesh default_aabb_mesh = OpenGL::Mesh::AABB();
+    // OpenGL::Mesh backpack_aabb_mesh = OpenGL::Mesh::AABB(backpack_mesh.aabb);
 
     while (!glfwWindowShouldClose(window)) {
         gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
@@ -113,18 +115,18 @@ int main(int argc, char** argv) {
         glm::mat4 model         = glm::mat4(1.0f);
         glm::mat4 view          = glm::mat4(1.0f);
         glm::mat4 projection    = glm::mat4(1.0f);
-        glm::quat rotation = glm::angleAxis((float)glfwGetTime() / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = model * glm::mat4_cast(rotation);
+        // glm::quat rotation = glm::angleAxis((float)glfwGetTime() / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+        // model = model * glm::mat4_cast(rotation);
         model = glm::scale(model, glm::vec3((sin((float)glfwGetTime()) + 2), 1, 1));
         view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
         projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 
         {
             OpenGL::RenderCommandOpaque command = {};
-            command.vao = &backpack_aabb_mesh.vao;
-            command.entry = &backpack_aabb_mesh.meshes[0];
+            command.vao = &default_aabb_mesh.vao;
+            command.entry = &default_aabb_mesh.meshes[0];
             command.material = &materials.uniform_color_green;
-            command.model = model;
+            command.model = model * backpack_mesh.aabb.to_transform_matrix4();
             command.view = view;
             command.projection = projection;
             queue.submit(command);
@@ -135,6 +137,15 @@ int main(int argc, char** argv) {
             command.entry = &entry;
             command.material = &backpack_mesh.materials[entry.material_index];
             command.model = model;
+            command.view = view;
+            command.projection = projection;
+            queue.submit(command);
+
+            command = {};
+            command.vao = &default_aabb_mesh.vao;
+            command.entry = &default_aabb_mesh.meshes[0];
+            command.material = &materials.uniform_color_green;
+            command.model = model * entry.aabb.to_transform_matrix4();
             command.view = view;
             command.projection = projection;
             queue.submit(command);
@@ -151,6 +162,7 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni):
+- [] entity manager, should have like all the entities[256], should have:
 - [] Scene
 - [] active camera
 - [] maybe get materials out of Mesh and have it just be a global table
