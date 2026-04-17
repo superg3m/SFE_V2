@@ -198,10 +198,7 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni):
-- [] Mesh should just have VAO, Entries
-- [] maybe get materials out of Mesh and have it just be a global table
-    - THIS WILL BE THE KEY TO TEH HASHMAP: "../../Assets/Models/backpack/material/" + i
-    material_index = g_materials.size() + i
+- [X] Mesh should just have VAO, Entries
 - [] entity manager, should have like all the entities[256], should have:
 - [] Scene
 - [] active camera

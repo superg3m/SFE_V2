@@ -28,7 +28,7 @@ struct Entity {
 	std::map<std::type_index, Component*> components; 
     Transform transform;
 
-    void reparent();
+    void reparent(); // TODO(Jovanni): yeah gotta write this...
 
     void set_rotation_euler(glm::vec3 euler) {
         this->transform.rotation = glm::quat(euler);
