@@ -220,14 +220,12 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni):
+- [] Loop at video and see where I can start abstracting the engine and application.
+
 - [X] Mesh should just have VAO, Entries
-- [] entity manager, should have like all the entities[256], should have:
-    Entity* create_entity() // give you a return &entites[next++]
-    // realisitically this hsould give you a handle but one thing at a time batman
-    std::vector<Entity*> QueryComponentList<MeshComponent>() 
+- [X] entity manager, should have like all the entities[256], should have:
     std::vector<Entity*> QuerySetComponentList<MeshComponent, GravityComponent...>()
-- [] Entity reparent()
-- [] Scene
+- [x] Scene
 - [] active camera
 
 - [] imgui, imguizmo
