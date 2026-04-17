@@ -151,6 +151,7 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni):
+- [] Scene
 - [] active camera
 - [] maybe get materials out of Mesh and have it just be a global table
     - THIS WILL BE THE KEY TO TEH HASHMAP: "../../Assets/Models/backpack/material/" + i
