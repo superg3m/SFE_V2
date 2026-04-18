@@ -45,7 +45,7 @@ constexpr float EPSILON = 0.0001f;
 #define GB(value) ((size_t)MB(value) * 1024L)
 #define OFFSET_OF(type, member) (size_t)(&(((type*)0)->member))
 #define UNUSED(a) (void)a
-#define INTERNAL_FUNCTION static
+#define INTERNAL_LINKAGE static
 #define LOCAL_PERSIST static
 
 #define NEAR_ZERO(x) (fabs(x) <= EPSILON)

@@ -77,12 +77,18 @@ struct Engine {
     OpenGL::RenderQueue queue;
     OpenGL::RenderState render_state;
     OpenGL::MaterialTable material_table;
+    Input input;
 
     Scene active_scene;
 
     bool init() {
         this->window = GLFW_INIT();
         if (!this->window) {
+            return false;
+        }
+
+        this->input.init();
+        if (!INPUT_GLFW_SETUP(&this->input, this->window)) {
             return false;
         }
 
@@ -104,6 +110,16 @@ struct Engine {
 
     void update(float dt) {
         active_scene.update(dt);
+
+        if (input.get_key(KEY_A, PRESSED|RELEASED)) {
+            LOG_ERROR("WOW\n");
+        }
+
+        if (input.get_key_pressed(KEY_ESCAPE)) {
+            glfwSetWindowShouldClose(this->window, true);
+        }
+
+        input.poll();
     }
 };
 
@@ -165,9 +181,17 @@ int main(int argc, char** argv) {
     OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&engine.material_table, &shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
     OpenGL::Mesh default_aabb_mesh = OpenGL::Mesh::AABB();
 
+    float dt = 0.0f; // Time between current frame and last frame
+    float previous_time = 0.0f; // Time of last frame
     while (!glfwWindowShouldClose(engine.window)) {
         gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
         gl_error_check(glClearColor(0.2, 0.2, 0.2, 1));
+
+        float current_time = glfwGetTime(); // Returns time in seconds
+        dt = current_time - previous_time;
+        previous_time = current_time;
+
+        engine.update(dt);
 
         glm::mat4 model         = glm::mat4(1.0f);
         glm::mat4 view          = glm::mat4(1.0f);
