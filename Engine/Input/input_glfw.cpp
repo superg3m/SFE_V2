@@ -2,7 +2,7 @@
 
 INTERNAL_LINKAGE GLFW_CTX ctx;
 
-bool INPUT_GLFW_SETUP(Input* input, GLFWwindow* window, GLFWkeyfun key_cb, GLFWmousebuttonfun mouse_button_cb, GLFWcursorposfun mouse_move_cb) {
+bool INPUT_GLFW_SETUP(InputManager* input, GLFWwindow* window, GLFWkeyfun key_cb, GLFWmousebuttonfun mouse_button_cb, GLFWcursorposfun mouse_move_cb) {
     input->platform_ctx = (void*)&ctx;
     ctx.input = input;
     ctx.window = window;

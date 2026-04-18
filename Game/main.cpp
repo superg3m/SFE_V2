@@ -4,36 +4,6 @@
 const int WIDTH = 800;
 const int HEIGHT = 800;
 
-struct TextureTable {
-    OpenGL::Texture face;
-    OpenGL::Texture container;
-
-    void initalize() {
-        this->face = OpenGL::Texture::load_from_file(1, "../../Assets/Textures/awesomeface.png");
-        this->container = OpenGL::Texture::load_from_file(1, "../../Assets/Textures/container.jpg");
-    }
-};
-
-struct ShaderTable {
-    OpenGL::Shader box_shader;
-    OpenGL::Shader model_shader;
-    OpenGL::Shader color_uniform_shader;
-
-    void initalize() {
-        this->box_shader = OpenGL::Shader::create({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
-        this->model_shader = OpenGL::Shader::create({"../../Assets/Shaders/model.vert", "../../Assets/Shaders/model.frag"});
-        this->color_uniform_shader = OpenGL::Shader::create({"../../Assets/Shaders/uniform.vert", "../../Assets/Shaders/uniform.frag"});
-    }
-
-    void compile() {
-        this->box_shader.compile();
-        this->model_shader.compile();
-    }
-};
-
-TextureTable textures;
-ShaderTable shaders;
-
 GLFWwindow* GLFW_INIT() {
     RUNTIME_ASSERT_MSG(glfwInit(), "Failed to init glfw\n");
 
@@ -76,8 +46,8 @@ struct Engine {
     GLFWwindow* window;
     OpenGL::RenderQueue queue;
     OpenGL::RenderState render_state;
-    OpenGL::MaterialTable material_table;
-    Input input;
+    InputManager input;
+    AssetManager asset_manager;
 
     Scene active_scene;
 
@@ -92,18 +62,20 @@ struct Engine {
             return false;
         }
 
+        this->asset_manager.init();
         this->render_state.set_depth_test_or_use_cached(true);
-
-        OpenGL::Material uniform_color_green = OpenGL::Material::create(&shaders.color_uniform_shader);
-        uniform_color_green.set_vec3("uColor", 0, 1, 0);
-
-        OpenGL::Material uniform_color_red = OpenGL::Material::create(&shaders.color_uniform_shader);
-        uniform_color_red.set_vec3("uColor", 1, 0, 0);
-
-        material_table.add_material("uniform_color_green", uniform_color_green);
-        material_table.add_material("uniform_color_red", uniform_color_red);
-
         this->queue = OpenGL::RenderQueue::create(&this->render_state);
+
+        this->asset_manager.load_shader("box_shader", {"cube.vert", "cube.frag"});
+        this->asset_manager.load_shader("model_shader", {"model.vert", "model.frag"});
+        this->asset_manager.load_shader("uniform_shader", {"uniform.vert", "uniform.frag"});
+
+        OpenGL::Shader* uniform_shader = &this->asset_manager.shaders["uniform_shader"];
+        this->asset_manager.materials[{"uniform_color_green", 0}] = OpenGL::Material::create(uniform_shader);
+        this->asset_manager.materials[{"uniform_color_green", 0}].set_vec3("uColor", 0, 1, 0);
+
+        this->asset_manager.load_texture("awesome_face", 0, "awesomeface.png");
+        this->asset_manager.load_texture("container", 1, "container.jpg");
 
         return true;
     }
@@ -113,6 +85,10 @@ struct Engine {
 
         if (input.get_key(KEY_A, PRESSED|RELEASED)) {
             LOG_ERROR("WOW\n");
+        }
+
+        if (input.get_key_pressed(KEY_R)) {
+            this->asset_manager.reload_shaders();
         }
 
         if (input.get_key_pressed(KEY_ESCAPE)) {
@@ -160,11 +136,6 @@ struct Editor {
 };
 
 int main(int argc, char** argv) {
-    // InputSystem input;
-    // input.previous_mouse
-    // input.current_mouse
-    // glm::vec3 delta = input.current - input.previous;
-
     Engine engine = {};
     if (!engine.init()) {
         return -1;
@@ -175,10 +146,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    shaders.initalize();
-    textures.initalize();
-
-    OpenGL::Mesh backpack_mesh = OpenGL::Mesh::load_from_file(&engine.material_table, &shaders.model_shader, "../../Assets/Models/backpack/backpack.obj");
+    OpenGL::Mesh backpack_mesh = engine.asset_manager.load_mesh("backpack/backpack.obj", &engine.asset_manager.shaders["model_shader"]);
     OpenGL::Mesh default_aabb_mesh = OpenGL::Mesh::AABB();
 
     float dt = 0.0f; // Time between current frame and last frame
@@ -205,18 +173,18 @@ int main(int argc, char** argv) {
         {
             OpenGL::RenderCommandOpaque command = {};
             command.vao = &default_aabb_mesh.vao;
-            command.entry = &default_aabb_mesh.meshes[0];
-            command.material = &engine.material_table.manifest_materials["uniform_color_green"];
+            command.entry = &default_aabb_mesh.entries[0];
+            command.material = &engine.asset_manager.materials[{"uniform_color_green", 0}];
             command.model = model * backpack_mesh.aabb.to_transform_matrix4();
             command.view = view;
             command.projection = projection;
             engine.queue.submit(command);
         }
-        for (OpenGL::MeshEntry& entry : backpack_mesh.meshes) {
+        for (OpenGL::MeshEntry& entry : backpack_mesh.entries) {
             OpenGL::RenderCommandOpaque command = {};
             command.vao = &backpack_mesh.vao;
             command.entry = &entry;
-            command.material = &engine.material_table.materials[entry.material_index];
+            command.material = &engine.asset_manager.materials[entry.material_key];
             command.model = model;
             command.view = view;
             command.projection = projection;
@@ -224,8 +192,8 @@ int main(int argc, char** argv) {
 
             command = {};
             command.vao = &default_aabb_mesh.vao;
-            command.entry = &default_aabb_mesh.meshes[0];
-            command.material = &engine.material_table.manifest_materials["uniform_color_green"];
+            command.entry = &default_aabb_mesh.entries[0];
+            command.material = &engine.asset_manager.materials[{"uniform_color_green", 0}];
             command.model = model * entry.aabb.to_transform_matrix4();
             command.view = view;
             command.projection = projection;
@@ -244,6 +212,8 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni):
+- [] switch all this pointer nonsense to handles... for the assets
+
 - [] Loop at video and see where I can start abstracting the engine and application.
 
 - [X] Mesh should just have VAO, Entries

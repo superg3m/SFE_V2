@@ -5,7 +5,37 @@
 #include <gpu_buffers.hpp>
 #include <material.hpp>
 
+glm::mat4 convert_assimp_matrix_to_glm(const aiMatrix4x4& from);
+
 namespace OpenGL {
+    void load_assimp_texture(MaterialMap& materials, MaterialKey material_key, int i, const aiScene* scene, std::string directory, aiTextureType ai_texture_type, const char* name) {
+        const aiMaterial* ai_material = scene->mMaterials[i];
+        if (ai_material->GetTextureCount(ai_texture_type) <= 0) {
+            return;
+        }
+
+        aiString str;
+        if (ai_material->GetTexture(ai_texture_type, 0, &str, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+            const char* texture_path = str.C_Str();
+            std::string filename = directory + "/" + texture_path;
+
+            const aiTexture* ai_texture = scene->GetEmbeddedTexture(str.C_Str());
+            if (ai_texture) {
+                int width, height, nrChannel = 0;
+                u8* image_data = stbi_load_from_memory((u8*)ai_texture->pcData, ai_texture->mWidth, &width, &height, &nrChannel, 0);
+                Texture texture = Texture::load_from_memory(ai_texture_type, image_data, width, height, nrChannel);
+
+                LOG_DEBUG("Material: %d | has embedded Texture of type: %s\n", i, Material::DIFFUSE_TEXTURE);
+                materials[material_key].set_texture(Material::DIFFUSE_TEXTURE, texture);
+            } else {
+                LOG_DEBUG("Material: %d | has external texture of type: %s\n", i, Material::DIFFUSE_TEXTURE);
+                materials[material_key].set_texture(Material::DIFFUSE_TEXTURE, Texture::load_from_file(ai_texture_type, filename.c_str()));
+            }
+        } else {
+            LOG_ERROR("Failed to get texture path for material: %d | type: %s\n", i, Material::DIFFUSE_TEXTURE);
+        }
+    }
+
     const float MAGIC_NUMBER = -123450510.0f;
     const int RESERVED_VERTEX_ATTRIBUTE_LOCATIONS = 8;
 
@@ -21,18 +51,18 @@ namespace OpenGL {
         u32 index_count = 0;
         u32 base_vertex  = 0; // starting offset to next vertex in the vertex buffer
         u32 base_index   = 0; // offset to next index in the index buffer
-        u32 material_index = 0;
+        MaterialKey material_key = {};
         AABB aabb;
 
         template<typename T>
-        static MeshEntry create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0, u32 material_index = 0) {
+        static MeshEntry create(VertexLayout& layout, std::vector<T>& vertex_data, std::vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0, MaterialKey material_key = {}) {
             MeshEntry ret = {};
             ret.draw_type = draw_type;
             ret.vertex_count = (vertex_data.size() * sizeof(T)) / layout.stride;
             ret.index_count = indices.size();
             ret.base_vertex  = base_vertex;
             ret.base_index   = base_index;
-            ret.material_index = material_index;
+            ret.material_key = material_key;
 
             return ret;
         }
@@ -43,7 +73,7 @@ namespace OpenGL {
         VAO vao;
         VBO vbo;
         EBO ebo;
-        std::vector<MeshEntry> meshes;
+        std::vector<MeshEntry> entries;
         AABB aabb;
 
         template<typename T>
@@ -108,7 +138,7 @@ namespace OpenGL {
             Mesh ret;
             ret.vertices = cube_vertices;
             ret.indices = cube_indices;
-            ret.meshes.push_back(MeshEntry::create(VertexLayout::PNT(), ret.vertices, ret.indices, GL_TRIANGLES));  
+            ret.entries.push_back(MeshEntry::create(VertexLayout::PNT(), ret.vertices, ret.indices, GL_TRIANGLES));  
             ret.setup();
 
             return ret;
@@ -162,7 +192,7 @@ namespace OpenGL {
 
             Mesh ret;
             ret.vertices = aabb_vertices;
-            ret.meshes.push_back(MeshEntry::create(VertexLayout::PNT(), ret.vertices, ret.indices, GL_LINES));  
+            ret.entries.push_back(MeshEntry::create(VertexLayout::PNT(), ret.vertices, ret.indices, GL_LINES));  
             ret.setup();
 
             return ret;
@@ -191,22 +221,101 @@ namespace OpenGL {
 
             Mesh ret;
             ret.vertices = aabb_vertices;
-            ret.meshes.push_back(MeshEntry::create(VertexLayout::PNT(), ret.vertices, ret.indices, GL_LINES));  
+            ret.entries.push_back(MeshEntry::create(VertexLayout::PNT(), ret.vertices, ret.indices, GL_LINES));  
             ret.setup();
 
             return ret;
         }
 
-        // TODO(Complete this): actually maybe not because this is pretty much an entity thing?
-        static Mesh load_from_file(MaterialTable* material_table, Shader* shader, std::string path);
+        static Mesh load_from_file(MaterialMap& materials, Shader* shader, std::string path) {
+            Mesh ret = {};
+            Assimp::Importer importer;
+            unsigned int assimp_flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;
+            const aiScene* scene = importer.ReadFile(path, assimp_flags);
+            if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
+                LOG_ERROR("ASSIMP ERROR: %s\n", importer.GetErrorString());
+            }
 
-    private:
-        std::vector<Vertex> vertices;
-        std::vector<u32> indices;
-        void process_node(MaterialTable* material_table, u32 base_material_index, aiNode* node, const aiScene* scene, glm::mat4 parent_transform);
-        MeshEntry process_mesh(MaterialTable* material_table, u32 base_material_index, aiMesh* ai_mesh, const aiScene* scene, glm::mat4 parent_transform);
-        void setup();
-    };
+            unsigned int total_vertex_count = 0;
+            unsigned int total_index_count = 0;
+            for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+                total_vertex_count += scene->mMeshes[i]->mNumVertices;
+                total_index_count  += scene->mMeshes[i]->mNumFaces * 3;
+            }
+
+            ret.vertices.reserve(total_vertex_count);
+            ret.indices.reserve(total_index_count);
+
+            int index = path.find_last_of("/");
+            if (index == std::string::npos) {
+                index = path.find_last_of("\\");
+                RUNTIME_ASSERT(index != std::string::npos);
+            }
+
+            std::string directory = path.substr(0, index);
+            for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
+                const aiMaterial* ai_material = scene->mMaterials[i];
+                MaterialKey material_key = {};
+                material_key.name = path;
+                material_key.material_index = i;
+                materials[material_key].shader = shader;
+
+                /*
+                aiColor4D ambient_color(0.0f, 0.0f, 0.0f, 0.0f);
+                if (ai_material->Get(AI_MATKEY_COLOR_AMBIENT, ambient_color) == AI_SUCCESS) {
+                    this->materials[i].ambient_color.r = ambient_color.r;
+                    this->materials[i].ambient_color.g = ambient_color.g;
+                    this->materials[i].ambient_color.b = ambient_color.b;
+                }
+
+
+                aiColor3D diffuse_color(0.0f, 0.0f, 0.0f);
+                if (ai_material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse_color) == AI_SUCCESS) {
+                    this->materials[i].diffuse_color.r = diffuse_color.r;
+                    this->materials[i].diffuse_color.g = diffuse_color.g;
+                    this->materials[i].diffuse_color.b = diffuse_color.b;
+                }
+
+                aiColor3D specular_color(0.0f, 0.0f, 0.0f);
+                if (ai_material->Get(AI_MATKEY_COLOR_SPECULAR, specular_color) == AI_SUCCESS) {
+                    this->materials[i].specular_color.r = specular_color.r;
+                    this->materials[i].specular_color.g = specular_color.g;
+                    this->materials[i].specular_color.b = specular_color.b;
+                }
+
+                float opacity = 1.0f;
+                if (ai_material->Get(AI_MATKEY_OPACITY, opacity) == AI_SUCCESS) {
+                    this->materials[i].opacity = opacity;
+                } else {
+                    // LOG_WARN("Mesh Failed opacity matkey?\n");
+                }
+                */
+
+                load_assimp_texture(materials, material_key, i, scene,  directory, aiTextureType_DIFFUSE, Material::DIFFUSE_TEXTURE);
+            }
+
+            MaterialKey material_key = {};
+            material_key.name = path;
+
+            ret.process_node(material_key, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
+            ret.setup();
+
+            ret.vertices.clear();
+            ret.vertices.shrink_to_fit();
+
+            ret.indices.clear();
+            ret.indices.shrink_to_fit();
+
+            return ret;
+        }
+
+        private:
+            std::vector<Vertex> vertices;
+            std::vector<u32> indices;
+            void process_node(MaterialKey material_key, aiNode* node, const aiScene* scene, glm::mat4 parent_transform);
+            MeshEntry process_mesh(MaterialKey material_key, aiMesh* ai_mesh, const aiScene* scene, glm::mat4 parent_transform);
+            void setup();
+        };
 
     /*
     struct Model {

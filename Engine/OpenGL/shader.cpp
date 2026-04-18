@@ -3,13 +3,13 @@
 #include <render_state.hpp>
 
 namespace OpenGL {
-    u32 Shader::create_shader_program(std::vector<const char*> shader_paths) {
+    u32 Shader::create_shader_program(std::vector<std::string> shader_paths) {
         u32 shader_program_id = glCreateProgram();
         this->shader_paths = shader_paths;
 
         std::vector<u32> shader_source_ids;
-        for (const char* path : shader_paths) {
-            u32 shader_source_id = this->shader_source_compile(path);
+        for (std::string path : shader_paths) {
+            u32 shader_source_id = this->shader_source_compile(path.c_str());
             glAttachShader(shader_program_id, shader_source_id);
             shader_source_ids.push_back(shader_source_id);
         }
@@ -20,7 +20,7 @@ namespace OpenGL {
         if (!success) {
             char info_log[1028] = {0};
             glGetProgramInfoLog(shader_program_id, 512, NULL, info_log);
-            LOG_ERROR("LINKING_FAILED {%s}\n", shader_paths[0]);
+            LOG_ERROR("LINKING_FAILED {%s}\n", shader_paths[0].c_str());
             LOG_ERROR("%s -- --------------------------------------------------- --\n", info_log);
         }
 
@@ -47,7 +47,7 @@ namespace OpenGL {
         return shader_program_id;
     }
 
-    Shader Shader::create(std::vector<const char*> shader_paths) {
+    Shader Shader::create(std::vector<std::string> shader_paths) {
         Shader ret = {};
         ret.program_id = 0;
         ret.shader_paths = shader_paths;
@@ -126,7 +126,7 @@ namespace OpenGL {
         if (this->uniforms.count(name)) {
             UniformDesc expected = this->uniforms[name];
             if (expected.type != type) {
-                LOG_ERROR("Shader {%s} Uniform: '%s' type missmatch | Expected: %s | Got: %s\n", this->shader_paths[0], name, gl_enum_to_string(expected.type), gl_enum_to_string(type));
+                LOG_ERROR("Shader {%s} Uniform: '%s' type missmatch | Expected: %s | Got: %s\n", this->shader_paths[0].c_str(), name, gl_enum_to_string(expected.type), gl_enum_to_string(type));
                 return (unsigned int)-1;
             }
 
@@ -136,7 +136,7 @@ namespace OpenGL {
         int location = glGetUniformLocation(this->program_id, name);
         this->uniforms.insert(std::make_pair(name, UniformDesc{type, location})); // this type might be wrong, but theres no great robust way to do arrays that I know of...
         if (location == -1) {
-            LOG_ERROR("Shader {%s} Uniform: '%s' does not exists\n", this->shader_paths[0], name);
+            LOG_ERROR("Shader {%s} Uniform: '%s' does not exists\n", this->shader_paths[0].c_str(), name);
         }
 
         return location;
@@ -173,7 +173,7 @@ namespace OpenGL {
 
         gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_2D), texture.texture_unit));
     }
-    void Shader::set_texture_cube( const char* name, Texture texture) {
+    void Shader::set_texture_cube(const char* name, Texture texture) {
         RUNTIME_ASSERT(texture.type == TextureSamplerType::CUBEMAP_3D);
 
         gl_error_check(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));

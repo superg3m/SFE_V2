@@ -17,7 +17,7 @@ namespace OpenGL {
     struct Shader {
         unsigned int program_id = 0;
 
-        static Shader create(std::vector<const char*> shader_paths);
+        static Shader create(std::vector<std::string> shader_paths);
         void compile();
 
         void use(RenderState* render_state) const;
@@ -84,10 +84,10 @@ namespace OpenGL {
             }
         }
     private:
-        std::vector<const char*> shader_paths;
+        std::vector<std::string> shader_paths;
         std::map<std::string, UniformDesc> uniforms;
 
-        u32 create_shader_program(std::vector<const char*> shader_paths);
+        u32 create_shader_program(std::vector<std::string> shader_paths);
         GLenum type_from_path(std::string path);
         void check_compile_error(unsigned int source_id, const char* path);
         unsigned int shader_source_compile(const char* path);

@@ -105,9 +105,9 @@ struct Profile {
     bool active;
 };
 
-struct Input {
+struct InputManager {
     std::vector<Profile> profiles;
-    std::map<KeyCode, KeyState> input_state;
+    std::unordered_map<KeyCode, KeyState> input_state;
     void* platform_ctx; // GLFW: GLFWwindow* | Winapi: HANDLE
 
     glm::vec2 current_mouse;

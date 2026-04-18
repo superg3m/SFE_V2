@@ -1,8 +1,17 @@
 #include <mesh.hpp>
-#include <core.hpp>
+
+glm::mat4 convert_assimp_matrix_to_glm(const aiMatrix4x4& from) {
+    glm::mat4 to;
+    //the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+    to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
+    to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
+    to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
+    to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
+    return to;
+}
 
 namespace OpenGL {
-    static AABB calculate_aabb(const std::vector<Vertex>& vertices, int base_vertex, int vertex_count) {
+    AABB calculate_aabb(const std::vector<Vertex>& vertices, int base_vertex, int vertex_count) {
         float x_min = FLT_MAX;
         float y_min = FLT_MAX;
         float z_min = FLT_MAX;
@@ -50,49 +59,13 @@ namespace OpenGL {
         return AABB::from_center_extents(center, extents);
     }
 
-    static inline glm::mat4 convert_assimp_matrix_to_glm(const aiMatrix4x4& from) {
-		glm::mat4 to;
-		//the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
-		to[0][0] = from.a1; to[1][0] = from.a2; to[2][0] = from.a3; to[3][0] = from.a4;
-		to[0][1] = from.b1; to[1][1] = from.b2; to[2][1] = from.b3; to[3][1] = from.b4;
-		to[0][2] = from.c1; to[1][2] = from.c2; to[2][2] = from.c3; to[3][2] = from.c4;
-		to[0][3] = from.d1; to[1][3] = from.d2; to[2][3] = from.d3; to[3][3] = from.d4;
-		return to;
-	}
-
-    void load_assimp_texture(MaterialTable* material_table, u32 base_material_index, int i, const aiScene* scene, std::string directory, aiTextureType ai_texture_type, const char* name) {
-        const aiMaterial* ai_material = scene->mMaterials[i];
-        if (ai_material->GetTextureCount(ai_texture_type) <= 0) {
-            return;
-        }
-
-        aiString str;
-        if (ai_material->GetTexture(ai_texture_type, 0, &str, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
-            const char* texture_path = str.C_Str();
-            std::string filename = directory + "/" + texture_path;
-
-            const aiTexture* ai_texture = scene->GetEmbeddedTexture(str.C_Str());
-            if (ai_texture) {
-                int width, height, nrChannel = 0;
-                u8* image_data = stbi_load_from_memory((u8*)ai_texture->pcData, ai_texture->mWidth, &width, &height, &nrChannel, 0);
-                Texture texture = Texture::load_from_memory(ai_texture_type, image_data, width, height, nrChannel);
-
-                LOG_DEBUG("Material: %d | has embedded Texture of type: %s\n", i, Material::DIFFUSE_TEXTURE);
-                material_table->materials[base_material_index + i].set_texture(Material::DIFFUSE_TEXTURE, texture);
-            } else {
-                LOG_DEBUG("Material: %d | has external texture of type: %s\n", i, Material::DIFFUSE_TEXTURE);
-                material_table->materials[base_material_index + i].set_texture(Material::DIFFUSE_TEXTURE, Texture::load_from_file(ai_texture_type, filename.c_str()));
-            }
-        } else {
-            LOG_ERROR("Failed to get texture path for material: %d | type: %s\n", i, Material::DIFFUSE_TEXTURE);
-        }
-    }
-
-    MeshEntry Mesh::process_mesh(MaterialTable* material_table, u32 base_material_index, aiMesh* ai_mesh, const aiScene* scene, glm::mat4 parent_transform) {
-        MeshEntry entry;
+    MeshEntry Mesh::process_mesh(MaterialKey material_key, aiMesh* ai_mesh, const aiScene* scene, glm::mat4 parent_transform) {
+        material_key.material_index = ai_mesh->mMaterialIndex;
+        
+        MeshEntry entry = {};
         entry.base_vertex = (unsigned int)this->vertices.size();
         entry.base_index = (unsigned int)this->indices.size();
-        entry.material_index = base_material_index + ai_mesh->mMaterialIndex;
+        entry.material_key = material_key;
         entry.index_count = ai_mesh->mNumFaces * 3;
         entry.vertex_count = ai_mesh->mNumVertices;
         unsigned int meshPrimitiveType;
@@ -158,7 +131,7 @@ namespace OpenGL {
         return entry;
     }
 
-    void Mesh::process_node(MaterialTable* material_table, u32 base_material_index, aiNode* node, const aiScene* scene, glm::mat4 parent_transform) {
+    void Mesh::process_node(MaterialKey material_key, aiNode* node, const aiScene* scene, glm::mat4 parent_transform) {
         for (unsigned int i = 0; i < node->mNumMeshes; i++) {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
             RUNTIME_ASSERT_MSG(mesh->mPrimitiveTypes != 0, "Primitive type not set by ASSIMP in mesh.\n");
@@ -172,97 +145,18 @@ namespace OpenGL {
                 RUNTIME_ASSERT(false);
             }
 
-            this->meshes.push_back(this->process_mesh(material_table, base_material_index, mesh, scene, parent_transform));
+            this->entries.push_back(this->process_mesh(material_key, mesh, scene, parent_transform));
         }
 
         glm::mat4 new_parent_transform = parent_transform * convert_assimp_matrix_to_glm(node->mTransformation);
         for (unsigned int i = 0; i < node->mNumChildren; i++) {
-            this->process_node(material_table, base_material_index, node->mChildren[i], scene, new_parent_transform);
+            this->process_node(material_key, node->mChildren[i], scene, new_parent_transform);
         }
-    }
-
-    Mesh Mesh::load_from_file(MaterialTable* material_table, Shader* shader, std::string path) {
-        Mesh ret = {};
-        Assimp::Importer importer;
-        unsigned int assimp_flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;
-        const aiScene* scene = importer.ReadFile(path, assimp_flags);
-        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-            LOG_ERROR("ASSIMP ERROR: %s\n", importer.GetErrorString());
-        }
-
-        unsigned int total_vertex_count = 0;
-        unsigned int total_index_count = 0;
-        for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
-            total_vertex_count += scene->mMeshes[i]->mNumVertices;
-            total_index_count  += scene->mMeshes[i]->mNumFaces * 3;
-        }
-
-        u32 base_material_index = material_table->materials.size();
-
-        ret.vertices.reserve(total_vertex_count);
-        ret.indices.reserve(total_index_count);
-        material_table->materials.resize(base_material_index + scene->mNumMaterials);
-
-        int index = path.find_last_of("/");
-        if (index == std::string::npos) {
-            index = path.find_last_of("\\");
-            RUNTIME_ASSERT(index != std::string::npos);
-        }
-
-        std::string directory = path.substr(0, index);
-        for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
-            const aiMaterial* ai_material = scene->mMaterials[i];
-            material_table->materials[base_material_index + i].shader = shader;
-
-            /*
-            aiColor4D ambient_color(0.0f, 0.0f, 0.0f, 0.0f);
-            if (ai_material->Get(AI_MATKEY_COLOR_AMBIENT, ambient_color) == AI_SUCCESS) {
-                this->materials[i].ambient_color.r = ambient_color.r;
-                this->materials[i].ambient_color.g = ambient_color.g;
-                this->materials[i].ambient_color.b = ambient_color.b;
-            }
-
-
-            aiColor3D diffuse_color(0.0f, 0.0f, 0.0f);
-            if (ai_material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse_color) == AI_SUCCESS) {
-                this->materials[i].diffuse_color.r = diffuse_color.r;
-                this->materials[i].diffuse_color.g = diffuse_color.g;
-                this->materials[i].diffuse_color.b = diffuse_color.b;
-            }
-
-            aiColor3D specular_color(0.0f, 0.0f, 0.0f);
-            if (ai_material->Get(AI_MATKEY_COLOR_SPECULAR, specular_color) == AI_SUCCESS) {
-                this->materials[i].specular_color.r = specular_color.r;
-                this->materials[i].specular_color.g = specular_color.g;
-                this->materials[i].specular_color.b = specular_color.b;
-            }
-
-            float opacity = 1.0f;
-            if (ai_material->Get(AI_MATKEY_OPACITY, opacity) == AI_SUCCESS) {
-                this->materials[i].opacity = opacity;
-            } else {
-                // LOG_WARN("Mesh Failed opacity matkey?\n");
-            }
-            */
-
-            load_assimp_texture(material_table, base_material_index, i, scene,  directory, aiTextureType_DIFFUSE, Material::DIFFUSE_TEXTURE);
-        }
-
-        ret.process_node(material_table, base_material_index, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
-        ret.setup();
-
-        ret.vertices.clear();
-        ret.vertices.shrink_to_fit();
-
-        ret.indices.clear();
-        ret.indices.shrink_to_fit();
-
-        return ret;
     }
 
     void Mesh::setup() {
         this->aabb = calculate_aabb(this->vertices, 0, this->vertices.size());
-        for (MeshEntry& entry : meshes) {
+        for (MeshEntry& entry : entries) {
             entry.aabb = calculate_aabb(this->vertices, entry.base_vertex, entry.vertex_count);
         }
 

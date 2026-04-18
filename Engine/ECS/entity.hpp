@@ -25,7 +25,7 @@ struct Entity {
     
 	Entity* parent;
 	std::vector<Entity*> children; 
-	std::map<std::type_index, Component*> components; 
+	std::unordered_map<std::type_index, Component*> components; 
     Transform transform;
 
     void reparent(); // TODO(Jovanni): yeah gotta write this...

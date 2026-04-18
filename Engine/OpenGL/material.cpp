@@ -1,5 +1,9 @@
 #include <material.hpp>
 
+bool operator<(const MaterialKey& k1, const MaterialKey& k2) {
+    return k1.material_index < k2.material_index;
+}
+
 namespace OpenGL {
     void Material::set_bool(const char* name, bool value) {
         BindingValue binding = {};

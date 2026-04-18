@@ -1,8 +1,24 @@
-
 #pragma once
 
 #include <core.hpp>
 #include <texture.hpp>
+
+struct MaterialKey {
+    std::string name; // backpack.obj | uniform_green_color
+    u32 material_index = 0; // for like backpack.obj and they have multiple
+    
+    bool operator==(const MaterialKey& other) const {
+        return (this->name == other.name) && (this->material_index == other.material_index);
+    }
+};
+
+auto material_key_hash = [](const MaterialKey& a){
+    return std::hash<std::string>()(a.name) ^ std::hash<u32>()(a.material_index);
+};
+
+auto material_key_equal = [](const MaterialKey& a, const MaterialKey& b) {
+    return a == b;
+};
 
 namespace OpenGL {
     struct Shader;
@@ -44,7 +60,7 @@ namespace OpenGL {
         }
 
         Shader* shader = nullptr;
-        std::map<std::string, BindingValue> bindings;
+        std::unordered_map<std::string, BindingValue> bindings;
 
         void set_bool(const char* name, bool value);
         void set_int(const char* name, int value);
@@ -59,19 +75,6 @@ namespace OpenGL {
         void set_vec4(const char* name, float x, float y, float z, float w);
         void set_mat4(const char* name, const glm::mat4& mat);
     };
-
-    struct MaterialTable {
-        std::vector<Material> materials;
-        std::map<std::string, Material> manifest_materials;
-        u32 add_material(Material& material) {
-            u32 ret = this->materials.size();
-            this->materials.push_back(material);
-            return ret;
-        }
-
-        void add_material(std::string key, Material& material) {
-            RUNTIME_ASSERT(!this->manifest_materials.count(key));
-            this->manifest_materials[key] = material;
-        }
-    };
 }
+
+using MaterialMap = std::unordered_map<MaterialKey, OpenGL::Material, decltype(material_key_hash), decltype(material_key_equal)>;

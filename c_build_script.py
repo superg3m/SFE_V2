@@ -75,6 +75,7 @@ RELATIVE_GLM_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glm"
 RELATIVE_IMGUI_ROOT = f"{RELATIVE_ENGINE_VENDOR}/imgui"
 
 RELATIVE_GAME_ROOT = "../../../Game"
+RELATIVE_GAME_ASSETS_ROOT = "../../Assets"
 
 
 inject = []
@@ -120,6 +121,7 @@ INCLUDES = [
     f"{RELATIVE_ENGINE_ROOT}/ECS",
     f"{RELATIVE_ENGINE_ROOT}/Scene",
     f"{RELATIVE_ENGINE_ROOT}/Input",
+    f"{RELATIVE_ENGINE_ROOT}/Managers",
 
     f"{RELATIVE_ENGINE_VENDOR}",
     f"{RELATIVE_STB_ROOT}",
@@ -142,6 +144,7 @@ procedures_config = {
             f"{RELATIVE_STB_ROOT}/stb_image.c",
         ],
         additional_libs = [],
+        compile_time_defines=[f"COMPTIME_ASSERT_ROOT={RELATIVE_GAME_ASSETS_ROOT}"],
         include_paths = INCLUDES,
         compiler_inject_into_args=[]
     ),
