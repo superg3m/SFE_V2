@@ -214,6 +214,7 @@ int main(int argc, char** argv) {
 TODO(Jovanni):
 - [] change glm to my own math
 - [] change containers to my containers
+- [] String
 - [] switch all this pointer nonsense to handles... for the assets
 - [] Look at video and see where I can start abstracting the engine and application.
 - [X] Mesh should just have VAO, Entries
@@ -259,4 +260,13 @@ new MeshComponent(shader, mat, mesh)
 
     - To ensure some dederminism Entities need to update their children
     - Components will just be a vector or hashmap on the actutal entity
+
+
+The end goal of this project is the following:
+- [] Animations
+- [] Show entity heiarchy
+- [] pickable entities (probably ray based)
+- [] Hot reloading
+- [] Material system thats nice and hotswappable
+- [] nice imgui and imguizmo
 */
