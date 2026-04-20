@@ -263,10 +263,20 @@ new MeshComponent(shader, mat, mesh)
 
 
 The end goal of this project is the following:
+- [] robust rendering system (account for framebuffer objects)
+    - [] texture for depth, color, light, normals
+        - These shoulnd't be in the shader, theres should just be thier own shader and i just swap out the shader
+        that way its easy and doesn't clutter up shaders.
+
+- [] Physics (collisions, shooting)
+- [] Multiple Cameras
 - [] Animations
 - [] Show entity heiarchy
 - [] pickable entities (probably ray based)
 - [] Hot reloading
 - [] Material system thats nice and hotswappable
+- [] Scene system with nice lighting abilities (spotlight, sunlight, pointlights)
 - [] nice imgui and imguizmo
+- [] AS FEW Syscalls during a frame as possible!!!
+- [] Profile and code instrumentation in imgui
 */
