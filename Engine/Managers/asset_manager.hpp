@@ -37,7 +37,14 @@ struct AssetManager {
     // OpenGL::Texture load_material(const char* asset_path);
     OpenGL::Shader load_shader(std::string name, std::vector<std::string> shader_paths);
     OpenGL::Mesh load_mesh(const char* asset_path, OpenGL::Shader* shader);
-    void reload_shaders();
+
+    void reload_shaders() {
+        for (Slot<Asset>* slot : registry.slots) {
+            if (slot.data.type == SHADER) {
+                slot.data.shader.compile();
+            }
+        }
+    }
 }
 
 */
