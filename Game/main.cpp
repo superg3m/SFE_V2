@@ -223,6 +223,11 @@ TODO(Jovanni):
 - [x] Scene
 - [] active camera
 
+- [] probably you can just add a 
+    ComponentFlags to an entity this will make serialization trivial.
+    Theres also another reason this is nice. I can guarentee the order in which entity 
+    data/components will update.
+    update.
 - [] Start shifting the responsibility on the entity system
 - [] Entity Picking
 - [] Need to really think about how the hierarchy stuff is gonna owrk witih rendering
