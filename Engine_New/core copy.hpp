@@ -4,638 +4,737 @@
 // literally the thing that I learned a year ago or two at this point i'm refucking learning.
 // fuck c++ fuck your devilish temptations
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <type_traits>
+#define CORE_TYPES
+#define CORE_DEFINES
+#define CORE_LOGGING
+#define CORE_ASSERT
+#define CORE_MEMORY
+#define CORE_MEMORY_ARENA
+#define CORE_MATH
+#define CORE_HANDLE_REGISTRY
+#define CORE_STRING
+#define CORE_HASHING
+#define CORE_RANDOM
+#define CORE_DATA_STRUCTURES
+#define CORE_PLATFORM
+#define CORE_FRONTEND
 
-using u8  = uint8_t;
-using u16 = uint16_t;
-using u32 = uint32_t;
-using u64 = uint64_t;
-
-using s8  = int8_t;
-using s16 = int16_t;
-using s32 = int32_t;
-using s64 = int64_t;
-
-// --
-
-enum class Error : int {
-	SUCCESS = 0,
-	RESOURCE_NOT_FOUND,
-	RESOURCE_TOO_BIG,
-	NULL_PARAMETER,
-	INVALID_PARAMETER,
-	COUNT
-};
-
-/**
- * @brief returns a string literal of the error code
- * 
- * @param error_code 
- * @return const char*
- */
-const char* error_get_string(Error error_code);
-
-// --
-
-typedef void* (AllocateFunction)(void* ctx, size_t allocation_size);
-typedef void* (ReallocFunction)(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size);
-typedef void  (FreeFunction)(void* ctx, void* data);
-
-struct Allocator {
-	void* ctx;
-	AllocateFunction* malloc;
-	ReallocFunction* realloc;
-	FreeFunction* free;
-
-	bool operator==(Allocator other) const;
-	bool operator!=(Allocator other) const;
-};
-
-Allocator allocator_invalid();
-Allocator allocator_general();
-
-// --
-
-template <typename K, typename V>
-struct KeyValuePair {
-	K key;
-	V value;
-};
-
-// --
-
-struct Timer { 
-	bool should_tick;
-	float elapsed; 
-	float duration; 
-
-	static Timer create();
-	void start(float duration);
-	bool tick(float dt);
-	void stop();
-};
-
-// --
-
-struct String {
-	char* data = nullptr;
-	u64 length = 0;
-
-	static String create(char* data, u64 length);
-	bool operator==(const String& other) const;
-	bool operator!=(const String& other) const;
-};
-
-// --
-
-template<typename T>
-struct CompileTime {
-	static constexpr bool TYPE_IS_CSTRING = std::is_same_v<T, char*> || std::is_same_v<T, const char*>;
-	static constexpr bool TYPE_IS_STRING = std::is_same_v<T, String>;
-	static constexpr bool TYPE_IS_TRIVIAL = std::is_trivially_copyable_v<T>;
-	static constexpr bool TYPE_IS_POINTER = std::is_pointer_v<T>;
-};
-
-#define STRINGIFY(entry) #entry
-#define GLUE(a, b) a##b
-
-#define KB(value) ((size_t)(value) * 1024L)
-#define MB(value) ((size_t)KB(value) * 1024L)
-#define GB(value) ((size_t)MB(value) * 1024L)
-#define OFFSET_OF(type, member) (size_t)(&(((type*)0)->member))
-#define FIRST_DIGIT(number) ((int)number % 10)
-#define GET_BIT(number, bit_to_check) ((number & (1 << bit_to_check)) >> bit_to_check)
-#define SET_BIT(number, bit_to_set) number |= (1 << bit_to_set);
-#define UNSET_BIT(number, bit_to_unset) number &= (~(1 << bit_to_unset));
-
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define CLAMP(value, min_value, max_value) (MIN(MAX(value, min_value), max_value))
-
-#define ARRARY_COUNT(array) (sizeof(array) / sizeof(array[0]))
-#define STRING_LIT_ARG(literal) literal, sizeof(literal) - 1
-
-#define CHAR_IS_DIGIT(c) (((c) >= '0') && ((c) <= '9'))
-#define CHAR_IS_UPPER(c) (((c) >= 'A') && ((c) <= 'Z'))
-#define CHAR_IS_LOWER(c) (((c) >= 'a') && ((c) <= 'z'))
-#define CHAR_IS_ALPHA(c) (CHAR_IS_UPPER(c & 0b11011111))
-#define CHAR_IS_ALPHA_NUMERIC(c) (CHAR_IS_ALPHA(c) || CHAR_IS_DIGIT(c))
-
-#define DEFAULT_CAPACITY 16
-#define DEFAULT_LOAD_FACTOR 0.7f
-#define UNUSED(a) (void)a
-
-#define INTERNAL_FUNCTION static
-#define LOCAL_PERSIST static
-
-#if defined(_WIN32)
-	#define PLATFORM_WINDOWS
-	#define CRASH() __debugbreak()
-
-	#undef NOMINMAX
-	#undef WIN32_LEAN_AND_MEAN
-
-	#define NOMINMAX
-	#define WIN32_LEAN_AND_MEAN
-	#include <windows.h>
-#elif defined(__APPLE__)
-	#define PLATFORM_APPLE
-	#define CRASH() __builtin_trap()
-	#include <time.h>
-#elif (defined(__linux__) || defined(__unix__) || defined(__POSIX__))
-	#define PLATFORM_LINUX
-	#define CRASH() __builtin_trap()
-	#include <time.h>
-#else
-	#error "Unknown Platform???"
+#if defined(CORE_IMPL)
+    #define CORE_TYPES_IMPL
+    #define CORE_DEFINES_IMPL
+    #define CORE_LOGGING_IMPL
+    #define CORE_ASSERT_IMPL
+    #define CORE_MATH_IMPL
+    #define CORE_STRING_IMPL
+    #define CORE_MEMORY_IMPL
+    #define CORE_MEMORY_ALLOCATOR_IMPL
+    #define CORE_MEMORY_ARENA_IMPL
+    #define CORE_HASHING_IMPL
+    #define CORE_RANDOM_IMPL
+    #define CORE_COLLECTION_IMPL
+    #define CORE_CONTAINER_IMPL
+    #define CORE_PLATFORM_IMPL
+    #define CORE_FRONTEND_IMPL
 #endif
 
-#if defined(_MSC_VER)
-	#define UNUSED_FUNCTION
-#elif defined(__clang__)
-	#define UNUSED_FUNCTION __attribute__((used))
-#elif defined(__GNUC__) || defined(__GNUG__)
-	#define UNUSED_FUNCTION __attribute__((used))
+#if defined(CORE_TYPES)
+    #include <stdint.h>
+    #include <stdlib.h>
+    #include <type_traits>
+
+    using u8  = uint8_t;
+    using u16 = uint16_t;
+    using u32 = uint32_t;
+    using u64 = uint64_t;
+
+    using s8  = int8_t;
+    using s16 = int16_t;
+    using s32 = int32_t;
+    using s64 = int64_t;
+
+    // --
+
+    enum class Error : int {
+        SUCCESS = 0,
+        RESOURCE_NOT_FOUND,
+        RESOURCE_TOO_BIG,
+        NULL_PARAMETER,
+        INVALID_PARAMETER,
+        COUNT
+    };
+
+    /**
+     * @brief returns a string literal of the error code
+     * 
+     * @param error_code 
+     * @return const char*
+     */
+    const char* error_get_string(Error error_code);
+
+    // --
+
+    typedef void* (AllocateFunction)(void* ctx, size_t allocation_size);
+    typedef void* (ReallocFunction)(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size);
+    typedef void  (FreeFunction)(void* ctx, void* data);
+
+    struct Allocator {
+        void* ctx;
+        AllocateFunction* malloc;
+        ReallocFunction* realloc;
+        FreeFunction* free;
+
+        bool operator==(Allocator other) const;
+        bool operator!=(Allocator other) const;
+    };
+
+    Allocator allocator_invalid();
+    Allocator allocator_general();
+    
+    // --
+
+    template <typename K, typename V>
+    struct KeyValuePair {
+        K key;
+        V value;
+    };
+
+    // --
+
+    struct Timer { 
+        bool should_tick;
+        float elapsed; 
+        float duration; 
+    };
+
+    Timer timer_create();
+    void timer_start(Timer* timer, float duration);
+    bool timer_tick(Timer* timer, float dt);
+    void timer_stop(Timer* timer);
+
+    // --
+
+    bool memory_equal(const void* buffer_one, size_t b1_size, const void* buffer_two, size_t b2_size);
+
+    template <typename T>
+    struct View {
+        const T* data = nullptr;
+        u64 length = 0;
+
+        bool operator==(const View& other) const;
+        bool operator!=(const View& other) const;
+    };
+
+    template<typename T>
+    bool View<T>::operator==(const View<T>& other) const {
+        return memory_equal(this->data, this->length, other.data, other.length);
+    }
+
+    template<typename T>
+    bool View<T>::operator!=(const View<T>& other) const {
+        return !(*this == other);
+    }
+
+    template<typename T>
+    View<T> view_create(const T* data, u64 length) {
+        View<T> ret;
+        ret.data = data;
+        ret.length = length;
+
+        return ret;
+    }
+
+    // --
+
+    template<typename T>
+    struct CompileTime {
+        static constexpr bool TYPE_IS_CSTRING = std::is_same_v<T, char*> || std::is_same_v<T, const char*>;
+        static constexpr bool TYPE_IS_STRING_VIEW = std::is_same_v<T, View<char>> || std::is_same_v<T, View<const char>>;
+        static constexpr bool TYPE_IS_TRIVIAL = std::is_trivially_copyable_v<T>;
+        static constexpr bool TYPE_IS_POINTER = std::is_pointer_v<T>;
+    };
 #endif
 
-#define COLOR_RED "\033[0;31m"
-#define COLOR_GREEN "\033[0;32m"
-#define COLOR_YELLOW "\033[0;33m"
-#define COLOR_BLUE "\033[0;34m"
-#define COLOR_PURPLE "\033[0;35m"
+#if defined(CORE_DEFINES)
+    #undef STRINGIFY
+    #undef GLUE
+    #undef KB
+    #undef MB
+    #undef GB
+    #undef MIN
+    #undef MAX
+    #undef CLAMP
+    #undef FIRST_DIGIT
+    #undef GET_BIT
+    #undef SET_BIT
+    #undef UNSET_BIT
+    #undef ARRAY_COUNT
+    #undef PLATFORM_WINDOWS
+    #undef PLATFORM_APPLE
+    #undef PLATFORM_LINUX
+    #undef OS_DELIMITER
+    #undef CRASH
+    #undef UNUSED
+    #undef UNUSED_FUNCTION
+    #undef CHAR_IS_DIGIT
+    #undef CHAR_IS_UPPER
+    #undef CHAR_IS_LOWER
+    #undef CHAR_IS_ALPHA
+    #undef CHAR_IS_ALPHA_NUMERIC
+    #undef DEFAULT_CAPACITY
+    #undef DEFAULT_LOAD_FACTOR
 
-#define RED_BACKGROUND "\033[41m"
-#define COLOR_RESET "\033[0m"
+    #define STRINGIFY(entry) #entry
+    #define GLUE(a, b) a##b
 
-#define LOG_WARNING_ENABLED 1
-#define LOG_INFO_ENABLED 1
-#define LOG_DEBUG_ENABLED 1
-#define LOG_TRACE_ENABLED 1
+    #define KB(value) ((size_t)(value) * 1024L)
+    #define MB(value) ((size_t)KB(value) * 1024L)
+    #define GB(value) ((size_t)MB(value) * 1024L)
+    #define OFFSET_OF(type, member) (size_t)(&(((type*)0)->member))
+    #define FIRST_DIGIT(number) ((int)number % 10);
+    #define GET_BIT(number, bit_to_check) ((number & (1 << bit_to_check)) >> bit_to_check)
+    #define SET_BIT(number, bit_to_set) number |= (1 << bit_to_set);
+    #define UNSET_BIT(number, bit_to_unset) number &= (~(1 << bit_to_unset));
 
-#if RELEASE == 1
-	#define LOG_DEBUG_ENABLED 0
-	#define LOG_TRACE_ENABLED 0
+    #define MIN(a, b) (((a) < (b)) ? (a) : (b))
+    #define MAX(a, b) (((a) > (b)) ? (a) : (b))
+    #define CLAMP(value, min_value, max_value) (MIN(MAX(value, min_value), max_value))
+
+    #define ARRARY_COUNT(array) (sizeof(array) / sizeof(array[0]))
+    #define STRING_LIT_ARG(literal) literal, sizeof(literal) - 1
+
+    #define CHAR_IS_DIGIT(c) (((c) >= '0') && ((c) <= '9'))
+    #define CHAR_IS_UPPER(c) (((c) >= 'A') && ((c) <= 'Z'))
+    #define CHAR_IS_LOWER(c) (((c) >= 'a') && ((c) <= 'z'))
+    #define CHAR_IS_ALPHA(c) (CHAR_IS_UPPER(c & 0b11011111))
+    #define CHAR_IS_ALPHA_NUMERIC(c) (CHAR_IS_ALPHA(c) || CHAR_IS_DIGIT(c))
+
+    #define DEFAULT_CAPACITY 16
+    #define DEFAULT_LOAD_FACTOR 0.7f
+    #define UNUSED(a) (void)a
+
+    #define INTERNAL_FUNCTION static
+    #define LOCAL_PERSIST static
+
+    #if defined(_WIN32)
+        #define PLATFORM_WINDOWS
+        #define CRASH() __debugbreak()
+
+        #undef NOMINMAX
+        #undef WIN32_LEAN_AND_MEAN
+
+        #define NOMINMAX
+        #define WIN32_LEAN_AND_MEAN
+        #include <windows.h>
+    #elif defined(__APPLE__)
+        #define PLATFORM_APPLE
+        #define CRASH() __builtin_trap()
+        #include <time.h>
+    #elif (defined(__linux__) || defined(__unix__) || defined(__POSIX__))
+        #define PLATFORM_LINUX
+        #define CRASH() __builtin_trap()
+        #include <time.h>
+    #else
+        #error "Unknown Platform???"
+    #endif
+
+    #if defined(_MSC_VER)
+        #define UNUSED_FUNCTION
+    #elif defined(__clang__)
+        #define UNUSED_FUNCTION __attribute__((used))
+    #elif defined(__GNUC__) || defined(__GNUG__)
+        #define UNUSED_FUNCTION __attribute__((used))
+    #endif
 #endif
 
-typedef enum LogLevel {
-	LOG_LEVEL_FATAL = 0,
-	LOG_LEVEL_ERROR = 1,
-	LOG_LEVEL_WARN  = 2,
-	LOG_LEVEL_INFO  = 3,
-	LOG_LEVEL_DEBUG = 4,
-	LOG_LEVEL_TRACE = 5,
-	LOG_LEVEL_COUNT = 6
-} LogLevel;
+#if defined(CORE_LOGGING)
+    #define COLOR_RED "\033[0;31m"
+    #define COLOR_GREEN "\033[0;32m"
+    #define COLOR_YELLOW "\033[0;33m"
+    #define COLOR_BLUE "\033[0;34m"
+    #define COLOR_PURPLE "\033[0;35m"
 
-void LOG_OUTPUT(LogLevel log_level, const char* message, ...);
-#define LOG_FATAL(message, ...) LOG_OUTPUT(LOG_LEVEL_FATAL, message, ##__VA_ARGS__)
-#define LOG_ERROR(message, ...) LOG_OUTPUT(LOG_LEVEL_ERROR, message, ##__VA_ARGS__)
+    #define RED_BACKGROUND "\033[41m"
+    #define COLOR_RESET "\033[0m"
 
-#if LOG_WARNING_ENABLED == 1
-	#define LOG_WARN(message, ...) LOG_OUTPUT(LOG_LEVEL_WARN, message, ##__VA_ARGS__)
-#else
-	#define LOG_WARN(message, ...)
+    #define LOG_WARNING_ENABLED 1
+    #define LOG_INFO_ENABLED 1
+    #define LOG_DEBUG_ENABLED 1
+    #define LOG_TRACE_ENABLED 1
+
+    #if RELEASE == 1
+        #define LOG_DEBUG_ENABLED 0
+        #define LOG_TRACE_ENABLED 0
+    #endif
+
+    typedef enum LogLevel {
+        LOG_LEVEL_FATAL = 0,
+        LOG_LEVEL_ERROR = 1,
+        LOG_LEVEL_WARN  = 2,
+        LOG_LEVEL_INFO  = 3,
+        LOG_LEVEL_DEBUG = 4,
+        LOG_LEVEL_TRACE = 5,
+        LOG_LEVEL_COUNT = 6
+    } LogLevel;
+
+    void LOG_OUTPUT(LogLevel log_level, const char* message, ...);
+    #define LOG_FATAL(message, ...) LOG_OUTPUT(LOG_LEVEL_FATAL, message, ##__VA_ARGS__)
+    #define LOG_ERROR(message, ...) LOG_OUTPUT(LOG_LEVEL_ERROR, message, ##__VA_ARGS__)
+
+    #if LOG_WARNING_ENABLED == 1
+        #define LOG_WARN(message, ...) LOG_OUTPUT(LOG_LEVEL_WARN, message, ##__VA_ARGS__)
+    #else
+        #define LOG_WARN(message, ...)
+    #endif
+
+    #if LOG_INFO_ENABLED == 1
+        #define LOG_INFO(message, ...) LOG_OUTPUT(LOG_LEVEL_INFO, message, ##__VA_ARGS__)
+    #else
+        #define LOG_INFO(message, ...)
+    #endif
+
+    #if LOG_DEBUG_ENABLED == 1
+        #define LOG_DEBUG(message, ...) LOG_OUTPUT(LOG_LEVEL_DEBUG , message, ##__VA_ARGS__)
+    #else
+        #define LOG_DEBUG(message, ...)
+    #endif
+
+    #if LOG_TRACE_ENABLED == 1
+        #define LOG_TRACE(message, ...) LOG_OUTPUT(LOG_LEVEL_TRACE, message, ##__VA_ARGS__)
+    #else
+        #define LOG_TRACE(message, ...)
+    #endif
 #endif
 
-#if LOG_INFO_ENABLED == 1
-	#define LOG_INFO(message, ...) LOG_OUTPUT(LOG_LEVEL_INFO, message, ##__VA_ARGS__)
-#else
-	#define LOG_INFO(message, ...)
+#if defined(CORE_ASSERT)
+    #if defined(RUNTIME_ASSERTS_DISABLED)
+        #define RUNTIME_ASSERT(expression)
+        #define RUNTIME_ASSERT_MSG(expression)
+    #else
+        void MACRO_RUNTIME_ASSERT(bool expression, const char* function, const char* file, int line);
+        void MACRO_RUNTIME_ASSERT_MSG(bool expression, const char* function, const char* file, int line, const char* fmt, ...);
+        #define RUNTIME_ASSERT(expression) MACRO_RUNTIME_ASSERT((expression), __func__, __FILE__, __LINE__)
+        #define RUNTIME_ASSERT_MSG(expression, message, ...) MACRO_RUNTIME_ASSERT_MSG((expression), __func__, __FILE__, __LINE__, message, ##__VA_ARGS__)
+    #endif
+
+    #define STATIC_ASSERT static_assert
+    #define INVARIENT_TRIVAL_TYPE(...) STATIC_ASSERT(std::is_trivially_copyable_v<__VA_ARGS__>)
 #endif
 
-#if LOG_DEBUG_ENABLED == 1
-	#define LOG_DEBUG(message, ...) LOG_OUTPUT(LOG_LEVEL_DEBUG , message, ##__VA_ARGS__)
-#else
-	#define LOG_DEBUG(message, ...)
+#if defined(CORE_MEMORY)
+    void memory_zero(void* data, size_t data_size_in_bytes);
+    void memory_copy(void* destination, size_t destination_size, const void* source, size_t source_size);
+    bool memory_equal(const void* buffer_one, size_t b1_size, const void* buffer_two, size_t b2_size);
+
+    template <typename T>
+    void memory_swap(T &a, T &b) {
+        T temp = a;
+        a = b;
+        b = temp;
+    }
 #endif
 
-#if LOG_TRACE_ENABLED == 1
-	#define LOG_TRACE(message, ...) LOG_OUTPUT(LOG_LEVEL_TRACE, message, ##__VA_ARGS__)
-#else
-	#define LOG_TRACE(message, ...)
+#if defined(CORE_STRING)
+    #include <stdarg.h>
+    #include <string.h>
+    #include <stdio.h>
+
+    char* str_allocate(Allocator a, const char* s1, u64 length);
+    char* str_sprintf(Allocator a, u64* out_buffer_length, const char* fmt, ...);
+    char* str_sprintf(Allocator a, u64* out_buffer_length, const char* fmt, va_list args);
+    void str_sprintf(char* buffer, size_t buffer_capacity, u64* out_buffer_length, const char* fmt, ...);
+    void str_sprintf(char* buffer, size_t buffer_capacity, u64* out_buffer_length, const char* fmt, va_list args);
+
+    u64 str_length(const char* c_string);
+    bool str_equal(const char* s1, u64 s1_length, const char* s2, u64 s2_length);
+    bool str_equal(const char* s1, const char* s2);
+    bool str_contains(const char* s1, u64 s1_length, const char* contains, u64 contains_length);
+
+    s64 str_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
+    s64 str_last_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
+    bool str_starts_with(const char* str, u64 str_length, const char* starts_with, u64 starts_with_length);
+    bool str_ends_with(const char* str, u64 str_length, const char* ends_with, u64 ends_with_length);
+
+    void str_copy(char* s1, size_t s1_capacity, const char* s2, u64 s2_length);
+    void str_append(char* str, u64 &out_str_length, size_t str_capacity, const char* to_append, u64 to_append_length);
+    void str_append(char* str, u64 &out_str_length, size_t str_capacity, View<char> to_append);
+    void str_append(char* str, u64 &out_str_length, size_t str_capacity, View<const char> to_append);
+    void str_append(char* str, u64 &out_str_length, size_t str_capacity, char to_append);
+    void str_insert(char* str, u64 &out_str_length, size_t str_capacity, const char* to_insert, u64 to_insert_length, u64 index);
+    void str_insert(char* str, u64 &out_str_length, size_t str_capacity, char to_insert, u64 index);
 #endif
 
-#if defined(RUNTIME_ASSERTS_DISABLED)
-	#define RUNTIME_ASSERT(expression)
-	#define RUNTIME_ASSERT_MSG(expression)
-#else
-	void MACRO_RUNTIME_ASSERT(bool expression, const char* function, const char* file, int line);
-	void MACRO_RUNTIME_ASSERT_MSG(bool expression, const char* function, const char* file, int line, const char* fmt, ...);
-	#define RUNTIME_ASSERT(expression) MACRO_RUNTIME_ASSERT((expression), __func__, __FILE__, __LINE__)
-	#define RUNTIME_ASSERT_MSG(expression, message, ...) MACRO_RUNTIME_ASSERT_MSG((expression), __func__, __FILE__, __LINE__, message, ##__VA_ARGS__)
+#if defined(CORE_HASHING)
+    namespace Hashing {
+        u64 zero_hash(const void* source, size_t source_size);
+        u64 siphash(const void* source, size_t source_size);
+        u64 cstring_hash(const void* str, size_t str_length);
+        bool cstring_equality(const void* c1, size_t c1_size, const void* c2, size_t c2_size);
+        u64 string_view_hash(const void* view, size_t str_length);
+        bool string_view_equality(const void* c1, size_t c1_size, const void* c2, size_t c2_size);
+    }
 #endif
 
-#define STATIC_ASSERT static_assert
-#define INVARIENT_TRIVAL_TYPE(...) STATIC_ASSERT(std::is_trivially_copyable_v<__VA_ARGS__>)
-
-namespace Memory {
-	void zero(void* data, size_t data_size_in_bytes);
-	void copy(void* destination, size_t destination_size, const void* source, size_t source_size);
-	bool equal(const void* buffer_one, size_t b1_size, const void* buffer_two, size_t b2_size);
-
-	template <typename T>
-	void swap(T &a, T &b) {
-		T temp = a;
-		a = b;
-		b = temp;
-	}
-}
-
-#include <stdarg.h>
-#include <string.h>
-#include <stdio.h>
-
-namespace CString {
-	char* allocate(Allocator a, const char* s1, u64 length);
-	char* sprintf(Allocator a, u64* out_buffer_length, const char* fmt, ...);
-	char* sprintf(Allocator a, u64* out_buffer_length, const char* fmt, va_list args);
-	void sprintf(char* buffer, size_t buffer_capacity, u64* out_buffer_length, const char* fmt, ...);
-	void sprintf(char* buffer, size_t buffer_capacity, u64* out_buffer_length, const char* fmt, va_list args);
-
-	u64 length(const char* c_string);
-	bool equal(const char* s1, u64 s1_length, const char* s2, u64 s2_length);
-	bool equal(const char* s1, const char* s2);
-	bool contains(const char* s1, u64 s1_length, const char* contains, u64 contains_length);
-
-	s64 index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
-	s64 last_index_of(const char* str, u64 str_length, const char* substring, u64 substring_length);
-	bool starts_with(const char* str, u64 str_length, const char* starts_with, u64 starts_with_length);
-	bool ends_with(const char* str, u64 str_length, const char* ends_with, u64 ends_with_length);
-
-	void copy(char* s1, size_t s1_capacity, const char* s2, u64 s2_length);
-	void append(char* str, u64 &out_str_length, size_t str_capacity, const char* to_append, u64 to_append_length);
-	void append(char* str, u64 &out_str_length, size_t str_capacity, String to_append);
-	void append(char* str, u64 &out_str_length, size_t str_capacity, char to_append);
-	void insert(char* str, u64 &out_str_length, size_t str_capacity, const char* to_insert, u64 to_insert_length, u64 index);
-	void insert(char* str, u64 &out_str_length, size_t str_capacity, char to_insert, u64 index);
-}
-
-namespace Hashing {
-	u64 zero_hash(const void* source, size_t source_size);
-	u64 siphash(const void* source, size_t source_size);
-	u64 cstring_hash(const void* str, size_t str_length);
-	bool cstring_equality(const void* c1, size_t c1_size, const void* c2, size_t c2_size);
-	u64 string_view_hash(const void* view, size_t str_length);
-	bool string_view_equality(const void* c1, size_t c1_size, const void* c2, size_t c2_size);
-}
-
-#include <math.h>
-
-constexpr float PI = 3.14159265359f;
-constexpr float TAU = PI * 2;
-constexpr float G = 0.0000000000667430f;
-constexpr float EPSILON = 0.0001f;
-
-#define SQUARED(a) ((a) * (a))
-#define DEGREES_TO_RAD(degrees) ((degrees)*(PI/180.0f))
-#define RAD_TO_DEGREES(rad) ((rad)*(180.0f/PI))
-#define NEAR_ZERO(x) (fabs(x) <= EPSILON)
-#define NEAR_EQUAL(a, b) (fabs((a) - (b)) <= EPSILON)
-
-// Date: May 18, 2025
-// NOTE(Jovanni): Visualize these at: https://easinfgs.net/
-/*
-float ease_in_sinfe(float t);
-float ease_out_sinfe(float t);
-float ease_in_out_sinfe(float t);
-float ease_in_quad(float t);
-float ease_out_quad(float t);
-float ease_in_cubic(float t);
-float ease_out_cubic(float t);
-float ease_in_out_cubic(float t);
-float ease_in_quart(float t);
-float ease_out_quart(float t);
-float ease_in_out_quart(float t);
-float ease_in_quint(float t);
-float ease_out_quint(float t);
-float ease_in_out_quint(float t);
-float ease_in_expo(float t);
-float ease_out_expo(float t);
-float ease_in_out_expo(float t);
-float ease_in_circ(float t);
-float ease_out_circ(float t);
-float ease_in_out_circ(float t);
-float ease_in_back(float t);
-float ease_out_back(float t);
-float ease_in_out_back(float t);
-float ease_in_elastic(float t);
-float ease_out_elastic(float t);
-float ease_in_out_elastic(float t);
-float ease_in_bounce(float t);
-float ease_out_bounce(float t);
-float ease_in_out_bounce(float t);
-*/
-
-namespace Math {
-	template <typename T>
-	inline T average(T* array, int count) {
-		T accumlator = 0;
-		for (int i = 0; i < count; i++) {
-			accumlator += array[i];
-		}
-
-		T average = (T)accumlator / (T)count;
-
-		return average;
-	}
-
-	float lerp(float a, float b, float t);
-	float inverse_lerp(float a, float b, float value);
-	float remap(float x, float s_min, float s_max, float e_min, float e_max);
-	float move_toward(float current, float target, float delta);
-	int mod(int a, int b);
-}
-
-typedef struct Vec4 Vec4;
-struct Vec2 {
-	float x;
-	float y;
-
-	float magnitude() const;
-	float magnitude_squared() const;
-	Vec2 normalize() const;
-	Vec2 scale(float scale) const;
-	Vec2 scale(float scale_x, float scale_y) const;
-	Vec2 scale(Vec2 s) const;
-
-	Vec2 operator+(const Vec2 &right) const;
-	Vec2& operator+=(const Vec2 &right);
-	Vec2 operator-(const Vec2 &right) const;
-	Vec2& operator-=(const Vec2 &right);
-
-	Vec2 operator*(const Vec2 &right) const;
-	Vec2& operator*=(const Vec2 &right);
-
-	Vec2 operator/(const Vec2 &right) const;
-	Vec2& operator/=(const Vec2 &right);
-
-	bool operator==(const Vec2 &right) const;
-	bool operator!=(const Vec2 &right) const;
-};
-
-typedef struct Vec4 Vec4;
-struct Vec3 {
-	union {
-		struct {
-			float x;
-			float y;
-			float z;
-		};
-
-		struct {
-			float r;
-			float g;
-			float b;
-		};
-	};
-
-	float magnitude() const;
-	float magnitude_squared() const;
-	Vec3 normalize() const;
-	Vec3 scale(float scale) const;
-	Vec3 scale(float scale_x, float scale_y, float scale_z) const;
-	Vec3 scale(Vec3 s) const;
-
-	Vec3 operator+(const Vec3 &right) const;
-	Vec3& operator+=(const Vec3 &right);
-	Vec3 operator-(const Vec3 &right) const;
-	Vec3& operator-=(const Vec3 &right);
-
-	Vec3 operator*(const Vec3 &right) const;
-	Vec3& operator*=(const Vec3 &right);
-
-	Vec3 operator/(const Vec3 &right) const;
-	Vec3& operator/=(const Vec3 &right);
-
-	bool operator==(const Vec3 &right) const;
-	bool operator!=(const Vec3 &right) const;
-};
-
-struct Vec4 {
-	union {
-		struct {
-			float x;
-			float y;
-			float z;
-			float w;
-		};
-
-		struct {
-			float r;
-			float g;
-			float b;
-			float a;
-		};
-	};
-
-	float magnitude() const;
-	float magnitude_squared() const;
-	Vec4 normalize() const;
-	Vec4 scale(float scale) const;
-	Vec4 scale(float scale_x, float scale_y, float scale_z, float scale_w) const;
-	Vec4 scale(Vec4 s) const;
-
-	Vec4 operator+(const Vec4 &right) const;
-	Vec4& operator+=(const Vec4 &right);
-	Vec4 operator-(const Vec4 &right) const;
-	Vec4& operator-=(const Vec4 &right);
-
-	Vec4 operator*(const Vec4 &right) const;
-	Vec4& operator*=(const Vec4 &right);
-
-	Vec4 operator/(const Vec4 &right) const;
-	Vec4& operator/=(const Vec4 &right);
-
-	bool operator==(const Vec4 &right) const;
-	bool operator!=(const Vec4 &right) const;
-};
-
-struct IVec4 {
-	union {
-		struct {
-			int x;
-			int y;
-			int z;
-			int w;
-		};
-	};
-
-	float magnitude() const;
-	float magnitude_squared() const;
-	IVec4 normalize() const;
-	IVec4 scale(int scale) const;
-	IVec4 scale(int scale_x, int scale_y, int scale_z, int scale_w) const;
-	IVec4 scale(IVec4 s) const;
-
-	IVec4 operator+(const IVec4 &right) const;
-	IVec4& operator+=(const IVec4 &right);
-	IVec4 operator-(const IVec4 &right) const;
-	IVec4& operator-=(const IVec4 &right);
-
-	IVec4 operator*(const IVec4 &right) const;
-	IVec4& operator*=(const IVec4 &right);
-
-	IVec4 operator/(const IVec4 &right) const;
-	IVec4& operator/=(const IVec4 &right);
-
-	bool operator==(const IVec4 &right) const;
-	bool operator!=(const IVec4 &right) const;
-};
-
-Vec2 vec2_create(float fill);
-Vec3 vec3_create(float fill);
-Vec4 vec4_create(float fill);
-IVec4 ivec4_create(int fill);
-
-Vec2 vec2_create(float x, float y);
-Vec3 vec3_create(float x, float y, float z);
-Vec4 vec4_create(float x, float y, float z, float w);
-IVec4 ivec4_create(int x, int y, int z, int w);
-
-Vec3 vec3_create(Vec4 v);
-Vec3 vec3_create(Vec2 v, float z);
-Vec4 vec4_create(Vec3 v, float w);
-
-/**
- * @brief NOTE(Jovanni): This only applies if both a and b vectors are normalized:
- * -1: the vectors are 180 degrees from eachother in other words they vectors are pointing in opposite directions
- *  0: the vectors are perpendicular or orthogonal to eachother
- *  1: the vectors are going the same direction
- * 
- * @param a 
- * @param b 
- * @return float 
- */
-float vec2_dot(Vec2 a, Vec2 b);
-float vec3_dot(Vec3 a, Vec3 b);
-float vec4_dot(Vec4 a, Vec4 b);
-float ivec4_dot(IVec4 a, IVec4 b);
-
-Vec2 vec2_lerp(Vec2 a, Vec2 b, float t);
-Vec3 vec3_lerp(Vec3 a, Vec3 b, float t);
-Vec4 vec4_lerp(Vec4 a, Vec4 b, float t);
-IVec4 ivec4_lerp(IVec4 a, IVec4 b, float t);
-
-float vec2_distance(Vec2 a, Vec2 b);
-float vec3_distance(Vec3 a, Vec3 b);
-float vec4_distance(Vec4 a, Vec4 b);
-float ivec4_distance(IVec4 a, IVec4 b);
-
-float vec2_distance_squared(Vec2 a, Vec2 b);
-float vec3_distance_squared(Vec3 a, Vec3 b);
-float vec4_distance_squared(Vec4 a, Vec4 b);
-float ivec4_distance_squared(IVec4 a, IVec4 b);
-
-Vec2 vec2_move_toward(Vec2 a, Vec2 b, float dt);
-Vec3 vec3_move_toward(Vec3 a, Vec3 b, float dt);
-Vec4 vec4_move_toward(Vec4 a, Vec4 b, float dt);
-IVec4 ivec4_move_toward(IVec4 a, IVec4 b, float dt);
-
-Vec2 vec2_closest(Vec2 a, Vec2 b, Vec2 target = vec2_create(0));
-Vec3 vec3_closest(Vec3 a, Vec3 b, Vec3 target = vec3_create(0));
-Vec4 vec4_closest(Vec4 a, Vec4 b, Vec4 target = vec4_create(0));
-IVec4 ivec4_closest(IVec4 a, IVec4 b, IVec4 target = ivec4_create(0));
-
-Vec2 vec2_euler(float yaw, float pitch);
-Vec3 vec3_euler(float yaw, float pitch);
-
-Vec3 vec3_cross(Vec3 A, Vec3 B);
-
-typedef struct Quat Quat;
-struct Mat4 { // Matrices are ROW-MAJOR
-	Vec4 v[4];
-
-	Mat4 transpose() const;
-	Mat4 inverse(bool &success) const;
-
-	Mat4 operator*(const Mat4 &right) const;
-	Vec4 operator*(const Vec4 &right) const;
-	Mat4& operator*=(const Mat4 &right);
-	bool operator==(const Mat4 &right) const;
-	bool operator!=(const Mat4 &right) const;
-
-	void print() const;
-};
-
-Mat4 mat4_create(Vec4 r0, Vec4 r1, Vec4 r2, Vec4 r3);
-Mat4 mat4_create(const float row_major[16]);
-Mat4 mat4_create(
-	float m00, float m01, float m02, float m03,
-	float m10, float m11, float m12, float m13,
-	float m20, float m21, float m22, float m23,
-	float m30, float m31, float m32, float m33
-);
-Mat4 mat4_from_column_major(const float mat[16]);
-Mat4 mat4_identity();
-Mat4 mat4_scale(Mat4 mat, float scale);
-Mat4 mat4_scale(Mat4 mat, Vec3 s);
-Mat4 mat4_scale(Mat4 mat, float scale_x, float scale_y, float scale_z);
-Mat4 mat4_rotate(Mat4 mat, float theta, Vec3 axis);
-Mat4 mat4_rotate(Mat4 mat, float theta, float rot_x, float rot_y, float rot_z);
-Mat4 mat4_translate(Mat4 mat, Vec3 t);
-Mat4 mat4_translate(Mat4 mat, float x, float y, float z);
-Mat4 mat4_transform(Vec3 s, float theta, Vec3 axis, Vec3 t);
-Mat4 mat4_inverse_transform(Vec3 s, float theta, Vec3 axis, Vec3 t);
-void mat4_decompose(Mat4 mat, Vec3* out_position, Quat* out_orientation, Vec3* out_scale);
-Mat4 mat4_perspective(float fov_degrees, float aspect, float near_plane, float far_plane);
-
-Mat4 mat4_orthographic(float left, float right, float bottom, float top, float near_plane, float far_plane);
-Mat4 mat4_lookat(Vec3 position, Vec3 target, Vec3 world_up);
-
-// -- 
-
-struct AABB {
-	Vec3 min;
-	Vec3 max;
-
-	Vec3 center() const;
-	Vec3 extents() const;
-};
-
-AABB aabb_create(Vec3 min, Vec3 max);
-AABB aabb_create(float min_x, float min_y, float min_z, float max_x, float max_y, float max_z);
-AABB aabb_from_center_extents(Vec3 center, Vec3 extents);
-bool aabb_check_line_intersection(AABB aabb, Vec3 p0, Vec3 p1);
-// bool aabb_check_intersection(AABB a, AABB b);
-
-// --
-
-struct Quat {
-	float w;
-	Vec3 v;
-
-	Quat inverse() const;
-	Quat scale(float scale) const;
-	Quat normalize() const;
-	Mat4 to_rotation_matrix() const;
-	void angle_axis(float &theta, Vec3 &vec) const;
-
-	Quat operator+(const Quat &right) const;
-	Quat& operator+=(const Quat &right);
-	Quat operator-(const Quat &right) const;
-	Quat& operator-=(const Quat &right);
-	Quat operator*(const Quat &right) const;
-	Quat& operator*=(const Quat &right);
-	Vec3 operator*(const Vec3 &right) const;
-	bool operator==(const Quat &right) const;
-	bool operator!=(const Quat &right) const;
-};
-
-Quat quat_create(float theta, Vec3 axis);
-Quat quat_create(float theta, float x, float y, float z);
-Quat quat_identity();
-Quat quat_from_euler(float theta_x, float theta_y, float theta_z);
-Quat quat_from_euler(Vec3 euler_angles_degrees);
-Quat quat_from_angle_axis(float angle, Vec3 axis);
-Quat quat_from_rotation_matrix(const float m[16]);
-Quat quat_from_rotation_matrix(Mat4 mat);
-Quat quat_slerp(Quat q, Quat r, float t);
-float quat_dot(Quat a, Quat b);
-
-Mat4 mat4_rotate(Mat4 mat, Quat quat);
-Mat4 mat4_transform(Vec3 s, Quat r, Vec3 t);
+#if defined(CORE_MATH)
+    #include <math.h>
+
+    constexpr float PI = 3.14159265359f;
+    constexpr float TAU = PI * 2;
+    constexpr float G = 0.0000000000667430f;
+    constexpr float EPSILON = 0.0001f;
+
+    #undef SQAURED
+    #undef DEGREES_TO_RAD
+    #undef RAD_TO_DEGREES
+    #undef NEAR_ZERO
+    #undef NEAR_EQUAL
+
+    #define SQUARED(a) ((a) * (a))
+    #define DEGREES_TO_RAD(degrees) ((degrees)*(PI/180.0f))
+    #define RAD_TO_DEGREES(rad) ((rad)*(180.0f/PI))
+    #define NEAR_ZERO(x) (fabs(x) <= EPSILON)
+    #define NEAR_EQUAL(a, b) (fabs((a) - (b)) <= EPSILON)
+
+    // Date: May 18, 2025
+    // NOTE(Jovanni): Visualize these at: https://easinfgs.net/
+    /*
+    float ease_in_sinfe(float t);
+    float ease_out_sinfe(float t);
+    float ease_in_out_sinfe(float t);
+    float ease_in_quad(float t);
+    float ease_out_quad(float t);
+    float ease_in_cubic(float t);
+    float ease_out_cubic(float t);
+    float ease_in_out_cubic(float t);
+    float ease_in_quart(float t);
+    float ease_out_quart(float t);
+    float ease_in_out_quart(float t);
+    float ease_in_quint(float t);
+    float ease_out_quint(float t);
+    float ease_in_out_quint(float t);
+    float ease_in_expo(float t);
+    float ease_out_expo(float t);
+    float ease_in_out_expo(float t);
+    float ease_in_circ(float t);
+    float ease_out_circ(float t);
+    float ease_in_out_circ(float t);
+    float ease_in_back(float t);
+    float ease_out_back(float t);
+    float ease_in_out_back(float t);
+    float ease_in_elastic(float t);
+    float ease_out_elastic(float t);
+    float ease_in_out_elastic(float t);
+    float ease_in_bounce(float t);
+    float ease_out_bounce(float t);
+    float ease_in_out_bounce(float t);
+    */
+
+    template <typename T>
+    inline T average(T* array, int count) {
+        T accumlator = 0;
+        for (int i = 0; i < count; i++) {
+            accumlator += array[i];
+        }
+
+        T average = (T)accumlator / (T)count;
+
+        return average;
+    }
+
+    float lerp(float a, float b, float t);
+    float inverse_lerp(float a, float b, float value);
+    float remap(float x, float s_min, float s_max, float e_min, float e_max);
+    float move_toward(float current, float target, float delta);
+    int mod(int a, int b);
+
+    typedef struct Vec4 Vec4;
+    struct Vec2 {
+        float x;
+        float y;
+
+        float magnitude() const;
+        float magnitude_squared() const;
+        Vec2 normalize() const;
+        Vec2 scale(float scale) const;
+        Vec2 scale(float scale_x, float scale_y) const;
+        Vec2 scale(Vec2 s) const;
+
+        Vec2 operator+(const Vec2 &right) const;
+        Vec2& operator+=(const Vec2 &right);
+        Vec2 operator-(const Vec2 &right) const;
+        Vec2& operator-=(const Vec2 &right);
+
+        Vec2 operator*(const Vec2 &right) const;
+        Vec2& operator*=(const Vec2 &right);
+
+        Vec2 operator/(const Vec2 &right) const;
+        Vec2& operator/=(const Vec2 &right);
+
+        bool operator==(const Vec2 &right) const;
+        bool operator!=(const Vec2 &right) const;
+    };
+
+    typedef struct Vec4 Vec4;
+    struct Vec3 {
+        union {
+            struct {
+                float x;
+                float y;
+                float z;
+            };
+
+            struct {
+                float r;
+                float g;
+                float b;
+            };
+        };
+
+        float magnitude() const;
+        float magnitude_squared() const;
+        Vec3 normalize() const;
+        Vec3 scale(float scale) const;
+        Vec3 scale(float scale_x, float scale_y, float scale_z) const;
+        Vec3 scale(Vec3 s) const;
+
+        Vec3 operator+(const Vec3 &right) const;
+        Vec3& operator+=(const Vec3 &right);
+        Vec3 operator-(const Vec3 &right) const;
+        Vec3& operator-=(const Vec3 &right);
+
+        Vec3 operator*(const Vec3 &right) const;
+        Vec3& operator*=(const Vec3 &right);
+
+        Vec3 operator/(const Vec3 &right) const;
+        Vec3& operator/=(const Vec3 &right);
+
+        bool operator==(const Vec3 &right) const;
+        bool operator!=(const Vec3 &right) const;
+    };
+
+    struct Vec4 {
+        union {
+            struct {
+                float x;
+                float y;
+                float z;
+                float w;
+            };
+
+            struct {
+                float r;
+                float g;
+                float b;
+                float a;
+            };
+        };
+
+        float magnitude() const;
+        float magnitude_squared() const;
+        Vec4 normalize() const;
+        Vec4 scale(float scale) const;
+        Vec4 scale(float scale_x, float scale_y, float scale_z, float scale_w) const;
+        Vec4 scale(Vec4 s) const;
+
+        Vec4 operator+(const Vec4 &right) const;
+        Vec4& operator+=(const Vec4 &right);
+        Vec4 operator-(const Vec4 &right) const;
+        Vec4& operator-=(const Vec4 &right);
+
+        Vec4 operator*(const Vec4 &right) const;
+        Vec4& operator*=(const Vec4 &right);
+
+        Vec4 operator/(const Vec4 &right) const;
+        Vec4& operator/=(const Vec4 &right);
+
+        bool operator==(const Vec4 &right) const;
+        bool operator!=(const Vec4 &right) const;
+    };
+
+    struct IVec4 {
+        union {
+            struct {
+                int x;
+                int y;
+                int z;
+                int w;
+            };
+        };
+
+        float magnitude() const;
+        float magnitude_squared() const;
+        IVec4 normalize() const;
+        IVec4 scale(int scale) const;
+        IVec4 scale(int scale_x, int scale_y, int scale_z, int scale_w) const;
+        IVec4 scale(IVec4 s) const;
+
+        IVec4 operator+(const IVec4 &right) const;
+        IVec4& operator+=(const IVec4 &right);
+        IVec4 operator-(const IVec4 &right) const;
+        IVec4& operator-=(const IVec4 &right);
+
+        IVec4 operator*(const IVec4 &right) const;
+        IVec4& operator*=(const IVec4 &right);
+
+        IVec4 operator/(const IVec4 &right) const;
+        IVec4& operator/=(const IVec4 &right);
+
+        bool operator==(const IVec4 &right) const;
+        bool operator!=(const IVec4 &right) const;
+    };
+
+    Vec2 vec2_create(float fill);
+    Vec3 vec3_create(float fill);
+    Vec4 vec4_create(float fill);
+    IVec4 ivec4_create(int fill);
+
+    Vec2 vec2_create(float x, float y);
+    Vec3 vec3_create(float x, float y, float z);
+    Vec4 vec4_create(float x, float y, float z, float w);
+    IVec4 ivec4_create(int x, int y, int z, int w);
+
+    Vec3 vec3_create(Vec4 v);
+    Vec3 vec3_create(Vec2 v, float z);
+    Vec4 vec4_create(Vec3 v, float w);
+
+    /**
+     * @brief NOTE(Jovanni): This only applies if both a and b vectors are normalized:
+     * -1: the vectors are 180 degrees from eachother in other words they vectors are pointing in opposite directions
+     *  0: the vectors are perpendicular or orthogonal to eachother
+     *  1: the vectors are going the same direction
+     * 
+     * @param a 
+     * @param b 
+     * @return float 
+     */
+    float vec2_dot(Vec2 a, Vec2 b);
+    float vec3_dot(Vec3 a, Vec3 b);
+    float vec4_dot(Vec4 a, Vec4 b);
+    float ivec4_dot(IVec4 a, IVec4 b);
+
+    Vec2 vec2_lerp(Vec2 a, Vec2 b, float t);
+    Vec3 vec3_lerp(Vec3 a, Vec3 b, float t);
+    Vec4 vec4_lerp(Vec4 a, Vec4 b, float t);
+    IVec4 ivec4_lerp(IVec4 a, IVec4 b, float t);
+
+    float vec2_distance(Vec2 a, Vec2 b);
+    float vec3_distance(Vec3 a, Vec3 b);
+    float vec4_distance(Vec4 a, Vec4 b);
+    float ivec4_distance(IVec4 a, IVec4 b);
+
+    float vec2_distance_squared(Vec2 a, Vec2 b);
+    float vec3_distance_squared(Vec3 a, Vec3 b);
+    float vec4_distance_squared(Vec4 a, Vec4 b);
+    float ivec4_distance_squared(IVec4 a, IVec4 b);
+
+    Vec2 vec2_move_toward(Vec2 a, Vec2 b, float dt);
+    Vec3 vec3_move_toward(Vec3 a, Vec3 b, float dt);
+    Vec4 vec4_move_toward(Vec4 a, Vec4 b, float dt);
+    IVec4 ivec4_move_toward(IVec4 a, IVec4 b, float dt);
+
+    Vec2 vec2_closest(Vec2 a, Vec2 b, Vec2 target = vec2_create(0));
+    Vec3 vec3_closest(Vec3 a, Vec3 b, Vec3 target = vec3_create(0));
+    Vec4 vec4_closest(Vec4 a, Vec4 b, Vec4 target = vec4_create(0));
+    IVec4 ivec4_closest(IVec4 a, IVec4 b, IVec4 target = ivec4_create(0));
+
+    Vec2 vec2_euler(float yaw, float pitch);
+    Vec3 vec3_euler(float yaw, float pitch);
+
+    Vec3 vec3_cross(Vec3 A, Vec3 B);
+
+    typedef struct Quat Quat;
+    struct Mat4 { // Matrices are ROW-MAJOR
+        Vec4 v[4];
+
+        Mat4 transpose() const;
+        Mat4 inverse(bool &success) const;
+
+        Mat4 operator*(const Mat4 &right) const;
+        Vec4 operator*(const Vec4 &right) const;
+        Mat4& operator*=(const Mat4 &right);
+        bool operator==(const Mat4 &right) const;
+        bool operator!=(const Mat4 &right) const;
+
+        void print() const;
+    };
+
+    Mat4 mat4_create(Vec4 r0, Vec4 r1, Vec4 r2, Vec4 r3);
+    Mat4 mat4_create(const float row_major[16]);
+    Mat4 mat4_create(
+        float m00, float m01, float m02, float m03,
+        float m10, float m11, float m12, float m13,
+        float m20, float m21, float m22, float m23,
+        float m30, float m31, float m32, float m33
+    );
+    Mat4 mat4_from_column_major(const float mat[16]);
+    Mat4 mat4_identity();
+    Mat4 mat4_scale(Mat4 mat, float scale);
+    Mat4 mat4_scale(Mat4 mat, Vec3 s);
+    Mat4 mat4_scale(Mat4 mat, float scale_x, float scale_y, float scale_z);
+    Mat4 mat4_rotate(Mat4 mat, float theta, Vec3 axis);
+    Mat4 mat4_rotate(Mat4 mat, float theta, float rot_x, float rot_y, float rot_z);
+    Mat4 mat4_translate(Mat4 mat, Vec3 t);
+    Mat4 mat4_translate(Mat4 mat, float x, float y, float z);
+    Mat4 mat4_transform(Vec3 s, float theta, Vec3 axis, Vec3 t);
+    Mat4 mat4_inverse_transform(Vec3 s, float theta, Vec3 axis, Vec3 t);
+    void mat4_decompose(Mat4 mat, Vec3* out_position, Quat* out_orientation, Vec3* out_scale);
+    Mat4 mat4_perspective(float fov_degrees, float aspect, float near_plane, float far_plane);
+
+    Mat4 mat4_orthographic(float left, float right, float bottom, float top, float near_plane, float far_plane);
+    Mat4 mat4_lookat(Vec3 position, Vec3 target, Vec3 world_up);
+
+    // -- 
+
+    struct AABB {
+        Vec3 min;
+        Vec3 max;
+
+        Vec3 center() const;
+        Vec3 extents() const;
+    };
+
+    AABB aabb_create(Vec3 min, Vec3 max);
+    AABB aabb_create(float min_x, float min_y, float min_z, float max_x, float max_y, float max_z);
+    AABB aabb_from_center_extents(Vec3 center, Vec3 extents);
+    bool aabb_check_line_intersection(AABB aabb, Vec3 p0, Vec3 p1);
+    // bool aabb_check_intersection(AABB a, AABB b);
+
+    // --
+
+    struct Quat {
+        float w;
+        Vec3 v;
+
+        Quat inverse() const;
+        Quat scale(float scale) const;
+        Quat normalize() const;
+        Mat4 to_rotation_matrix() const;
+        void angle_axis(float &theta, Vec3 &vec) const;
+
+        Quat operator+(const Quat &right) const;
+        Quat& operator+=(const Quat &right);
+        Quat operator-(const Quat &right) const;
+        Quat& operator-=(const Quat &right);
+        Quat operator*(const Quat &right) const;
+        Quat& operator*=(const Quat &right);
+        Vec3 operator*(const Vec3 &right) const;
+        bool operator==(const Quat &right) const;
+        bool operator!=(const Quat &right) const;
+    };
+
+    Quat quat_create(float theta, Vec3 axis);
+    Quat quat_create(float theta, float x, float y, float z);
+    Quat quat_identity();
+    Quat quat_from_euler(float theta_x, float theta_y, float theta_z);
+    Quat quat_from_euler(Vec3 euler_angles_degrees);
+    Quat quat_from_angle_axis(float angle, Vec3 axis);
+    Quat quat_from_rotation_matrix(const float m[16]);
+    Quat quat_from_rotation_matrix(Mat4 mat);
+    Quat quat_slerp(Quat q, Quat r, float t);
+    float quat_dot(Quat a, Quat b);
+
+    Mat4 mat4_rotate(Mat4 mat, Quat quat);
+    Mat4 mat4_transform(Vec3 s, Quat r, Vec3 t);
+#endif
 
 #if defined(CORE_RANDOM)
     constexpr u32 STATE_VECTOR_LENGTH = 624;
