@@ -135,32 +135,47 @@ INCLUDES = [
 # ---------------------------------------------------------------------------------------
 
 procedures_config = {
-    "SFE Engine": ProcedureConfig(
+    "Core": ProcedureConfig(
         build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
-        output_name = "sfe.lib",
+        output_name = "core.lib",
         source_files = [
-            f"{RELATIVE_ENGINE_ROOT}/**/*.cpp",
-            f"{RELATIVE_GLAD_ROOT}/src/glad.c",
-            f"{RELATIVE_STB_ROOT}/stb_image.c",
+            f"{RELATIVE_ENGINE_ROOT}_New/Core/core.cpp",
         ],
         additional_libs = [],
         compile_time_defines=[f"COMPTIME_ASSERT_ROOT={RELATIVE_GAME_ASSETS_ROOT}"],
         include_paths = INCLUDES,
         compiler_inject_into_args=[]
     ),
-
-    "Main": ProcedureConfig(
-        build_directory = f"{ABSOLUTE_GAME_BUILD}",
-        output_name = "main.exe",
-        source_files = [
-            f"{RELATIVE_GAME_ROOT}/*.cpp",
-        ],
-        additional_libs = libs,
-        compile_time_defines=[],
-        include_paths = INCLUDES,
-        compiler_inject_into_args=inject
-    )
+    
 }
+
+"""
+"SFE Engine": ProcedureConfig(
+    build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
+    output_name = "sfe.lib",
+    source_files = [
+        f"{RELATIVE_ENGINE_ROOT}/**/*.cpp",
+        f"{RELATIVE_GLAD_ROOT}/src/glad.c",
+        f"{RELATIVE_STB_ROOT}/stb_image.c",
+    ],
+    additional_libs = [],
+    compile_time_defines=[f"COMPTIME_ASSERT_ROOT={RELATIVE_GAME_ASSETS_ROOT}"],
+    include_paths = INCLUDES,
+    compiler_inject_into_args=[]
+),
+
+"Main": ProcedureConfig(
+    build_directory = f"{ABSOLUTE_GAME_BUILD}",
+    output_name = "main.exe",
+    source_files = [
+        f"{RELATIVE_GAME_ROOT}/*.cpp",
+    ],
+    additional_libs = libs,
+    compile_time_defines=[],
+    include_paths = INCLUDES,
+    compiler_inject_into_args=inject
+)
+"""
 
 manager: Manager = Manager(cc, pc, procedures_config)
 manager.build_project()
