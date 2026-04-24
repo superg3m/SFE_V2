@@ -1,6 +1,6 @@
 #include "basic.hpp"
-#include "assert.hpp"
-#include "string.hpp"
+#include "../Assert/assert.hpp"
+#include "../String/string.hpp"
 
 const char* error_get_string(Error error_code) {
 	LOCAL_PERSIST const char* ERROR_STRINGS[(int)Error::COUNT] = {

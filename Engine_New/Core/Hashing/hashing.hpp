@@ -1,6 +1,6 @@
 #pragma once
 
-#include "basic.hpp"
+#include "../Basic/basic.hpp"
 
 namespace Hashing {
 	u64 zero_hash(const void* source, size_t source_size);

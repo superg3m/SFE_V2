@@ -3,8 +3,8 @@
 #include <stdio.h>
 
 #include "logger.hpp"
-#include "basic.hpp"
-#include "assert.hpp"
+#include "../Assert/assert.hpp"
+#include "../Basic/basic.hpp"
 
 //Regular text
 #define COLOR_RED "\033[0;31m"

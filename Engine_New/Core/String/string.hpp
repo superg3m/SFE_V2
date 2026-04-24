@@ -3,8 +3,8 @@
 #include <cstdarg>
 #include <cstdio>
 
-#include "basic.hpp"
-#include "memory.hpp"
+#include "../Basic/basic.hpp"
+#include "../Memory/memory.hpp"
 
 struct String {
 	const char* data = nullptr;

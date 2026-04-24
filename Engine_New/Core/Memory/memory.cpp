@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "memory.hpp"
-#include "assert.hpp"
+#include "../Assert/assert.hpp"
 
 Arena Arena::create(void* memory, size_t allocation_size, int flags) {
 	Arena ret = {};

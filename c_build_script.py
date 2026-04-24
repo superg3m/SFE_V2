@@ -141,9 +141,10 @@ procedures_config = {
         output_name = "core.lib",
         source_files = [
             f"{RELATIVE_ENGINE_ROOT}/Core/core.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/Platform/platform.cpp",
         ],
         additional_libs = [],
-        include_paths = [],
+        include_paths = [f"../../Core"],
         compiler_inject_into_args=[]
     ),
     

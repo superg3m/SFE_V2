@@ -1,6 +1,6 @@
 #include "string.hpp"
-#include "memory.hpp"
-#include "assert.hpp"
+#include "../Memory/memory.hpp"
+#include "../Assert/assert.hpp"
 
 String String::create(const char* data, u64 length) {
 	String ret = {};

@@ -235,7 +235,7 @@ void test_clear(Allocator allocator) {
 }
 
 int main() {
-    constexpr int CAPACITY = KB(100);
+    constexpr int CAPACITY = KB(98);
     u8 program_memory[CAPACITY];
     Arena arena = Arena::fixed(program_memory, CAPACITY);
     Allocator arena_allocator = arena.to_allocator();

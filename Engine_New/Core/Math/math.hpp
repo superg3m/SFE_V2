@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include "basic.hpp"
+#include "../Basic/basic.hpp"
 
 namespace Math {
     // Date: May 18, 2025
@@ -98,11 +98,6 @@ struct Vec2 {
 	bool operator==(const Vec2 &right);
 	bool operator!=(const Vec2 &right);
 };
-
-#pragma once
-
-#include <cmath>
-#include "basic.hpp"
 
 struct Vec2;
 struct Vec4;

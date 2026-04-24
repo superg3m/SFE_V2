@@ -1,6 +1,6 @@
 #pragma once
 
-#include "basic.hpp"
+#include <type_traits>
 
 #if defined(RUNTIME_ASSERTS_DISABLED)
     #define RUNTIME_ASSERT(expression)
