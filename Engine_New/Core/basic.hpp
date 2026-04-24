@@ -36,9 +36,9 @@ enum class Error : int {
 const char* error_get_string(Error error_code);
 
 struct Timer { 
-	bool should_tick;
-	float elapsed; 
-	float duration; 
+	bool should_tick = false;
+	float elapsed = 0.0f; 
+	float duration = 0.0f; 
 
 	static Timer create();
 	void start(float duration);

@@ -2,7 +2,7 @@
 #include "memory.hpp"
 #include "assert.hpp"
 
-Arena create(void* memory, size_t allocation_size, int flags) {
+Arena Arena::create(void* memory, size_t allocation_size, int flags) {
 	Arena ret = {};
 
 	RUNTIME_ASSERT_MSG(memory, "Memory can't be a null pointer!\n");
@@ -18,10 +18,10 @@ Arena create(void* memory, size_t allocation_size, int flags) {
 	return ret;
 }
 
-Arena fixed(void* memory, size_t allocation_size) {
+Arena Arena::fixed(void* memory, size_t allocation_size) {
 	return Arena::create(memory, allocation_size, ARENA_FLAG_FIXED);
 }
-Arena circular(void* memory, size_t allocation_size) {
+Arena Arena::circular(void* memory, size_t allocation_size) {
 	return Arena::create(memory, allocation_size, ARENA_FLAG_CIRCULAR);
 }
 

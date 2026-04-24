@@ -10,7 +10,7 @@ void MACRO_RUNTIME_ASSERT(bool expression, const char* function, const char* fil
         char msg[] = "Func: %s, File: %s:%d\n";          
         LOG_FATAL(msg, function, file, line);
         CRASH();
-    }                                                         
+    }                       
 }
 
 void MACRO_RUNTIME_ASSERT_MSG(bool expression, const char* function, const char* file, int line, const char* msg, ...) {  

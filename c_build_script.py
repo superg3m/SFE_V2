@@ -25,7 +25,7 @@ pc: ProjectConfig = ProjectConfig(
     project_name = "SFE",
     project_dependencies = [],
     project_debug_with_visual_studio = True,
-    project_executable_names = ["main.exe"]
+    project_executable_names = ["test.exe"]
 )
 
 # ---------------------------- COMPILER SELECTION --------------------------------------
@@ -50,13 +50,14 @@ else:
     ]
 
 # ---------------------------------------------------------------------------------------
-ABSOLUTE_ENGINE_ROOT = "./Engine"
-ABSOLUTE_ENGINE_VENDOR = "./Engine/Vendor"
+ABSOLUTE_ENGINE_ROOT = "./Engine_New"
+ABSOLUTE_ENGINE_VENDOR = "./Engine_New/Vendor"
 ABSOLUTE_GAME_ROOT = "./Game"
 
 BUILD_APPEND = f"build_{cc.compiler_name}/{C_BUILD_BUILD_TYPE()}"
-ABSOLUTE_ENGINE_BUILD = f"./Engine/{BUILD_APPEND}"
+ABSOLUTE_ENGINE_BUILD = f"./Engine_New/{BUILD_APPEND}"
 ABSOLUTE_GAME_BUILD = f"./Game/{BUILD_APPEND}"
+ABSOLUTE_TEST_BUILD = f"./Test/{BUILD_APPEND}"
 
 ABSOLUTE_GLFW_ROOT = f"{ABSOLUTE_ENGINE_VENDOR}/glfw"
 ABSOLUTE_ASSIMP_ROOT = f"{ABSOLUTE_ENGINE_VENDOR}/assimp"
@@ -65,7 +66,7 @@ ABSOLUTE_STB_ROOT = f"{ABSOLUTE_ENGINE_VENDOR}/stb"
 
 # ---
 
-RELATIVE_ENGINE_ROOT = "../../../Engine"
+RELATIVE_ENGINE_ROOT = "../../../Engine_New"
 RELATIVE_ENGINE_VENDOR = f"{RELATIVE_ENGINE_ROOT}/Vendor"
 RELATIVE_GLFW_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glfw"
 RELATIVE_ASSIMP_ROOT = f"{RELATIVE_ENGINE_VENDOR}/assimp"
@@ -139,14 +140,25 @@ procedures_config = {
         build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
         output_name = "core.lib",
         source_files = [
-            f"{RELATIVE_ENGINE_ROOT}_New/Core/core.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/Core/core.cpp",
         ],
         additional_libs = [],
-        compile_time_defines=[f"COMPTIME_ASSERT_ROOT={RELATIVE_GAME_ASSETS_ROOT}"],
-        include_paths = INCLUDES,
+        include_paths = [],
         compiler_inject_into_args=[]
     ),
     
+    "Core Test": ProcedureConfig(
+        build_directory = f"{ABSOLUTE_TEST_BUILD}",
+        output_name = "test.exe",
+        source_files = [
+            f"../../test.cpp",
+        ],
+        additional_libs = [f"../../../Engine_New/{BUILD_APPEND}/core.lib"],
+        include_paths = [
+            f"../../../Engine_New/Core",
+        ],
+        compiler_inject_into_args=[]
+    ),
 }
 
 """

@@ -26,7 +26,10 @@ struct Allocator {
 		}
 	}
 
-    static Allocator invalid();
+    static Allocator invalid() {
+		return Allocator{};
+	}
+
 	bool operator==(Allocator other) const;
 	bool operator!=(Allocator other) const;
 };
@@ -72,13 +75,15 @@ struct Arena {
 };
 
 struct Temp {
-	size_t used_save_point;
-	Arena* arena;
+	size_t used_save_point = 0;
+	Arena* arena = nullptr;
 
 	static Temp begin(Arena* arena) {
 		Temp ret = {};
 		ret.used_save_point = arena->used;
 		ret.arena = arena;
+		
+		return ret;
 	}
 
 	void end() {

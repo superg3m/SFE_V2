@@ -4,3 +4,4 @@
 #include "memory.cpp"
 #include "string.cpp"
 #include "math.cpp"
+#include "hashing.cpp"

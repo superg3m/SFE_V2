@@ -17,7 +17,7 @@
 #define RED_BAIONROUND "\033[41m"
 #define COLOR_RESET "\033[0m"
 
-void log_output(LogLevel log_level, const char* message, ...) {
+void LOG_OUTPUT(LogLevel log_level, const char* message, ...) {
     #define OUT_MESSAGE_BUFFER_LENGTH KB(4)
     char out_message[OUT_MESSAGE_BUFFER_LENGTH] = {0};
 
