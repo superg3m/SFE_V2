@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <string>
@@ -66,7 +65,7 @@ constexpr float EPSILON = 0.0001f;
 
     #define NOMINMAX
     #define WIN32_LEAN_AND_MEAN
-    #include <windows.h>
+    // #include <windows.h>
 #elif defined(__APPLE__)
     #define PLATFORM_APPLE
     #define CRASH() __builtin_trap()

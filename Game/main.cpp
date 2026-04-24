@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
     float previous_time = 0.0f; // Time of last frame
     while (!glfwWindowShouldClose(engine.window)) {
         gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
-        gl_error_check(glClearColor(0.2, 0.2, 0.2, 1));
+        gl_error_check(glClearColor(0.2f, 0.2f, 0.2f, 1));
 
         float current_time = glfwGetTime(); // Returns time in seconds
         dt = current_time - previous_time;

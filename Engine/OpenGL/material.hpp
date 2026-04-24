@@ -4,20 +4,15 @@
 #include <texture.hpp>
 
 struct MaterialKey {
+    static std::function<std::size_t(const MaterialKey&)> material_key_hash;
+    static std::function<bool(const MaterialKey&, const MaterialKey&)> material_key_equal;
+
     std::string name; // backpack.obj | uniform_green_color
     u32 material_index = 0; // for like backpack.obj and they have multiple
     
     bool operator==(const MaterialKey& other) const {
         return (this->name == other.name) && (this->material_index == other.material_index);
     }
-};
-
-auto material_key_hash = [](const MaterialKey& a){
-    return std::hash<std::string>()(a.name) ^ std::hash<u32>()(a.material_index);
-};
-
-auto material_key_equal = [](const MaterialKey& a, const MaterialKey& b) {
-    return a == b;
 };
 
 namespace OpenGL {
@@ -77,4 +72,4 @@ namespace OpenGL {
     };
 }
 
-using MaterialMap = std::unordered_map<MaterialKey, OpenGL::Material, decltype(material_key_hash), decltype(material_key_equal)>;
+using MaterialMap = std::unordered_map<MaterialKey, OpenGL::Material, decltype(MaterialKey::material_key_hash), decltype(MaterialKey::material_key_equal)>;

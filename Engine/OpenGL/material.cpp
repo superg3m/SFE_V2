@@ -1,5 +1,13 @@
 #include <material.hpp>
 
+std::function<std::size_t(const MaterialKey&)> MaterialKey::material_key_hash = [](const MaterialKey& a){
+    return std::hash<std::string>()(a.name) ^ std::hash<u32>()(a.material_index);
+};
+
+std::function<bool(const MaterialKey&, const MaterialKey&)> MaterialKey::material_key_equal = [](const MaterialKey& a, const MaterialKey& b) {
+    return a == b;
+};
+
 bool operator<(const MaterialKey& k1, const MaterialKey& k2) {
     return k1.material_index < k2.material_index;
 }

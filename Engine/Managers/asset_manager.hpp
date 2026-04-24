@@ -56,7 +56,7 @@ struct AssetManager {
     MaterialMap materials;
 
     void init() {
-        this->materials = MaterialMap(8, material_key_hash, material_key_equal);
+        this->materials = MaterialMap(8, MaterialKey::material_key_hash, MaterialKey::material_key_equal);
         this->shaders.reserve(64);
         this->meshes.reserve(64);
         this->textures.reserve(64);
