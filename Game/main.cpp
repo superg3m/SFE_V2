@@ -146,6 +146,47 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    // Renderer<OpenGL> renderer = Renderer<OpenGL>::create();
+    /*
+    float vertices[];
+    BufferHandle vbo = renderer.CreateBuffer({
+        .size = sizeof(vertices),
+        .usage = BufferUsage::Vertex
+    }, vertices);
+
+    VertexLayout particleLayout = {
+        .stride = sizeof(QuadVertex),
+        .attributes = {
+            // per-vertex (mesh)
+            { .location = 0, .format = VEC3, .offset = 0, .instanced = false },
+
+            // per-instance position
+            { .location = 8, .format = VEC3, .offset = 0, .inputRate = true },
+
+            // per-instance color
+            { .location = 9, .format = VEC3, .offset = 0, .inputRate = true }
+        }
+    };
+
+    PipelineHandle particlePipe = renderer.CreatePipeline({
+        .layout = particleLayout,
+        .blend = { .enabled = true },
+        .depth = { .depth_test = true, .depth_write = false }
+    });
+
+    // Frame loop
+    auto cmd = renderer.begin_frame(window, framebuffer);
+        cmd.bind_pipeline(particlePipe);
+        cmd.bind_vertex_buffer(0, quadVBO);
+        cmd.bind_vertex_buffer(1, particlePosVBO);
+        cmd.bind_vertex_buffer(2, particleColorVBO);
+        cmd.draw_index_instanced(particle_mesh.index_count, PARTICLE_COUNT);
+    renderer.end_frame(window);
+
+    glfwSwapBuffers(engine.window);
+    glfwPollEvents();
+    */
+
     OpenGL::Mesh backpack_mesh = engine.asset_manager.load_mesh("backpack/backpack.obj", &engine.asset_manager.shaders["model_shader"]);
     OpenGL::Mesh default_aabb_mesh = OpenGL::Mesh::AABB();
 
@@ -161,14 +202,15 @@ int main(int argc, char** argv) {
 
         engine.update(dt);
 
-        glm::mat4 model         = glm::mat4(1.0f);
-        glm::mat4 view          = glm::mat4(1.0f);
-        glm::mat4 projection    = glm::mat4(1.0f);
-        glm::quat rotation = glm::angleAxis((float)glfwGetTime() / 2.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = model * glm::mat4_cast(rotation);
-        model = glm::scale(model, glm::vec3((sin((float)glfwGetTime()) + 2), 1, 1));
-        view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
-        projection = glm::perspective(glm::radians(45.0f), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+        Mat4 model         = Mat4(1.0f);
+        Mat4 view          = Mat4(1.0f);
+        Mat4 projection    = Mat4(1.0f);
+        Quat rotation = Quat::from_angle_axis((float)glfwGetTime() / 2.0f, Vec3(0.0f, 1.0f, 0.0f));
+
+        model = Mat4::scale(model, Vec3((sin((float)glfwGetTime()) + 2), 1, 1));
+        model = Mat4::rotate(model, rotation);
+        view  = Mat4::translate(view, Vec3(0.0f, 0.0f, -10.0f));
+        projection = Mat4::perspective(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 
         {
             OpenGL::RenderCommandOpaque command = {};
@@ -248,7 +290,7 @@ OpenGL::RenderCommand command = {};
 command.shader = &shaders.model_shader;
 command.mesh = &backpack_mesh;
 command.model = identity;
-command.view = glm::mat4(glm::mat3(view)); // remove translation
+command.view = Mat4(Mat3(view)); // remove translation
 command.projection = projection;
 
 SRT : THIS IS IMPORTANT!!!

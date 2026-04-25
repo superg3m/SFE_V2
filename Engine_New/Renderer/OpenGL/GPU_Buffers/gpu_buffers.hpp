@@ -17,10 +17,8 @@ namespace OpenGL {
     };
 
     struct VertexElement {
-        u32 offset = 0; // offset in bytes of the actual memeber! OFFSET_OF(Vertex, aPosition)
-        u32 location;
+        size_t offset = 0; // offset in bytes of the actual memeber! OFFSET_OF(Vertex, aPosition)
         BufferStrideTypeInfo type;
-        bool instanced = false;
     };
 
     struct VertexLayout {

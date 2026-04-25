@@ -291,8 +291,8 @@ struct Quat {
 	Vec3 v;
 
 	Quat();
-	Quat(float theta, Vec3 axis);
-	Quat(float theta, float x, float y, float z);
+	Quat(float w, Vec3 axis);
+	Quat(float w, float x, float y, float z);
 	Quat inverse();
 	Quat scale(float scale);
 	Quat normalize();

@@ -54,7 +54,7 @@ struct Registry {
 
 	static Handle<T> aquire_handle(Registry<T, N>* registry) {
 		Handle<T> handle = Handle<T>::invalid();
-		for (int i = 0; i < registry->slots.count; i++) {
+		for (int i = 0; i < N; i++) {
 			Slot<T>& slot = registry->slots[i];
 			if (slot.allocated == false) {
 				handle = Handle<T>::create(i, slot.generation);
@@ -89,11 +89,11 @@ struct Registry {
 		return handle.index != INVALID_HANDLE_INDEX && registry->slots[handle.index].generation == handle.generation;
 	}
 
-	static T* get(Registry<T, N>* registry, Handle<T> handle) {
+	static T& get(Registry<T, N>* registry, Handle<T> handle) {
 		RUNTIME_ASSERT(registry);
 		RUNTIME_ASSERT((Registry<T, N>::is_handle_valid(registry, handle)));
 
-		return &registry->slots[handle.index].data;
+		return registry->slots[handle.index].data;
 	}
 };
 

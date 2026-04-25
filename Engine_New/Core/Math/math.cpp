@@ -1007,8 +1007,8 @@ Quat::Quat() {
 	this->v = Vec3(0, 0, 0);
 }
 
-Quat::Quat(float theta, Vec3 axis) {
-	float radians = DEGREES_TO_RAD(theta);
+Quat::Quat(float w, Vec3 axis) {
+	float radians = DEGREES_TO_RAD(w);
 	this->w = cosf(radians / 2.0f);
 	if (NEAR_ZERO(this->w)) {
 		this->w = 0.0f;
@@ -1018,8 +1018,8 @@ Quat::Quat(float theta, Vec3 axis) {
 	this->v = axis.scale(sinf(radians / 2.0f));
 }
 
-Quat::Quat(float theta, float x, float y, float z) {
-	*this = Quat(theta, Vec3(x, y, z));
+Quat::Quat(float w, float x, float y, float z) {
+	*this = Quat(w, Vec3(x, y, z));
 }
 
 Quat Quat::inverse() {
