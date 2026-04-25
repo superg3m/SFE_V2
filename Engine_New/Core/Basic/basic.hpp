@@ -84,7 +84,7 @@ struct KeyValuePair {
 #define DEFAULT_CAPACITY 16
 #define DEFAULT_LOAD_FACTOR 0.7f
 #define UNUSED(a) (void)a
-#define INTERNAL_FUNCTION static
+#define INTERNAL_LINKAGE static
 #define LOCAL_PERSIST static
 #define IS_POWER_OF_TWO(n) (n > 0 && (n & (n - 1)) == 0)
 

@@ -172,17 +172,17 @@ namespace Platform {
 		return a.time == b.time;
 	}
 
-	INTERNAL_FUNCTION void* unix_malloc(void* ctx, size_t allocation_size) {
+	INTERNAL_LINKAGE void* unix_malloc(void* ctx, size_t allocation_size) {
 		UNUSED(ctx);
 		return malloc(allocation_size);
 	}
 
-	INTERNAL_FUNCTION void unix_free(void* ctx, void* data) {
+	INTERNAL_LINKAGE void unix_free(void* ctx, void* data) {
 		UNUSED(ctx);
 		free(data);
 	}
 
-	INTERNAL_FUNCTION void* unix_realloc(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size) {
+	INTERNAL_LINKAGE void* unix_realloc(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size) {
 		UNUSED(ctx);
 		return realloc(data, new_allocation_size);
 	}

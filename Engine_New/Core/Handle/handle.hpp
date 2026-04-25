@@ -1,0 +1,114 @@
+#include "../Basic/basic.hpp"
+#include "../Assert/assert.hpp"
+
+const s32 INVALID_HANDLE_INDEX = -1;
+
+template<typename T>
+struct Handle {
+	s32 index = INVALID_HANDLE_INDEX;
+	u32 generation = 0;
+
+	static Handle<T> create(u32 index, u32 generation) {
+		Handle<T> ret = {};
+		ret.index = index;
+		ret.generation = generation;
+
+		return ret;
+	}
+
+	bool invalid() {
+		Handle<T> ret = {};
+		ret.index = INVALID_HANDLE_INDEX;
+		
+		return ret;
+	}
+
+	bool operator==(Handle<T> other) const {
+		return this->index == other.index && this->generation == other.generation;
+	}
+
+	bool operator!=(Handle<T> other) const {
+		return !(*this == other);
+	}
+};
+
+// -- 
+
+template<typename T>
+struct Slot {
+	bool allocated = false; // I could get rid of this and just say if (generation > 0) then that equals allocated
+	u32 generation = 0;
+	T data;
+};
+
+template<typename T, int N>
+struct Registry {
+	// I need LinkedList because the addresses won't be the same otherwise when this resizes...
+	// I want like a freelist
+	Slot<T> slots[N] = {};
+
+	static Registry<T, N> create() {
+		Registry<T, N> ret = {};
+		return ret;
+	}
+
+	static Handle<T> aquire_handle(Registry<T, N>* registry) {
+		Handle<T> handle = Handle<T>::invalid();
+		for (int i = 0; i < registry->slots.count; i++) {
+			Slot<T>& slot = registry->slots[i];
+			if (slot.allocated == false) {
+				handle = Handle<T>::create(i, slot.generation);
+				slot.allocated = true;
+				break;
+			}
+		}
+
+		RUNTIME_ASSERT(handle != Handle<T>::invalid());
+
+		/*
+		if (handle == handle_invalid<T>()) {
+			registry->slots.push(Slot<T>{});
+			handle.index = registry->slots.count() - 1;
+			handle.generation = registry->slots[handle.index].generation;
+		}
+		*/
+
+		Memory::zero(&registry->slots[handle.index].data, sizeof(T));
+		return handle;
+	}
+
+	static void release_handle(Registry<T, N>* registry, Handle<T> handle) {
+		RUNTIME_ASSERT(registry);
+		RUNTIME_ASSERT((Registry<T, N>::is_handle_valid(registry, handle)));
+
+		registry->slots[handle.index].allocated = false;
+		registry->slots[handle.index].generation++;
+	}
+
+	static bool is_handle_valid(Registry<T, N>* registry, Handle<T> handle) {
+		return handle.index != INVALID_HANDLE_INDEX && registry->slots[handle.index].generation == handle.generation;
+	}
+
+	static T* get(Registry<T, N>* registry, Handle<T> handle) {
+		RUNTIME_ASSERT(registry);
+		RUNTIME_ASSERT((Registry<T, N>::is_handle_valid(registry, handle)));
+
+		return &registry->slots[handle.index].data;
+	}
+};
+
+/*
+template<typename T>
+Handle<T> registry_find(Registry<T>* registry, T* element) {
+	Handle<T> handle = handle_invalid<T>();
+	for (int i = 0; i < registry->slots.count; i++) {
+		Slot<T>& slot = registry->slots[i];
+		if (element == &slot.data && slot.allocated) {
+			handle = handle_create<T>(i, slot.generation);
+			break;
+		}
+	}
+
+	return handle;
+}
+*/

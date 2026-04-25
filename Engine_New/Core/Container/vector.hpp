@@ -34,7 +34,7 @@ struct Vector {
 		Memory::copy(this->data, this->capacity * sizeof(T), list.begin(), list.size() * sizeof(T));
 	}
 
-	Vector(Allocator allocator, u64 capacity, u64 count = 0) {
+	Vector(Allocator allocator, u64 capacity = DEFAULT_CAPACITY, u64 count = 0) {
 		this->count = count;
         this->capacity = capacity;
         this->data = nullptr;
@@ -74,19 +74,19 @@ struct Vector {
         this->capacity = count;
     }
 
-	void vector_append(Vector<T>* v, T value) {
-        if (!v->data) { 
-            v->data = (T*)v->allocator.malloc(v->capacity * sizeof(T), alignof(T));
+	void append(T value) {
+        if (!this->data) { 
+            this->data = (T*)this->allocator.malloc(this->capacity * sizeof(T), alignof(T));
         }
 
-        if (v->count == v->capacity) {
-            size_t old_allocation_size = (v->capacity * sizeof(T));
-            v->capacity *= 2;
-            size_t new_allocation_size = (v->capacity * sizeof(T));
-            v->data = (T*)v->allocator.realloc(v->data, old_allocation_size, new_allocation_size, alignof(T));
+        if (this->count == this->capacity) {
+            size_t old_allocation_size = (this->capacity * sizeof(T));
+            this->capacity *= 2;
+            size_t new_allocation_size = (this->capacity * sizeof(T));
+            this->data = (T*)this->allocator.realloc(this->data, old_allocation_size, new_allocation_size, alignof(T));
         }
 
-        v->data[v->count++] = value;
+        this->data[this->count++] = value;
     }
 
 	void stable_remove(int index) {
@@ -106,6 +106,16 @@ struct Vector {
 
 		this->data[index] = this->data[--this->count];
 	}
+
+    int find(T element) {
+        for (int i = 0; i < this->count; i++) {
+            if (this->data[i] == element) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
 
 	T* begin() { return this->data; }
 	T* end() { return this->data + this->count; }

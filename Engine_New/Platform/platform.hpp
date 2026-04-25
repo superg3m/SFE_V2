@@ -1,7 +1,8 @@
-#include <core.hpp>
+#pragma once
+
+#include "../Core/core.hpp"
 
 typedef void DLL;
-
 struct FileTime {
 	#if defined(PLATFORM_WINDOWS)
 		FILETIME time;

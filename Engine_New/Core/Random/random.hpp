@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../Basic/basic.hpp"
 
 namespace Random {

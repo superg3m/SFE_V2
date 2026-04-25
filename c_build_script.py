@@ -136,27 +136,26 @@ INCLUDES = [
 # ---------------------------------------------------------------------------------------
 
 procedures_config = {
-    "Core": ProcedureConfig(
+    "SFE": ProcedureConfig(
         build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
-        output_name = "core.lib",
+        output_name = "sfe.lib",
         source_files = [
-            f"{RELATIVE_ENGINE_ROOT}/Core/core.cpp",
-            f"{RELATIVE_ENGINE_ROOT}/Platform/platform.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/sfe.cpp",
         ],
         additional_libs = [],
-        include_paths = [f"../../Core"],
+        include_paths = [],
         compiler_inject_into_args=[]
     ),
     
-    "Core Test": ProcedureConfig(
+    "SFE Test": ProcedureConfig(
         build_directory = f"{ABSOLUTE_TEST_BUILD}",
         output_name = "test.exe",
         source_files = [
             f"../../test.cpp",
         ],
-        additional_libs = [f"../../../Engine_New/{BUILD_APPEND}/core.lib"],
+        additional_libs = libs,
         include_paths = [
-            f"../../../Engine_New/Core",
+            f"../../../Engine_New",
         ],
         compiler_inject_into_args=[]
     ),
