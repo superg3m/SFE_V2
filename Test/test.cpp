@@ -263,6 +263,9 @@ int main() {
     temp.end();
 
     LOG_INFO("All tests passed\n");
-    
+
+    Renderer<OpenGL> renderer = {};
+    auto cmd = renderer.begin_frame();
+
     return 0;
 }

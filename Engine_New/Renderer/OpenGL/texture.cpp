@@ -1,12 +1,8 @@
-#include "opengl_backend.hpp"
-
-#include <texture.hpp>
-#include <gl_error_check.hpp>
+#include "backend.hpp"
 #include <stb_image.h>
-
 #include "../../Platform/platform.hpp"
 
-void Texture::flip_vertically_in_place(u8* data, int width, int height) {
+void OpenGL::Texture::flip_vertically_in_place(u8* data, int width, int height) {
 	for (int y = 0; y < height / 2; y++) {
 		for (int x = 0; x < width; x++) {
 			std::swap(data[y * width + x], data[(height - 1 - y) * width + x]);
@@ -14,9 +10,8 @@ void Texture::flip_vertically_in_place(u8* data, int width, int height) {
 	}
 }
 
-Texture Texture::load_from_file(const char* path, TextureDescription& desc) {
+OpenGL::Texture OpenGL::Texture::load_from_file(const char* path, TextureDescription& desc) {
 	RUNTIME_ASSERT_MSG(Platform::file_exists(path), "Texture path: '%s' doesn't exist!\n", path);
-	
 
 	GLenum TEXTURE_VERTICAL_FLIP = desc.vertical_flip;
 
@@ -25,7 +20,7 @@ Texture Texture::load_from_file(const char* path, TextureDescription& desc) {
 	u8* data = stbi_load(path, &width, &height, &nrChannels, 0);
 	stbi_set_flip_vertically_on_load(false);
 
-	Texture ret = Texture::load_from_memory(data, width, height, nrChannels, desc.pixel_perfect);
+	Texture ret = Texture::load_from_memory(data, width, height, nrChannels, desc);
 
 	stbi_image_free(data);
 	data = nullptr;
@@ -37,7 +32,7 @@ Texture Texture::load_from_file(const char* path, TextureDescription& desc) {
 	return ret;
 }
 
-Texture Texture::load_from_memory(const u8* data, int width, int height, int nrChannels, TextureDescription& desc) {
+OpenGL::Texture OpenGL::Texture::load_from_memory(const u8* data, int width, int height, int nrChannels, TextureDescription& desc) {
 	if (!data || width <= 0 || height <= 0 || nrChannels == 0) {
 		RUNTIME_ASSERT_MSG(false, "TextureLoader | Invalid input data for loadTextureFromMemory!\n");
 	}
@@ -91,7 +86,7 @@ Texture Texture::load_from_memory(const u8* data, int width, int height, int nrC
 }
 
 // {right, left, top, bottom, front, back}
-Texture Texture::load_cube_map(Vector<const char*> texture_paths) {
+OpenGL::Texture OpenGL::Texture::load_cube_map(Vector<const char*> texture_paths) {
 	u32 texture = 0;
 	gl_error_check(glGenTextures(1, &texture));
 	gl_error_check(glBindTexture(GL_TEXTURE_CUBE_MAP, texture));

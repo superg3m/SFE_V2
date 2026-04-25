@@ -118,11 +118,6 @@ elif IS_DARWIN():
 
 INCLUDES = [
     f"{RELATIVE_ENGINE_ROOT}",
-    f"{RELATIVE_ENGINE_ROOT}/OpenGL",
-    f"{RELATIVE_ENGINE_ROOT}/ECS",
-    f"{RELATIVE_ENGINE_ROOT}/Scene",
-    f"{RELATIVE_ENGINE_ROOT}/Input",
-    f"{RELATIVE_ENGINE_ROOT}/Managers",
 
     f"{RELATIVE_ENGINE_VENDOR}",
     f"{RELATIVE_STB_ROOT}",
@@ -141,9 +136,12 @@ procedures_config = {
         output_name = "sfe.lib",
         source_files = [
             f"{RELATIVE_ENGINE_ROOT}/sfe.cpp",
+            
+            f"{RELATIVE_GLAD_ROOT}/src/glad.c",
+            f"{RELATIVE_STB_ROOT}/stb_image.c",
         ],
         additional_libs = [],
-        include_paths = [],
+        include_paths = INCLUDES,
         compiler_inject_into_args=[]
     ),
     
@@ -154,9 +152,7 @@ procedures_config = {
             f"../../test.cpp",
         ],
         additional_libs = libs,
-        include_paths = [
-            f"../../../Engine_New",
-        ],
+        include_paths = INCLUDES,
         compiler_inject_into_args=[]
     ),
 }

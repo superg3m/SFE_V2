@@ -52,10 +52,10 @@ struct Registry {
 		return ret;
 	}
 
-	static Handle<T> aquire_handle(Registry<T, N>* registry) {
+	static Handle<T> aquire() {
 		Handle<T> handle = Handle<T>::invalid();
 		for (int i = 0; i < N; i++) {
-			Slot<T>& slot = registry->slots[i];
+			Slot<T>& slot = this->slots[i];
 			if (slot.allocated == false) {
 				handle = Handle<T>::create(i, slot.generation);
 				slot.allocated = true;
@@ -73,27 +73,25 @@ struct Registry {
 		}
 		*/
 
-		Memory::zero(&registry->slots[handle.index].data, sizeof(T));
+		Memory::zero(&this->slots[handle.index].data, sizeof(T));
 		return handle;
 	}
 
-	static void release_handle(Registry<T, N>* registry, Handle<T> handle) {
-		RUNTIME_ASSERT(registry);
-		RUNTIME_ASSERT((Registry<T, N>::is_handle_valid(registry, handle)));
+	void release(Handle<T> handle) {
+		RUNTIME_ASSERT(this->is_handle_valid(handle));
 
-		registry->slots[handle.index].allocated = false;
-		registry->slots[handle.index].generation++;
+		this->slots[handle.index].allocated = false;
+		this->slots[handle.index].generation++;
 	}
 
-	static bool is_handle_valid(Registry<T, N>* registry, Handle<T> handle) {
-		return handle.index != INVALID_HANDLE_INDEX && registry->slots[handle.index].generation == handle.generation;
+	bool is_handle_valid(Handle<T> handle) {
+		return handle.index != INVALID_HANDLE_INDEX && this->slots[handle.index].generation == handle.generation;
 	}
 
-	static T& get(Registry<T, N>* registry, Handle<T> handle) {
-		RUNTIME_ASSERT(registry);
-		RUNTIME_ASSERT((Registry<T, N>::is_handle_valid(registry, handle)));
+	T& get(Handle<T> handle) {
+		RUNTIME_ASSERT(this->is_handle_valid(handle));
 
-		return registry->slots[handle.index].data;
+		return this->slots[handle.index].data;
 	}
 };
 

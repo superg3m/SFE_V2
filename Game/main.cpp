@@ -146,7 +146,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    // Renderer<OpenGL> renderer = Renderer<OpenGL>::create();
+    // Renderer<Vulkan> renderer = Renderer<Vulkan>::create();
     /*
     float vertices[];
     BufferHandle vbo = renderer.CreateBuffer({
