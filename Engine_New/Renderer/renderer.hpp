@@ -23,6 +23,11 @@ struct Renderer {
     using Shader = typename B::Shader;
     using ShaderHandle = Handle<Shader>;
 
+    using Material = typename B::Material;
+    using MaterialHandle = Handle<Material>;
+
+    using BindingValue = typename B::BindingValue;
+
     B backend;
 
     TextureHandle create_texture(const char* path, TextureDescription& desc) {
@@ -66,6 +71,22 @@ struct Renderer {
 
         return handle;
     }
+
+    MaterialHandle create_material(ShaderHandle shader_handle) {
+        MaterialHandle handle = backend.materials.acquire();
+        Material& material = backend.materials.get(handle);
+        Shader& shader = backend.shaders.get(shader_handle);
+        material = Material(&shader);
+
+        return handle;
+    }
+
+    void material_set_mat4(MaterialHandle handle, Hashmap<const char*, Mat4> bindings) {
+        Material& material = backend.materials.get(handle);
+        for (auto entry : bindings) {
+            material.set_mat4(entry.key, entry.value);
+        }
+    }
     
     // TODO(Jovanni): Account for framebuffer
     CommandBufferHandle begin_frame(u32 framebuffer = 0) {
@@ -87,6 +108,13 @@ struct Renderer {
         Shader& shader = backend.shaders.get(shader_handle);
 
         cmd.bind_pipeline(pipeline, shader);
+    }
+
+    void bind_material(ShaderHandle shader_handle, MaterialHandle material_handle) {
+        Shader& shader = backend.shaders.get(shader_handle);
+        Material& material = backend.materials.get(material_handle);
+
+        shader.set_material(&material);
     }
 
     void bind_vertex_buffer(CommandBufferHandle cmd_handle, VertexBufferHandle vbo_handle) {

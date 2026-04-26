@@ -4,6 +4,7 @@
 #include "texture.cpp"
 #include "command_buffer.cpp"
 #include "shader.cpp"
+#include "material.cpp"
 
 void _GL_ERROR_CHECK(const char *file, int line) {
     GLenum errorCode;

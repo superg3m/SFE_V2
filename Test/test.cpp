@@ -454,10 +454,13 @@ s
     auto pipeline = renderer.create_pipeline(pipeline_description);
     auto vbo = renderer.create_vertex_buffer(pipeline, cube_vertices);
     auto ebo = renderer.create_index_buffer(pipeline, cube_indices);
+    auto material = renderer.create_material(shader);
 
     float dt = 0.0f; // Time between current frame and last frame
     float previous_time = 0.0f; // Time of last frame
     while (!glfwWindowShouldClose(engine.window)) {
+        Temp frame_temp = Temp::begin(&arena);
+
         gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
         gl_error_check(glClearColor(0.2f, 0.2f, 0.2f, 1));
 
@@ -476,10 +479,17 @@ s
         model = Mat4::rotate(model, rotation);
         view  = Mat4::translate(view, Vec3(0.0f, 0.0f, -10.0f));
         projection = Mat4::perspective(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+        
+        // currently this is using a general allocator make it use the frame_allocator!
+        renderer.material_set_mat4(material, Hashmap<const char *, Mat4>({
+            {"uModel", model},
+            {"uView", view},
+            {"uProjection", projection},
+        }, arena_allocator)); // make this more explicit tbh
 
         auto cmd = renderer.begin_frame();
             renderer.bind_pipeline(cmd, pipeline, shader);
-            renderer.bind_material(cmd, shader, material);
+            renderer.bind_material(shader, material);
             renderer.bind_vertex_buffer(cmd, vbo);
             renderer.bind_index_buffer(cmd, ebo);
             renderer.draw_indices(0, 0, cube_vertices.count);
@@ -487,6 +497,8 @@ s
 
         glfwSwapBuffers(engine.window);
         glfwPollEvents();
+
+        frame_temp.end();
     }
 
     return 0;

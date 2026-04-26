@@ -104,7 +104,8 @@ struct OpenGL {
         Shader* shader = nullptr;
         Hashmap<const char*, BindingValue> bindings;
 
-        Material(Allocator allocator, OpenGL::Shader* shader) : bindings(Hashmap<const char*, BindingValue>(allocator)) {
+        Material() = default;
+        Material(OpenGL::Shader* shader) {
             this->shader = shader;
         }
 
@@ -252,4 +253,5 @@ struct OpenGL {
 	Registry<OpenGL::VertexBuffer, 256> vbos;
 	Registry<OpenGL::IndexBuffer, 256> ebos;
 	Registry<OpenGL::CommandBuffer, 256> command_buffers;
+	Registry<OpenGL::Material, 256> materials;
 };
