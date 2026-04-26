@@ -321,27 +321,25 @@ s
         1, 2, 3
     }, arena_allocator);
 
-    VertexLayout layout = VertexLayout({
-        {0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3},
-        {1, OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3},
-        {2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2},
-    });
-    RasterizerState rasterizer = RasterizerState();
-    DepthState depth = DepthState();
-    BlendState blend = BlendState();
-    PipelineDescriptor pipeline_description = PipelineDescriptor(layout, rasterizer, depth, blend);
-    auto pipeline = renderer.create_pipeline(pipeline_description);
-
+    PipelineDescriptor pipeline_description = PipelineDescriptor(
+        VertexLayout({
+            {0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3},
+            {1, OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3},
+            {2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2},
+        }), 
+        RasterizerState(), 
+        DepthState(), 
+        BlendState()
+    );
     auto shader = renderer.create_shader({"../../Scenes/ParticleScene/Shaders/singularity.vert", "../../Scenes/ParticleScene/Shaders/singularity.frag"});
-
+    auto pipeline = renderer.create_pipeline(pipeline_description);
     auto vbo = renderer.create_vertex_buffer(pipeline, quad_vertices, false);
     auto ebo = renderer.create_index_buffer(pipeline, quad_indices);
-
     auto cmd = renderer.begin_frame();
         renderer.bind_pipeline(cmd, pipeline, shader);
         renderer.bind_vertex_buffer(cmd, vbo);
         renderer.bind_index_buffer(cmd, ebo);
-        // renderer.draw_index_instanced(particle_mesh.index_count, PARTICLE_COUNT);
+        renderer.draw_indices(0, 0, quad_indices.count);
     renderer.end_frame(cmd);
 
     return 0;

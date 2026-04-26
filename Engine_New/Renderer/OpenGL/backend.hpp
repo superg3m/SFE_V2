@@ -36,6 +36,7 @@ struct OpenGL {
         unsigned int program_id = 0;
         Shader() = default;
         Shader(Vector<const char*> shader_paths) {
+            this->shader_paths = shader_paths;
             this->compile();
         }
 
@@ -202,7 +203,40 @@ struct OpenGL {
 		void end_frame();
 	};
 
-	OpenGL::CommandBuffer begin_frame();
+    // TODO(Jovanni): For now just allow triangles, but later parameterize this?
+    void draw_vertices(u32 vertex_base, u32 vertex_count, u32 instance_count = 0) {
+        if (instance_count) {
+            gl_error_check(glDrawArraysInstanced(
+                GL_TRIANGLES,
+                vertex_base,
+                vertex_count,
+                instance_count
+            ));
+        } else {
+            gl_error_check(glDrawArrays(
+                GL_TRIANGLES,
+                vertex_base,
+                vertex_count
+            )); 
+        }
+    }
+
+    // TODO(Jovanni): For now just allow triangles, but later parameterize this?
+    void draw_indices(u32 vertex_base, u32 index_base, u32 index_count, u32 instance_count = 0) {
+        if (instance_count) {
+            gl_error_check(glDrawElementsInstancedBaseVertex(
+                GL_TRIANGLES, index_count,
+                GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * index_base),
+                instance_count, vertex_base
+            ));
+        } else {
+            gl_error_check(glDrawElementsBaseVertex(
+                GL_TRIANGLES, index_count, GL_UNSIGNED_INT, 
+                (void*)(sizeof(u32) * index_base), 
+                vertex_base
+            ));
+        }
+    }
 
     s32 BOUND_VAO_ID = -1;
     s32 BOUND_PROGRAM_ID = -1;

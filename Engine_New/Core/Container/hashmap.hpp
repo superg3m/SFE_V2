@@ -251,6 +251,9 @@ struct Hashmap {
     void clear() {
         count = 0;
         dead_count = 0;
-        Memory::zero(entries, sizeof(HashmapEntry<K, V>) * capacity);
+
+        if (this->entries) {
+            Memory::zero(entries, sizeof(HashmapEntry<K, V>) * capacity);
+        }
     }
 };

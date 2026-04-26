@@ -29,6 +29,10 @@ struct Vector {
 
         if (list.size() == 0) return;
 
+        if (this->allocator == Allocator::invalid()) {
+            this->allocator = Allocator::general();
+        }
+
 		this->count = list.size();
 		this->capacity = this->count * 2;
 		this->data = (T*)this->allocator.malloc(this->capacity * sizeof(T), alignof(T));

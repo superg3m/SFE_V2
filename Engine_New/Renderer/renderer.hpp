@@ -124,11 +124,13 @@ struct Renderer {
         shader.compile();
     }
 
-    void draw_vertices(u32 vertex_base, u32 vertex_count) {
-
+    // TODO(Jovanni): For now just allow triangles, but later parameterize this?
+    void draw_vertices(u32 vertex_base, u32 vertex_count, u32 instance_count = 0) {
+        backend.draw_vertices(vertex_base, vertex_count);
     }
 
-    void draw_indexed(u32 index_base, u32 index_count) {
-
+    // TODO(Jovanni): For now just allow triangles, but later parameterize this?
+    void draw_indices(u32 vertex_base, u32 index_base, u32 index_count, u32 instance_count = 0) {
+        backend.draw_indices(vertex_base, index_base, index_count, instance_count);
     }
 };
