@@ -12,6 +12,14 @@ void _GL_ERROR_CHECK(const char* file, int line);
 #endif
 
 struct OpenGL {
+    s32 BOUND_VAO_ID = -1;
+    s32 BOUND_PROGRAM_ID = -1;
+    bool DEPTH_TEST = false;
+    bool STENCIL = false;
+    bool BLENDING = false;
+    bool WIREFRAME = false;
+    int DRAW_CALL_COUNT = 0;
+
     struct Texture {
         u32 id = 0;
         u32 width = 0;
