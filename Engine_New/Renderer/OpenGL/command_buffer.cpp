@@ -1,10 +1,7 @@
 #include "backend.hpp"
 
-
-
-void OpenGL::CommandBuffer::bind_pipeline(OpenGL& backend, Handle<OpenGL::Shader> shader, Handle<OpenGL::Pipeline> pipeline_handle) {
-	Pipeline& p = backend.pipelines.get(pipeline_handle);
-	gl_error_check(glUseProgram(p.shader_program));
+void OpenGL::CommandBuffer::bind_pipeline(OpenGL::Pipeline pipeline, OpenGL::Shader shader) {
+	shader.use();
 
 	/*
 	if (p.raster.cull_enabled) {
@@ -19,27 +16,34 @@ void OpenGL::CommandBuffer::bind_pipeline(OpenGL& backend, Handle<OpenGL::Shader
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	// 3. Depth state
-	if (p.depth.depth_testing) {
+	if (pipeline.depth.depth_testing) {
 		glEnable(GL_DEPTH_TEST);
 		glDepthFunc(GL_LESS);
 	} else {
 		glDisable(GL_DEPTH_TEST);
 	}
 
-	glDepthMask(p.depth.depth_write ? GL_TRUE : GL_FALSE);
+	glDepthMask(pipeline.depth.depth_write ? GL_TRUE : GL_FALSE);
 
 	// 4. Blend state
-	if (p.blend.enabled) {
+	if (pipeline.blend.enabled) {
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	} else {
 		glDisable(GL_BLEND);
 	}
 
-	glBindVertexArray(p.vao);
+	glBindVertexArray(pipeline.vao);
 }
-void OpenGL::CommandBuffer::bind_vertex_buffer(Handle<VertexBuffer> vbo) {}
-void OpenGL::CommandBuffer::bind_index_buffer(Handle<IndexBuffer> ebo) {}
+
+void OpenGL::CommandBuffer::bind_vertex_buffer(OpenGL::VertexBuffer vbo) {
+	gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, vbo.id));
+}
+
+void OpenGL::CommandBuffer::bind_index_buffer(IndexBuffer ebo) {
+	gl_error_check(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo.id));
+}
+
 void OpenGL::CommandBuffer::draw_vertices(u32 vertex_base, u32 vertex_count) {}
 void OpenGL::CommandBuffer::draw_indexed(u32 index_base, u32 index_count) {}
 

@@ -264,8 +264,85 @@ int main() {
 
     LOG_INFO("All tests passed\n");
 
+    // Renderer<Vulkan> renderer = Renderer<Vulkan>::create();
+    /*
+    float vertices[];
+    BufferHandle vbo = renderer.CreateBuffer({
+        .size = sizeof(vertices),
+        .usage = BufferUsage::Vertex
+    }, vertices);
+
+    VertexLayout particleLayout = {
+        .stride = sizeof(QuadVertex),
+        .attributes = {
+            // per-vertex (mesh)
+            { .location = 0, .format = VEC3, .offset = 0, .instanced = false },
+
+            // per-instance position
+            { .location = 8, .format = VEC3, .offset = 0, .inputRate = true },
+
+            // per-instance color
+            { .location = 9, .format = VEC3, .offset = 0, .inputRate = true }
+        }
+    };
+
+    PipelineHandle particlePipe = renderer.CreatePipeline({
+        .layout = particleLayout,
+        .blend = { .enabled = true },
+        .depth = { .depth_test = true, .depth_write = false }
+    });
+s
+    // Frame loop
+    auto texture renderer.create_texture(path, texture_description);
+
+    auto cmd = renderer.begin_frame(window, framebuffer);
+        cmd.bind_pipeline(particlePipe);
+        cmd.bind_vertex_buffer(0, quadVBO);
+        cmd.bind_vertex_buffer(1, particlePosVBO);
+        cmd.bind_vertex_buffer(2, particleColorVBO);
+        cmd.draw_index_instanced(particle_mesh.index_count, PARTICLE_COUNT);
+    renderer.end_frame(window);
+
+    glfwSwapBuffers(engine.window);
+    glfwPollEvents();
+    */
+
     Renderer<OpenGL> renderer = {};
+    Vector<Vertex> quad_vertices = Vector<Vertex>({
+        //         Position                      Normal                 UV
+        Vertex{Vec3( 0.5f,  0.5f, 0.0f),  Vec3(1.0f, 0.0f, 0.0f),  Vec2(1, 1)}, // top right
+        Vertex{Vec3( 0.5f, -0.5f, 0.0f),  Vec3(0.0f, 1.0f, 0.0f),  Vec2(1, 0)}, // bottom right
+        Vertex{Vec3(-0.5f, -0.5f, 0.0f),  Vec3(0.0f, 0.0f, 1.0f),  Vec2(0, 0)}, // bottom left
+        Vertex{Vec3(-0.5f,  0.5f, 0.0f),  Vec3(1.0f, 1.0f, 0.0f),  Vec2(0, 1)}  // top left 
+    }, arena_allocator); 
+
+    Vector<u32> quad_indices = Vector<u32>({
+        0, 1, 3,
+        1, 2, 3
+    }, arena_allocator);
+
+    VertexLayout layout = VertexLayout({
+        {0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3},
+        {1, OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3},
+        {2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2},
+    });
+    RasterizerState rasterizer = RasterizerState();
+    DepthState depth = DepthState();
+    BlendState blend = BlendState();
+    PipelineDescriptor pipeline_description = PipelineDescriptor(layout, rasterizer, depth, blend);
+    auto pipeline = renderer.create_pipeline(pipeline_description);
+
+    auto shader = renderer.create_shader({"../../Scenes/ParticleScene/Shaders/singularity.vert", "../../Scenes/ParticleScene/Shaders/singularity.frag"});
+
+    auto vbo = renderer.create_vertex_buffer(pipeline, quad_vertices, false);
+    auto ebo = renderer.create_index_buffer(pipeline, quad_indices);
+
     auto cmd = renderer.begin_frame();
+        renderer.bind_pipeline(cmd, pipeline, shader);
+        renderer.bind_vertex_buffer(cmd, vbo);
+        renderer.bind_index_buffer(cmd, ebo);
+        // renderer.draw_index_instanced(particle_mesh.index_count, PARTICLE_COUNT);
+    // renderer.end_frame();
 
     return 0;
 }

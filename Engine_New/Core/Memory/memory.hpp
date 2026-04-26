@@ -7,10 +7,10 @@ typedef void* (ReallocFunction)(void* ctx, void* data, size_t old_allocation_siz
 typedef void  (FreeFunction)(void* ctx, void* data);
 
 struct Allocator {
-	void* ctx;
-	AllocateFunction* malloc_cb;
-	ReallocFunction* realloc_cb;
-	FreeFunction* free_cb;
+	void* ctx = nullptr;
+	AllocateFunction* malloc_cb = nullptr;
+	ReallocFunction* realloc_cb = nullptr;
+	FreeFunction* free_cb = nullptr;
 
 	void* malloc(size_t allocation_size, size_t alignment) {
 		return malloc_cb(this->ctx, allocation_size, alignment);
@@ -27,8 +27,11 @@ struct Allocator {
 	}
 
     static Allocator invalid() {
-		return Allocator{};
+		Allocator ret = {};
+		return ret;
 	}
+
+	static Allocator general();
 
 	bool operator==(Allocator other) const;
 	bool operator!=(Allocator other) const;

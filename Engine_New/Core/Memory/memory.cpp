@@ -2,6 +2,44 @@
 #include "memory.hpp"
 #include "../Assert/assert.hpp"
 
+INTERNAL_LINKAGE void* general_malloc(void* ctx, size_t allocation_size, size_t alignment) {
+	UNUSED(ctx);
+	UNUSED(alignment);
+	return malloc(allocation_size);
+}
+
+INTERNAL_LINKAGE void* general_realloc(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment) {
+	UNUSED(ctx);
+	UNUSED(old_allocation_size);
+	UNUSED(alignment);
+	return realloc(data, new_allocation_size);
+}
+
+INTERNAL_LINKAGE void general_free(void* ctx, void* data) {
+	UNUSED(ctx);
+	return free(data);
+}
+
+bool Allocator::operator==(Allocator other) const {
+	return Memory::equal(this, sizeof(Allocator), &other, sizeof(Allocator));
+}
+
+bool Allocator::operator!=(Allocator other) const {
+	return !(*this == other);
+}
+
+Allocator Allocator::general() {
+	Allocator ret = {};
+	ret.ctx = nullptr;
+	ret.malloc_cb = general_malloc;
+	ret.realloc_cb = general_realloc;
+	ret.free_cb = general_free;
+
+	LOG_WARN("You are using a general allocator\n");
+
+	return ret;
+}
+
 Arena Arena::create(void* memory, size_t allocation_size, int flags) {
 	Arena ret = {};
 

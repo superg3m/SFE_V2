@@ -12,14 +12,6 @@ void _GL_ERROR_CHECK(const char* file, int line);
 #endif
 
 struct OpenGL {
-    s32 BOUND_VAO_ID = -1;
-    s32 BOUND_PROGRAM_ID = -1;
-    bool DEPTH_TEST = false;
-    bool STENCIL = false;
-    bool BLENDING = false;
-    bool WIREFRAME = false;
-    int DRAW_CALL_COUNT = 0;
-
     struct Texture {
         u32 id = 0;
         u32 width = 0;
@@ -42,15 +34,14 @@ struct OpenGL {
     struct Material;
     struct Shader {
         unsigned int program_id = 0;
-        Allocator allocator = Allocator::invalid();
-
-        Shader(Allocator allocator, Vector<const char*> shader_paths) : allocator(allocator), shader_paths(shader_paths), uniforms(Hashmap<const char *, OpenGL::UniformDesc>(allocator)) {
+        Shader() = default;
+        Shader(Vector<const char*> shader_paths) {
             this->compile();
         }
 
         void compile();
 
-        void use(RenderState* render_state) const;
+        void use() const;
         void set_model(Mat4 &model);
         void set_view(Mat4 &view);
         void set_projection(Mat4 &projection);
@@ -130,33 +121,42 @@ struct OpenGL {
         void set_mat4(const char* name, const Mat4& mat);
     };
 
+    struct Pipeline {
+		u32 vao;
+		u32 shader_program;
+		RasterizerState raster;
+		DepthState depth;
+		BlendState blend;
+		
+		static Pipeline create(PipelineDescriptor desc);
+	};
+
 	struct VertexBuffer {
         u32 id;
         GLenum gl_usage;
-        VertexLayout layout;
 
         /*
             Because of mac opengl I actually need to create the pipeline first
         */
         template<typename T>
-        static VertexBuffer create(u32 vao, Vector<T>& buffer, GLenum gl_usage = GL_STATIC_DRAW) {
+        static VertexBuffer create(OpenGL::Pipeline pipeline, Vector<T>& buffer, bool dynamic = true) {
             VertexBuffer ret = {};
-            ret.gl_usage = gl_usage;
+            ret.gl_usage = dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 
-            gl_error_check(glBindVertexArray(vao));
+            gl_error_check(glBindVertexArray(pipeline.vao));
             gl_error_check(glGenBuffers(1, &ret.id));
             gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
-            gl_error_check(glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(T), buffer.data(), gl_usage));
+            gl_error_check(glBufferData(GL_ARRAY_BUFFER, buffer.count * sizeof(T), buffer.data, ret.gl_usage));
 
             return ret;
         }
 
         template<typename T>
-        void update_buffer(u32 vao, Vector<T>& buffer, s64 offset = 0) {
-            RUNTIME_ASSERT(gl_usage == GL_DYNAMIC_DRAW);
+        void update_buffer(OpenGL::Pipeline pipeline, Vector<T>& buffer, s64 offset = 0) {
+            RUNTIME_ASSERT(this->gl_usage == GL_DYNAMIC_DRAW);
 
-            gl_error_check(glBindVertexArray(vao)); // might want to cache this
-            this->bind();
+            gl_error_check(glBindVertexArray(pipeline.vao)); // might want to cache this
+            gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, this->id));
 -
             #if 0
                 void *ptr = gl_error_check(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
@@ -164,28 +164,23 @@ struct OpenGL {
                 Memory::Copy(ptr, buffer_size, buffer.data(), buffer_size);
                 gl_error_check(glUnmapBuffer(GL_ARRAY_BUFFER));
             #else
-                gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, this->id));
-                gl_error_check(glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(T) * buffer.count(), buffer.data()));
+                gl_error_check(glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(T) * buffer.count, buffer.data));
             #endif
-        }
-
-        void bind() {
-            gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, this->id));
         }
 	};
 
 	struct IndexBuffer {
         u32 id;
         GLenum gl_usage;
-        static IndexBuffer create(u32 vao, Vector<u32>& indices, GLenum gl_usage = GL_STATIC_DRAW) {
+        static IndexBuffer create(OpenGL::Pipeline pipeline, Vector<u32>& indices, bool dynamic = false) {
             IndexBuffer ret = {};
-            ret.gl_usage = gl_usage;
+            ret.gl_usage = dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 
             if (indices.count) {
-                gl_error_check(glBindVertexArray(vao));
+                gl_error_check(glBindVertexArray(pipeline.vao));
                 gl_error_check(glGenBuffers(1, &ret.id));
                 gl_error_check(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ret.id));
-                gl_error_check(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.count * sizeof(u32), indices.data, gl_usage));
+                gl_error_check(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.count * sizeof(u32), indices.data, ret.gl_usage));
             }
 
             return ret;
@@ -196,20 +191,10 @@ struct OpenGL {
         }
 	};
 
-	struct Pipeline {
-		u32 vao;
-		u32 shader_program;
-		RasterizerState raster;
-		DepthState depth;
-		BlendState blend;
-		
-		static Pipeline create(PipelineDescriptor& desc);
-	};
-
 	struct CommandBuffer {
-		void bind_pipeline(OpenGL& backend, Handle<OpenGL::Shader> shader, Handle<OpenGL::Pipeline> pipeline_handle);
-		void bind_vertex_buffer(Handle<VertexBuffer> vbo);
-		void bind_index_buffer(Handle<IndexBuffer> ebo);
+		void bind_pipeline(OpenGL::Pipeline pipeline, OpenGL::Shader shader);
+		void bind_vertex_buffer(VertexBuffer vbo);
+		void bind_index_buffer(IndexBuffer ebo);
 		void draw_vertices(u32 vertex_base, u32 vertex_count);
 		void draw_indexed(u32 index_base, u32 index_count);
 
@@ -219,6 +204,18 @@ struct OpenGL {
 
 	OpenGL::CommandBuffer begin_frame();
 
-	Registry<OpenGL::Texture, 256> textures;
+    s32 BOUND_VAO_ID = -1;
+    s32 BOUND_PROGRAM_ID = -1;
+    bool DEPTH_TEST = false;
+    bool STENCIL = false;
+    bool BLENDING = false;
+    bool WIREFRAME = false;
+    int DRAW_CALL_COUNT = 0;
+
+    Registry<OpenGL::Texture, 256> textures;
 	Registry<OpenGL::Pipeline, 256> pipelines;
+	Registry<OpenGL::Shader, 256> shaders;
+	Registry<OpenGL::VertexBuffer, 256> vbos;
+	Registry<OpenGL::IndexBuffer, 256> ebos;
+	Registry<OpenGL::CommandBuffer, 256> command_buffers;
 };

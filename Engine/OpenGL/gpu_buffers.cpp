@@ -58,9 +58,9 @@ namespace OpenGL {
 
     VertexLayout& VertexLayout::PNT() {
         static VertexLayout layout = VertexLayout::create({
-            {OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3},
-            {OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3},
-            {OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2},
+            {OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3, false},
+            {OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3, false},
+            {OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2, false},
         });
 
         return layout;

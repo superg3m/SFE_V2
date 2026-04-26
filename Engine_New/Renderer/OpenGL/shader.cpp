@@ -1,4 +1,5 @@
 #include "backend.hpp"
+#include "../../Platform/platform.hpp"
 
 u32 OpenGL::Shader::create_shader_program(Vector<const char*> shader_paths) {
     u32 shader_program_id = glCreateProgram();
@@ -96,7 +97,7 @@ void OpenGL::Shader::check_compile_error(unsigned int source_id, const char* pat
 unsigned int OpenGL::Shader::shader_source_compile(const char* path) {
     size_t file_size = 0;
     Error error = Error::SUCCESS;
-    GLchar* shader_source = (GLchar*)Platform::read_entire_file(this->allocator, path, file_size, error);
+    GLchar* shader_source = (GLchar*)Platform::read_entire_file(Allocator::general(), path, file_size, error);
     RUNTIME_ASSERT_MSG(error == Error::SUCCESS, "Shader Error: %s\n", path, error_get_string(error));
 
     GLenum type = this->type_from_path(path);
@@ -130,8 +131,8 @@ unsigned int OpenGL::Shader::get_uniform_location(const char* name, GLenum type)
     return location;
 }
 
-void OpenGL::Shader::use(RenderState* render_state) const {
-    // render_state->bind_shader_program_or_use_cached(this->program_id);
+void OpenGL::Shader::use() const {
+    gl_error_check(glUseProgram(this->program_id));
 }
 
 // TODO(Jovanni): Make this use the locations instead of string lookups

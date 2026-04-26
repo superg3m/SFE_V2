@@ -24,8 +24,8 @@ struct Vertex {
 };
 
 struct VertexAttribute {
+	u32 location = 0;
 	size_t offset = 0; // offset in bytes of the actual memeber! OFFSET_OF(Vertex, aPosition)
-	u32 location;
 	BufferStrideTypeInfo type;
 	bool instanced = false;
 };
@@ -56,7 +56,7 @@ struct VertexLayout {
     }
 	*/
 
-	VertexLayout(Vector<VertexAttribute>& attributes) : attributes(attributes) {
+	VertexLayout(Vector<VertexAttribute> attributes) {
         this->stride = 0;
 		for (VertexAttribute desc : attributes) {
 			this->stride += (u32)desc.type * sizeof(float);
@@ -84,7 +84,7 @@ struct RasterizerState {
 	// bool front_face = CCW;
 	// bool fill = true;
 
-	RasterizerState create();
+	// RasterizerState create();
 };
 
 struct PipelineDescriptor {
@@ -92,6 +92,12 @@ struct PipelineDescriptor {
 	RasterizerState rasterizer;
 	DepthState depth;
 	BlendState blend;
+
+	PipelineDescriptor(VertexLayout layout, RasterizerState rasterizer, DepthState depth, BlendState blend) : layout(layout) {
+		this->rasterizer = rasterizer;
+		this->depth = depth;
+		this->blend = blend;
+	}
 };
 
 /*

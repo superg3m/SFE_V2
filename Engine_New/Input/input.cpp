@@ -2,7 +2,7 @@
 
 void Input::init(Allocator allocator) {
 	this->profiles = Vector<Profile>(allocator);
-	this->input_state = Hashmap<KeyCode, KeyState>(allocator, {
+	this->input_state = Hashmap<KeyCode, KeyState>({
 		#define X(name, value) {name, KeyState::UP},
 			X_ASCII_KEYCODE
 		#undef X
@@ -10,7 +10,7 @@ void Input::init(Allocator allocator) {
 		#define X(name) {name, KeyState::UP},
 			X_COMPLEX_KEYCODE
 		#undef X
-	});
+	}, allocator);
 }
 
 void Input::poll() {

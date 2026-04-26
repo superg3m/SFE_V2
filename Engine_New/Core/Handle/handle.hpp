@@ -16,7 +16,7 @@ struct Handle {
 		return ret;
 	}
 
-	bool invalid() {
+	static Handle<T> invalid() {
 		Handle<T> ret = {};
 		ret.index = INVALID_HANDLE_INDEX;
 		
@@ -52,7 +52,7 @@ struct Registry {
 		return ret;
 	}
 
-	static Handle<T> aquire() {
+	Handle<T> acquire() {
 		Handle<T> handle = Handle<T>::invalid();
 		for (int i = 0; i < N; i++) {
 			Slot<T>& slot = this->slots[i];

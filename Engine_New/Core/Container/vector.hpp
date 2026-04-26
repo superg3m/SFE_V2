@@ -5,16 +5,24 @@
 #include "../Basic/basic.hpp"
 #include "../Memory/memory.hpp"
 #include "../Assert/assert.hpp"
+#include "../Logger/logger.hpp"
 #include "../Hashing/hashing.hpp"
 
 template <typename T>
 struct Vector {
 	u64 count = 0;
-	u64 capacity = 0;
+	u64 capacity = DEFAULT_CAPACITY;
 	T* data = nullptr;
 	Allocator allocator = Allocator::invalid();
     
-	Vector(Allocator allocator, std::initializer_list<T> list) {
+   	Vector(Allocator allocator = Allocator::invalid(), u64 capacity = DEFAULT_CAPACITY, u64 count = 0) {
+		this->count = count;
+        this->capacity = capacity;
+        this->data = nullptr;
+        this->allocator = allocator;
+	}
+    
+    Vector(std::initializer_list<T> list, Allocator allocator = Allocator::invalid()) {
         this->count = list.size();
         this->capacity = (this->count * 2) ? (this->count * 2) : DEFAULT_CAPACITY;
         this->allocator = allocator;
@@ -25,13 +33,6 @@ struct Vector {
 		this->capacity = this->count * 2;
 		this->data = (T*)this->allocator.malloc(this->capacity * sizeof(T), alignof(T));
 		Memory::copy(this->data, this->capacity * sizeof(T), list.begin(), list.size() * sizeof(T));
-	}
-
-	Vector(Allocator allocator, u64 capacity = DEFAULT_CAPACITY, u64 count = 0) {
-		this->count = count;
-        this->capacity = capacity;
-        this->data = nullptr;
-        this->allocator = allocator;
 	}
 
     static void copy(Vector<T>* destination, Vector<T>* source) {
@@ -68,6 +69,10 @@ struct Vector {
     }
 
 	void append(T value) {
+        if (this->allocator == Allocator::invalid()) {
+            this->allocator = Allocator::general();
+        }
+
         if (!this->data) { 
             this->data = (T*)this->allocator.malloc(this->capacity * sizeof(T), alignof(T));
         }

@@ -32,7 +32,7 @@ INTERNAL_LINKAGE void bind_vertex_attribute(int location, u32 stride, VertexAttr
 	}
 }
 
-OpenGL::Pipeline OpenGL::Pipeline::create(PipelineDescriptor& desc) {
+OpenGL::Pipeline OpenGL::Pipeline::create(PipelineDescriptor desc) {
 	OpenGL::Pipeline ret = {};
 
 	glGenVertexArrays(1, &ret.vao);

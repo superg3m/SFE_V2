@@ -1,6 +1,7 @@
 #include "../Basic/basic.hpp"
 #include "../Memory/memory.hpp"
 #include "../Assert/assert.hpp"
+#include "../Logger/logger.hpp"
 #include "../Hashing/hashing.hpp"
 
 using HashFunction = u64(const void*, size_t);
@@ -59,9 +60,9 @@ struct Hashmap {
 
     u64 count = 0;
     u64 dead_count = 0;
-    u64 capacity = 0;
+    u64 capacity = DEFAULT_CAPACITY;
     HashmapEntry<K, V>* entries = nullptr;
-    HashFunction* hash_func = nullptr;
+    HashFunction* hash_func = compile_time_get_hash_function<K>();
     Allocator allocator = Allocator::invalid();
 
     struct Iterator {
@@ -106,13 +107,13 @@ struct Hashmap {
         return static_cast<float>(dead_count + count) / static_cast<float>(capacity);
     }
 
-    Hashmap(Allocator allocator, u64 capacity = DEFAULT_CAPACITY, HashFunction* hash_func = compile_time_get_hash_function<K>()) {
+    Hashmap(Allocator allocator = Allocator::invalid(), u64 capacity = DEFAULT_CAPACITY,  HashFunction* hash_func = compile_time_get_hash_function<K>()) {
 		this->allocator = allocator;
 		this->capacity = capacity;
 		this->hash_func = hash_func;
 	}
 
-    Hashmap(Allocator allocator, std::initializer_list<KeyValuePair<K, V>> list, HashFunction* hf = compile_time_get_hash_function<K>()) {
+    Hashmap(std::initializer_list<KeyValuePair<K, V>> list, Allocator allocator = Allocator::invalid(), HashFunction* hf = compile_time_get_hash_function<K>()) {
 		this->allocator = allocator;
 		this->capacity = DEFAULT_CAPACITY;
 		this->hash_func = hash_func;
@@ -198,6 +199,10 @@ struct Hashmap {
     }
 
     void put(const K& key, const V& value) {
+        if (this->allocator == Allocator::invalid()) {
+            this->allocator = Allocator::general();
+        }
+
         if (!entries || load_factor() >= DEFAULT_LOAD_FACTOR) {
             this->grow_rehash();
         }
