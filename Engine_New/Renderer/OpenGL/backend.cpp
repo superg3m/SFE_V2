@@ -22,6 +22,13 @@ void _GL_ERROR_CHECK(const char *file, int line) {
     }
 }
 
+OpenGL::CommandBuffer OpenGL::begin_frame() {
+    OpenGL::CommandBuffer cmd = {};
+    cmd.begin_frame();
+
+    return cmd;
+}
+
 /*
 void OpenGL::draw(Vector<RenderObject>& objects) {
 	OpenGL::CommandBuffer cmd = renderer.BeginFrame();

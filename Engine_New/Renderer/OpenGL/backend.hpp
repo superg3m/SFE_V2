@@ -123,7 +123,45 @@ struct OpenGL {
     };
 
 	struct VertexBuffer {
+        u32 id;
+        GLenum gl_usage;
+        VertexLayout layout;
 
+        /*
+            Because of mac opengl I actually need to create the pipeline first
+        */
+        template<typename T>
+        static VertexBuffer create(u32 vao, Vector<T>& buffer, GLenum gl_usage = GL_STATIC_DRAW) {
+            VertexBuffer ret = {};
+            ret.gl_usage = gl_usage;
+
+            gl_error_check(glBindVertexArray(vao));
+            gl_error_check(glGenBuffers(1, &ret.id));
+            gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
+            gl_error_check(glBufferData(GL_ARRAY_BUFFER, buffer.size() * sizeof(T), buffer.data(), gl_usage));
+
+            return ret;
+        }
+
+        template<typename T>
+        void update_buffer(u32 vao, Vector<T>& buffer, s64 offset = 0) {
+            RUNTIME_ASSERT(gl_usage == GL_DYNAMIC_DRAW);
+
+            gl_error_check(glBindVertexArray(vao)); // might want to cache this
+            this->bind();
+-
+            #if 0
+                void *ptr = gl_error_check(glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY));
+                size_t buffer_size = sizeof(T) * buffer.count();
+                Memory::Copy(ptr, buffer_size, buffer.data(), buffer_size);
+                gl_error_check(glUnmapBuffer(GL_ARRAY_BUFFER));
+            #else
+                gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, this->id));
+                gl_error_check(glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(T) * buffer.count(), buffer.data()));
+            #endif
+        }
+
+        void bind();
 	};
 
 	struct IndexBuffer {
@@ -151,12 +189,7 @@ struct OpenGL {
 		void end_frame();
 	};
 
-	OpenGL::CommandBuffer begin_frame() {
-		OpenGL::CommandBuffer cmd = {};
-		cmd.begin_frame();
-
-		return cmd;
-	}
+	OpenGL::CommandBuffer begin_frame();
 
 	Registry<OpenGL::Texture, 256> textures;
 	Registry<OpenGL::Pipeline, 256> pipelines;

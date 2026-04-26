@@ -36,7 +36,7 @@ struct Renderer {
     }
 
     /*
-    BufferHandle CreateBuffer(const BufferDesc& desc, const void* data) {
+    VertexBufferHandle create_vertex_buffer(const BufferDesc& desc, const void* data) {
         uint32_t idx = buffers.Allocate();
         auto& slot = buffers.slots[idx];
 
@@ -54,6 +54,9 @@ struct Renderer {
         slot.data.usage = desc.usage;
 
         return { idx, slot.generation };
+    }
+
+    void update_vertex_buffer(VertexBufferHandle handle, Vector<T> data) {
     }
     */
 };
