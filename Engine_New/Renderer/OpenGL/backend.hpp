@@ -161,11 +161,31 @@ struct OpenGL {
             #endif
         }
 
-        void bind();
+        void bind() {
+            gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, this->id));
+        }
 	};
 
 	struct IndexBuffer {
+        u32 id;
+        GLenum gl_usage;
+        static IndexBuffer create(u32 vao, Vector<u32>& indices, GLenum gl_usage = GL_STATIC_DRAW) {
+            IndexBuffer ret = {};
+            ret.gl_usage = gl_usage;
 
+            if (indices.count) {
+                gl_error_check(glBindVertexArray(vao));
+                gl_error_check(glGenBuffers(1, &ret.id));
+                gl_error_check(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ret.id));
+                gl_error_check(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.count * sizeof(u32), indices.data, gl_usage));
+            }
+
+            return ret;
+        }
+
+        void bind() {
+            gl_error_check(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->id));
+        }
 	};
 
 	struct Pipeline {
