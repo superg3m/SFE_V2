@@ -2,12 +2,9 @@
 #include "../Memory/memory.hpp"
 #include "../Assert/assert.hpp"
 
-String String::create(const char* data, u64 length) {
-	String ret = {};
-	ret.data = data;
-	ret.length = length;
-
-	return ret;
+String::String(const char* data, u64 length) {
+	this->data = data;
+	this->length = length;
 }
 
 bool String::operator==(const String& other) const {
@@ -134,7 +131,7 @@ s64 String::index_of(const char* str, u64 str_length, const char* substring, u64
 			continue;
 		}
 
-		String current_view = String::create(str + i, substring_length);
+		String current_view = String(str + i, substring_length);
 		if (String::equal(substring, substring_length, current_view.data, current_view.length)) {
 			ret_index = (s64)i;
 			break;
@@ -173,7 +170,7 @@ s64 String::last_index_of(const char* str, u64 str_length, const char* substring
 			continue;
 		}
 
-		String current_view = String::create(str + i, substring_length);
+		String current_view = String(str + i, substring_length);
 		if (String::equal(current_view.data, current_view.length, substring, substring_length)) {
 			ret_index = (s64)i;
 		}

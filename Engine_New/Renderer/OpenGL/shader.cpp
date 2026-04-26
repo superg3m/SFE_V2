@@ -67,10 +67,11 @@ static const char* gl_enum_to_string(GLenum type) {
 }
 
 GLenum OpenGL::Shader::type_from_path(const char* shader_source_path) {
-    s64 extension_index = String::last_index_of(shader_source_path, String::cstr_length(shader_source_path), STRING_LIT_ARG("."));
+    u64 len = String::cstr_length(shader_source_path);
+    s64 extension_index = String::last_index_of(shader_source_path, len, STRING_LIT_ARG("."));
     RUNTIME_ASSERT_MSG(extension_index != -1, "Missing extension (.vert, .frag)\n");
     
-    String extension = String(shader_source_path + extension_index);
+    String extension = String(shader_source_path + extension_index, len - extension_index);
     if (String::contains(extension.data, extension.length,  STRING_LIT_ARG(".vert"))) {
         return GL_VERTEX_SHADER;
     } else if (String::contains(extension.data, extension.length,  STRING_LIT_ARG(".frag"))) {
@@ -97,7 +98,8 @@ void OpenGL::Shader::check_compile_error(unsigned int source_id, const char* pat
 unsigned int OpenGL::Shader::shader_source_compile(const char* path) {
     size_t file_size = 0;
     Error error = Error::SUCCESS;
-    GLchar* shader_source = (GLchar*)Platform::read_entire_file(Allocator::general(), path, file_size, error);
+    Allocator allocator = Allocator::general();
+    GLchar* shader_source = (GLchar*)Platform::read_entire_file(allocator, path, file_size, error);
     RUNTIME_ASSERT_MSG(error == Error::SUCCESS, "Shader Error: %s\n", path, error_get_string(error));
 
     GLenum type = this->type_from_path(path);
@@ -106,7 +108,7 @@ unsigned int OpenGL::Shader::shader_source_compile(const char* path) {
     gl_error_check(glCompileShader(source_id));
 
     this->check_compile_error(source_id, path);
-    free(shader_source);
+    allocator.free(shader_source);
 
     return source_id;
 }

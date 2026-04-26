@@ -192,10 +192,10 @@ manager.build_project()
 
 if IS_WINDOWS():
     if cc.compiler_name == "cl":
-        COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-static-ucrt", "glfw3.dll", ABSOLUTE_GAME_BUILD)
+        COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-static-ucrt", "glfw3.dll", ABSOLUTE_TEST_BUILD)
     else:
-        COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-mingw-w64", "glfw3.dll", ABSOLUTE_GAME_BUILD)
+        COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-mingw-w64", "glfw3.dll", ABSOLUTE_TEST_BUILD)
 
-    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/windows", "assimp-vc143-mtd.dll", ABSOLUTE_GAME_BUILD)
+    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/windows", "assimp-vc143-mtd.dll", ABSOLUTE_TEST_BUILD)
 elif IS_DARWIN():
-    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_GAME_BUILD)
+    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_TEST_BUILD)

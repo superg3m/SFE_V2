@@ -1,4 +1,5 @@
 #include <sfe.hpp>
+#include <GLFW/glfw3.h>
 
 struct Point {
     int x;
@@ -234,6 +235,84 @@ void test_clear(Allocator allocator) {
     LOG_INFO("test_clear passed\n");
 }
 
+const int WIDTH = 800;
+const int HEIGHT = 800;
+
+GLFWwindow* GLFW_INIT() {
+    RUNTIME_ASSERT_MSG(glfwInit(), "Failed to init glfw\n");
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_SAMPLES, 4);
+
+    #ifdef __APPLE__
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    #endif
+
+    GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "LearnOpenGL", nullptr, nullptr);
+    if (window == nullptr) {
+        LOG_ERROR("Failed to create GLFW window\n");
+        glfwTerminate();
+        exit(-1);
+    }
+
+    glfwMakeContextCurrent(window);
+
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        LOG_ERROR("Failed to initialize GLAD\n");
+        glfwTerminate();
+        exit(-1);
+    }
+
+    glfwSwapInterval(1);
+    // glfwSetInputMode(window, GLFW_CURSOR, mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+
+    gl_error_check(glEnable(GL_MULTISAMPLE));
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_FRONT); 
+    // glEnable(GL_FRAMEBUFFER_SRGB);
+
+    return window;
+}
+
+struct Engine {
+    GLFWwindow* window;
+    Input input;
+
+    bool init(Allocator allocator) {
+        this->window = GLFW_INIT();
+        if (!this->window) {
+            return false;
+        }
+
+        this->input.init(allocator);
+        if (!INPUT_GLFW_SETUP(&this->input, this->window)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    void update(float dt) {
+        // active_scene.update(dt);
+
+        if (input.get_key(KEY_A, PRESSED|RELEASED)) {
+            LOG_ERROR("WOW\n");
+        }
+
+        if (input.get_key_pressed(KEY_R)) {
+            // this->asset_manager.reload_shaders();
+        }
+
+        if (input.get_key_pressed(KEY_ESCAPE)) {
+            glfwSetWindowShouldClose(this->window, true);
+        }
+
+        input.poll();
+    }
+};
+
 int main() {
     constexpr int CAPACITY = KB(98);
     u8 program_memory[CAPACITY];
@@ -307,19 +386,58 @@ s
     glfwPollEvents();
     */
 
-    Renderer<OpenGL> renderer = {};
-    Vector<Vertex> quad_vertices = Vector<Vertex>({
-        //         Position                      Normal                 UV
-        Vertex{Vec3( 0.5f,  0.5f, 0.0f),  Vec3(1.0f, 0.0f, 0.0f),  Vec2(1, 1)}, // top right
-        Vertex{Vec3( 0.5f, -0.5f, 0.0f),  Vec3(0.0f, 1.0f, 0.0f),  Vec2(1, 0)}, // bottom right
-        Vertex{Vec3(-0.5f, -0.5f, 0.0f),  Vec3(0.0f, 0.0f, 1.0f),  Vec2(0, 0)}, // bottom left
-        Vertex{Vec3(-0.5f,  0.5f, 0.0f),  Vec3(1.0f, 1.0f, 0.0f),  Vec2(0, 1)}  // top left 
-    }, arena_allocator); 
+    Engine engine = {};
+    if (!engine.init(arena_allocator)) {
+        return -1;
+    }
 
-    Vector<u32> quad_indices = Vector<u32>({
-        0, 1, 3,
-        1, 2, 3
-    }, arena_allocator);
+    Renderer<OpenGL> renderer = {};
+    Vector<Vertex> cube_vertices = {
+        // Front face
+        Vertex{Vec3(-1.0f, -1.0f, -1.0f), Vec3(0, 0, -1), Vec2(0, 0)},
+        Vertex{Vec3( 1.0f, -1.0f, -1.0f), Vec3(0, 0, -1), Vec2(1, 0)},
+        Vertex{Vec3( 1.0f,  1.0f, -1.0f), Vec3(0, 0, -1), Vec2(1, 1)},
+        Vertex{Vec3(-1.0f,  1.0f, -1.0f), Vec3(0, 0, -1), Vec2(0, 1)},
+
+        // Back face
+        Vertex{Vec3(-1.0f, -1.0f, 1.0f), Vec3(0, 0, 1), Vec2(0, 0)},
+        Vertex{Vec3( 1.0f, -1.0f, 1.0f), Vec3(0, 0, 1), Vec2(1, 0)},
+        Vertex{Vec3( 1.0f,  1.0f, 1.0f), Vec3(0, 0, 1), Vec2(1, 1)},
+        Vertex{Vec3(-1.0f,  1.0f, 1.0f), Vec3(0, 0, 1), Vec2(0, 1)},
+
+        // Left face
+        Vertex{Vec3(-1.0f, -1.0f,  1.0f), Vec3(-1, 0, 0), Vec2(0, 0)},
+        Vertex{Vec3(-1.0f, -1.0f, -1.0f), Vec3(-1, 0, 0), Vec2(1, 0)},
+        Vertex{Vec3(-1.0f,  1.0f, -1.0f), Vec3(-1, 0, 0), Vec2(1, 1)},
+        Vertex{Vec3(-1.0f,  1.0f,  1.0f), Vec3(-1, 0, 0), Vec2(0, 1)},
+
+        // Right face
+        Vertex{Vec3( 1.0f, -1.0f, -1.0f), Vec3(1, 0, 0), Vec2(0, 0)},
+        Vertex{Vec3( 1.0f, -1.0f,  1.0f), Vec3(1, 0, 0), Vec2(1, 0)},
+        Vertex{Vec3( 1.0f,  1.0f,  1.0f), Vec3(1, 0, 0), Vec2(1, 1)},
+        Vertex{Vec3( 1.0f,  1.0f, -1.0f), Vec3(1, 0, 0), Vec2(0, 1)},
+
+        // Bottom face
+        Vertex{Vec3(-1.0f, -1.0f, -1.0f), Vec3(0, -1, 0), Vec2(0, 1)},
+        Vertex{Vec3( 1.0f, -1.0f, -1.0f), Vec3(0, -1, 0), Vec2(1, 1)},
+        Vertex{Vec3( 1.0f, -1.0f,  1.0f), Vec3(0, -1, 0), Vec2(1, 0)},
+        Vertex{Vec3(-1.0f, -1.0f,  1.0f), Vec3(0, -1, 0), Vec2(0, 0)},
+
+        // Top face
+        Vertex{Vec3(-1.0f,  1.0f, -1.0f), Vec3(0, 1, 0), Vec2(0, 1)},
+        Vertex{Vec3( 1.0f,  1.0f, -1.0f), Vec3(0, 1, 0), Vec2(1, 1)},
+        Vertex{Vec3( 1.0f,  1.0f,  1.0f), Vec3(0, 1, 0), Vec2(1, 0)},
+        Vertex{Vec3(-1.0f,  1.0f,  1.0f), Vec3(0, 1, 0), Vec2(0, 0)},
+    };
+
+    Vector<u32> cube_indices = {
+        0,  1,  2,  2,  3,  0,  // Front
+        4,  5,  6,  6,  7,  4,  // Back
+        8,  9,  10, 10, 11, 8,  // Left
+        12, 13, 14, 14, 15, 12, // Right
+        16, 17, 18, 18, 19, 16, // Bottom
+        20, 21, 22, 22, 23, 20  // Top
+    };
 
     PipelineDescriptor pipeline_description = PipelineDescriptor(
         VertexLayout({
@@ -331,18 +449,49 @@ s
         DepthState(), 
         BlendState()
     );
-    auto shader = renderer.create_shader({"../../Scenes/ParticleScene/Shaders/singularity.vert", "../../Scenes/ParticleScene/Shaders/singularity.frag"});
+
+    auto shader = renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
     auto pipeline = renderer.create_pipeline(pipeline_description);
-    auto vbo = renderer.create_vertex_buffer(pipeline, quad_vertices, false);
-    auto ebo = renderer.create_index_buffer(pipeline, quad_indices);
-    auto cmd = renderer.begin_frame();
-        renderer.bind_pipeline(cmd, pipeline, shader);
-        renderer.bind_vertex_buffer(cmd, vbo);
-        renderer.bind_index_buffer(cmd, ebo);
-        renderer.draw_indices(0, 0, quad_indices.count);
-    renderer.end_frame(cmd);
+    auto vbo = renderer.create_vertex_buffer(pipeline, cube_vertices);
+    auto ebo = renderer.create_index_buffer(pipeline, cube_indices);
+
+    float dt = 0.0f; // Time between current frame and last frame
+    float previous_time = 0.0f; // Time of last frame
+    while (!glfwWindowShouldClose(engine.window)) {
+        gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
+        gl_error_check(glClearColor(0.2f, 0.2f, 0.2f, 1));
+
+        float current_time = glfwGetTime(); // Returns time in seconds
+        dt = current_time - previous_time;
+        previous_time = current_time;
+
+        engine.update(dt);
+
+        Mat4 model         = Mat4(1.0f);
+        Mat4 view          = Mat4(1.0f);
+        Mat4 projection    = Mat4(1.0f);
+        Quat rotation = Quat::from_angle_axis((float)glfwGetTime() / 2.0f, Vec3(0.0f, 1.0f, 0.0f));
+
+        model = Mat4::scale(model, Vec3((sin((float)glfwGetTime()) + 2), 1, 1));
+        model = Mat4::rotate(model, rotation);
+        view  = Mat4::translate(view, Vec3(0.0f, 0.0f, -10.0f));
+        projection = Mat4::perspective(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
+
+        auto cmd = renderer.begin_frame();
+            renderer.bind_pipeline(cmd, pipeline, shader);
+            renderer.bind_material(cmd, shader, material);
+            renderer.bind_vertex_buffer(cmd, vbo);
+            renderer.bind_index_buffer(cmd, ebo);
+            renderer.draw_indices(0, 0, cube_vertices.count);
+        renderer.end_frame(cmd);
+
+        glfwSwapBuffers(engine.window);
+        glfwPollEvents();
+    }
 
     return 0;
 }
 
 // probably take a look at the ::create(...) stuff see if you can get away with not doing that?
+// Entity stuff
+// glfw glad

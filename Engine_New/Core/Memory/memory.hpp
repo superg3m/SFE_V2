@@ -2,41 +2,6 @@
 
 #include "../Basic/basic.hpp"
 
-typedef void* (AllocateFunction)(void* ctx, size_t allocation_size, size_t alignment);
-typedef void* (ReallocFunction)(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment);
-typedef void  (FreeFunction)(void* ctx, void* data);
-
-struct Allocator {
-	void* ctx = nullptr;
-	AllocateFunction* malloc_cb = nullptr;
-	ReallocFunction* realloc_cb = nullptr;
-	FreeFunction* free_cb = nullptr;
-
-	void* malloc(size_t allocation_size, size_t alignment) {
-		return malloc_cb(this->ctx, allocation_size, alignment);
-	}
-
-	void* realloc(void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment) {
-		return realloc_cb(this->ctx, data, old_allocation_size, new_allocation_size, alignment);
-	}
-
-	void free(void* data) {
-		if (free_cb) {
-			free_cb(this->ctx, data);
-		}
-	}
-
-    static Allocator invalid() {
-		Allocator ret = {};
-		return ret;
-	}
-
-	static Allocator general();
-
-	bool operator==(Allocator other) const;
-	bool operator!=(Allocator other) const;
-};
-
 namespace Memory {
     void zero(void* data, size_t data_size_in_bytes);
     void copy(void* destination, size_t destination_size, const void* source, size_t source_size);
@@ -49,6 +14,26 @@ namespace Memory {
         b = temp;
     }
 }
+
+typedef void* (AllocateFunction)(void* ctx, size_t allocation_size, size_t alignment);
+typedef void* (ReallocFunction)(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment);
+typedef void  (FreeFunction)(void* ctx, void* data);
+
+struct Allocator {
+	void* ctx = nullptr;
+	AllocateFunction* malloc_cb = nullptr;
+	FreeFunction* free_cb = nullptr;
+
+	void* malloc(size_t allocation_size, size_t alignment);
+	void* realloc(void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment);
+	void free(void* data);
+
+    static Allocator invalid();
+	static Allocator general();
+
+	bool operator==(Allocator other) const;
+	bool operator!=(Allocator other) const;
+};
 
 // TODO(Jovanni): add linked list memory pages flag
 enum ArenaFlag {

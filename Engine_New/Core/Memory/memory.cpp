@@ -8,13 +8,6 @@ INTERNAL_LINKAGE void* general_malloc(void* ctx, size_t allocation_size, size_t 
 	return malloc(allocation_size);
 }
 
-INTERNAL_LINKAGE void* general_realloc(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment) {
-	UNUSED(ctx);
-	UNUSED(old_allocation_size);
-	UNUSED(alignment);
-	return realloc(data, new_allocation_size);
-}
-
 INTERNAL_LINKAGE void general_free(void* ctx, void* data) {
 	UNUSED(ctx);
 	return free(data);
@@ -28,11 +21,34 @@ bool Allocator::operator!=(Allocator other) const {
 	return !(*this == other);
 }
 
+void* Allocator::malloc(size_t allocation_size, size_t alignment) {
+	void* ret = malloc_cb(this->ctx, allocation_size, alignment);
+	Memory::zero(ret, allocation_size);
+	return ret;
+}
+
+void* Allocator::realloc(void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment) {
+	void* ret = this->malloc(new_allocation_size, alignment);
+	Memory::copy(ret, new_allocation_size, data, old_allocation_size);
+	this->free(data);
+	return ret;
+}
+
+void Allocator::free(void* data) {
+	if (free_cb) {
+		free_cb(this->ctx, data);
+	}
+}
+
+Allocator Allocator::invalid() {
+	Allocator ret = {};
+	return ret;
+}
+
 Allocator Allocator::general() {
 	Allocator ret = {};
 	ret.ctx = nullptr;
 	ret.malloc_cb = general_malloc;
-	ret.realloc_cb = general_realloc;
 	ret.free_cb = general_free;
 
 	LOG_WARN("You are using a general allocator\n");
@@ -63,12 +79,12 @@ Arena Arena::circular(void* memory, size_t allocation_size) {
 	return Arena::create(memory, allocation_size, ARENA_FLAG_CIRCULAR);
 }
 
-static void* arena_malloc(void* ctx, size_t allocation_size, size_t alignment) {
+INTERNAL_LINKAGE void* arena_malloc(void* ctx, size_t allocation_size, size_t alignment) {
 	Arena* arena = (Arena*)ctx;
 	return arena->push(allocation_size, alignment);
 }
 
-static void* arena_realloc(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment) {
+INTERNAL_LINKAGE void* arena_realloc(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment) {
 	Arena* arena = (Arena*)ctx;
 	return arena->realloc(data, old_allocation_size, new_allocation_size, alignment);
 }
@@ -77,7 +93,6 @@ Allocator Arena::to_allocator() {
 	Allocator ret = {};
 	ret.ctx = this;
 	ret.malloc_cb = arena_malloc;
-	ret.realloc_cb = arena_realloc;
 	ret.free_cb = nullptr;
 
 	return ret;

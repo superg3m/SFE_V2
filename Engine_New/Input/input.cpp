@@ -131,3 +131,5 @@ void Input::update_mouse_position(float x, float y) {
 	this->previous_mouse = this->current_mouse;
 	this->current_mouse = Vec2(x, y);
 }
+
+#include "input_glfw.cpp"

@@ -1,4 +1,4 @@
-#include <input_glfw.hpp>
+#include "input_glfw.hpp"
 
 INTERNAL_LINKAGE GLFW_CTX ctx;
 
@@ -99,12 +99,12 @@ bool INPUT_GLFW_SETUP(Input* input, GLFWwindow* window, GLFWkeyfun key_cb, GLFWm
             ctx.cb_keyboard((GLFWwindow*)ctx.window, key, scancode, action, mods);  
         }
 
-        if (!ctx.glfw_to_key_code.count(key)) {
+        if (!ctx.glfw_to_key_code.has(key)) {
             LOG_WARN("Pressed a glfw key and it is not mapped yet: %s\n", glfwGetKeyName(key, scancode));
             return;
         }
 
-        KeyCode cb_code = ctx.glfw_to_key_code[key];
+        KeyCode cb_code = ctx.glfw_to_key_code.get(key);
         ctx.input->update_input_code(cb_code, action != GLFW_RELEASE);
         for (const auto profile : ctx.input->profiles) {
             if (!profile.active) {
@@ -122,7 +122,7 @@ bool INPUT_GLFW_SETUP(Input* input, GLFWwindow* window, GLFWkeyfun key_cb, GLFWm
             ctx.cb_mouse_button(window, button, action, mods);   
         }
 
-        KeyCode cb_code = ctx.glfw_to_key_code[button];
+        KeyCode cb_code = ctx.glfw_to_key_code.get(button);
         ctx.input->update_input_code(cb_code, action != GLFW_RELEASE);
         for (const auto profile : ctx.input->profiles) {
             if (!profile.active) {

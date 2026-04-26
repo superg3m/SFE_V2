@@ -108,8 +108,6 @@ namespace Platform {
 
 		fclose(file_handle);
 
-		out_file_size = out_file_size + 1;
-
 		return file_data;
 	}
 

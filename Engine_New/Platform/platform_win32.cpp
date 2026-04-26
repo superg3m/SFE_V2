@@ -190,19 +190,9 @@ namespace Platform {
 		VirtualFree(data, 0, MEM_RELEASE);
 	}
 
-	INTERNAL_LINKAGE void* win32_realloc(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment) {
-		UNUSED(ctx);
-		void* ret = VirtualAlloc(nullptr, new_allocation_size, MEM_COMMIT, PAGE_READWRITE);
-		Memory::copy(ret, new_allocation_size, data, old_allocation_size);
-		win32_free(ctx, data);
-
-		return ret;
-	}
-
 	Allocator get_allocator() {
 		Allocator allocator = {};
 		allocator.malloc_cb = win32_malloc;
-		allocator.realloc_cb = win32_realloc;
 		allocator.free_cb = win32_free;
 
 		return allocator;

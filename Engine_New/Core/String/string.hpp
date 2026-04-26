@@ -7,12 +7,12 @@
 #include "../Memory/memory.hpp"
 
 struct String {
-	const char* data = nullptr;
-	u64 length = 0;
+    const char* data = nullptr;
+    u64 length = 0;
 
-	static String create(const char* data, u64 length);
-	bool operator==(const String& other) const;
-	bool operator!=(const String& other) const;
+    String(const char* data, u64 length);
+    bool operator==(const String& other) const;
+    bool operator!=(const String& other) const;
 
     static char* allocate(Allocator allocator, const char* s1, u64 length);
     static char* sprintf(Allocator allocator, u64 &out_buffer_length, const char* fmt ...);
