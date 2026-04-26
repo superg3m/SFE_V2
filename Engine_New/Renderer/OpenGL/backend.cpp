@@ -3,6 +3,7 @@
 #include "pipeline.cpp"
 #include "texture.cpp"
 #include "command_buffer.cpp"
+#include "shader.cpp"
 
 void _GL_ERROR_CHECK(const char *file, int line) {
     GLenum errorCode;

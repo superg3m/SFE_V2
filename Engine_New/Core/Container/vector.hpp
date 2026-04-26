@@ -13,14 +13,7 @@ struct Vector {
 	u64 capacity = 0;
 	T* data = nullptr;
 	Allocator allocator = Allocator::invalid();
-
-	Vector() {
-		this->count = 0;
-		this->capacity = 0;
-		this->data = nullptr;
-		this->allocator = Allocator::invalid();
-	}
-
+    
 	Vector(Allocator allocator, std::initializer_list<T> list) {
         this->count = list.size();
         this->capacity = (this->count * 2) ? (this->count * 2) : DEFAULT_CAPACITY;
