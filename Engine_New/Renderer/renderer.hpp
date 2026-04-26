@@ -71,13 +71,14 @@ struct Renderer {
     CommandBufferHandle begin_frame(u32 framebuffer = 0) {
         CommandBufferHandle handle = backend.command_buffers.acquire();
         CommandBuffer& cmd = backend.command_buffers.get(handle);
-        cmd = backend.begin_frame();
+        cmd.begin_frame();
 
         return handle;
     }
 
-    void end_frame() {
-        backend.end_frame();
+    void end_frame(CommandBufferHandle handle) {
+        CommandBuffer& cmd = backend.command_buffers.get(handle);
+        cmd.end_frame();
     }
 
     void bind_pipeline(CommandBufferHandle cmd_handle, PipelineHandle pipeline_handle, ShaderHandle shader_handle) {

@@ -342,7 +342,9 @@ s
         renderer.bind_vertex_buffer(cmd, vbo);
         renderer.bind_index_buffer(cmd, ebo);
         // renderer.draw_index_instanced(particle_mesh.index_count, PARTICLE_COUNT);
-    // renderer.end_frame();
+    renderer.end_frame(cmd);
 
     return 0;
 }
+
+// probably take a look at the ::create(...) stuff see if you can get away with not doing that?
