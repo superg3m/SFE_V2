@@ -48,7 +48,7 @@ void OpenGL::CommandBuffer::draw_vertices(u32 vertex_base, u32 vertex_count) {}
 void OpenGL::CommandBuffer::draw_indexed(u32 index_base, u32 index_count) {}
 
 void OpenGL::CommandBuffer::begin_frame(u32 framebuffer) {
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+	// glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 }
 
 void OpenGL::CommandBuffer::end_frame() {

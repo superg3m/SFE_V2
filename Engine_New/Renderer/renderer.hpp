@@ -100,6 +100,8 @@ struct Renderer {
     void end_frame(CommandBufferHandle handle) {
         CommandBuffer& cmd = backend.command_buffers.get(handle);
         cmd.end_frame();
+
+        backend.command_buffers.release(handle);
     }
 
     void bind_pipeline(CommandBufferHandle cmd_handle, PipelineHandle pipeline_handle, ShaderHandle shader_handle) {

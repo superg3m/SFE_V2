@@ -492,7 +492,7 @@ s
             renderer.bind_material(shader, material);
             renderer.bind_vertex_buffer(cmd, vbo);
             renderer.bind_index_buffer(cmd, ebo);
-            renderer.draw_indices(0, 0, cube_vertices.count);
+            renderer.draw_indices(0, 0, cube_indices.count);
         renderer.end_frame(cmd);
 
         glfwSwapBuffers(engine.window);
