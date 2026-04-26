@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
         Quat rotation = Quat::from_angle_axis((float)glfwGetTime() / 2.0f, Vec3(0.0f, 1.0f, 0.0f));
 
         model = Mat4::scale(model, Vec3((sin((float)glfwGetTime()) + 2), 1, 1));
-        model = Mat4::rotate(model, rotation);
+        model = Mat4::rotate(model, Vec3(0, glfwGetTime(), 0));
         view  = Mat4::translate(view, Vec3(0.0f, 0.0f, -10.0f));
         projection = Mat4::perspective(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 

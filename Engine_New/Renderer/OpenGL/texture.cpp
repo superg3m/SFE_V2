@@ -10,7 +10,7 @@ void OpenGL::Texture::flip_vertically_in_place(u8* data, int width, int height) 
 	}
 }
 
-OpenGL::Texture OpenGL::Texture::load_from_file(const char* path, TextureDescription& desc) {
+OpenGL::Texture OpenGL::Texture::load_from_file(u32 texture_unit, const char* path, TextureDescription& desc) {
 	RUNTIME_ASSERT_MSG(Platform::file_exists(path), "Texture path: '%s' doesn't exist!\n", path);
 
 	GLenum TEXTURE_VERTICAL_FLIP = desc.vertical_flip;
@@ -20,7 +20,7 @@ OpenGL::Texture OpenGL::Texture::load_from_file(const char* path, TextureDescrip
 	u8* data = stbi_load(path, &width, &height, &nrChannels, 0);
 	stbi_set_flip_vertically_on_load(false);
 
-	Texture ret = Texture::load_from_memory(data, width, height, nrChannels, desc);
+	Texture ret = Texture::load_from_memory(texture_unit, data, width, height, nrChannels, desc);
 
 	stbi_image_free(data);
 	data = nullptr;
@@ -32,7 +32,7 @@ OpenGL::Texture OpenGL::Texture::load_from_file(const char* path, TextureDescrip
 	return ret;
 }
 
-OpenGL::Texture OpenGL::Texture::load_from_memory(const u8* data, int width, int height, int nrChannels, TextureDescription& desc) {
+OpenGL::Texture OpenGL::Texture::load_from_memory(u32 texture_unit, const u8* data, int width, int height, int nrChannels, TextureDescription& desc) {
 	if (!data || width <= 0 || height <= 0 || nrChannels == 0) {
 		RUNTIME_ASSERT_MSG(false, "TextureLoader | Invalid input data for loadTextureFromMemory!\n");
 	}
@@ -75,6 +75,7 @@ OpenGL::Texture OpenGL::Texture::load_from_memory(const u8* data, int width, int
 	}
 
 	Texture ret;
+	ret.texture_unit = texture_unit;
 	ret.id = texture;
 	ret.width = width;
 	ret.height = height;
@@ -86,7 +87,7 @@ OpenGL::Texture OpenGL::Texture::load_from_memory(const u8* data, int width, int
 }
 
 // {right, left, top, bottom, front, back}
-OpenGL::Texture OpenGL::Texture::load_cube_map(Vector<const char*> texture_paths) {
+OpenGL::Texture OpenGL::Texture::load_cube_map(u32 texture_unit, Vector<const char*> texture_paths) {
 	u32 texture = 0;
 	gl_error_check(glGenTextures(1, &texture));
 	gl_error_check(glBindTexture(GL_TEXTURE_CUBE_MAP, texture));
@@ -126,6 +127,7 @@ OpenGL::Texture OpenGL::Texture::load_cube_map(Vector<const char*> texture_paths
 	}
 
 	Texture ret;
+	ret.texture_unit = texture_unit;
 	ret.id = texture;
 	ret.type = TextureSamplerType::CUBEMAP_3D;
 

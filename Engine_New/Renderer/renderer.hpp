@@ -26,22 +26,20 @@ struct Renderer {
     using Material = typename B::Material;
     using MaterialHandle = Handle<Material>;
 
-    using BindingValue = typename B::BindingValue;
-
     B backend;
 
-    TextureHandle create_texture(const char* path, TextureDescription& desc) {
+    TextureHandle create_texture(u32 texture_unit, const char* path, TextureDescription& desc) {
         TextureHandle handle = backend.textures.acquire();
         Texture& texture = backend.textures.get(handle);
-        texture = Texture::load_from_file(path, desc);
+        texture = Texture::load_from_file(texture_unit, path, desc);
 
         return handle;
     }
 
-    TextureHandle create_texture(Vector<const char*> cube_map_texture_paths) {
+    TextureHandle create_texture(u32 texture_unit, Vector<const char*> cube_map_texture_paths) {
         TextureHandle handle = backend.textures.acquire();
         Texture& texture = backend.textures.get(handle);
-        texture = Texture::load_cube_map(cube_map_texture_paths);
+        texture = Texture::load_cube_map(texture_unit, cube_map_texture_paths);
 
         return handle;
     }
@@ -85,6 +83,14 @@ struct Renderer {
         Material& material = backend.materials.get(handle);
         for (auto entry : bindings) {
             material.set_mat4(entry.key, entry.value);
+        }
+    }
+
+    void material_set_texture(MaterialHandle handle, Hashmap<const char*, TextureHandle> bindings) {
+        Material& material = backend.materials.get(handle);
+        for (auto entry : bindings) {
+            Texture& texture = this->backend.textures.get(entry.value);
+            material.set_texture(entry.key, texture);
         }
     }
     

@@ -2,6 +2,7 @@
 
 #include "../common.hpp"
 #include <glad/glad.h>
+#include <concepts>
 
 void _GL_ERROR_CHECK(const char* file, int line);
 #define ENABLE_GL_ERROR_CHECK
@@ -11,8 +12,11 @@ void _GL_ERROR_CHECK(const char* file, int line);
     #define gl_error_check(glCall) glCall
 #endif
 
+void bind_vertex_attribute(int location, u32 stride, VertexAttribute attribute);
+
 struct OpenGL {
     struct Texture {
+        u32 texture_unit = 505;
         u32 id = 0;
         u32 width = 0;
         u32 height = 0;
@@ -20,9 +24,9 @@ struct OpenGL {
         TextureSamplerType type = TextureSamplerType::SAMPLER_2D;
 
         static void flip_vertically_in_place(u8* data, int width, int height);
-        static Texture load_from_file(const char* path, TextureDescription& desc);
-        static Texture load_from_memory(const u8* data, int width, int height, int channels, TextureDescription& desc);
-        static Texture load_cube_map(Vector<const char*> cube_map_texture_paths);
+        static Texture load_from_file(u32 texture_unit, const char* path, TextureDescription& desc);
+        static Texture load_from_memory(u32 texture_unit, const u8* data, int width, int height, int channels, TextureDescription& desc);
+        static Texture load_cube_map(u32 texture_unit, Vector<const char*> cube_map_texture_paths);
     };
 
     struct RenderState;
@@ -89,13 +93,48 @@ struct OpenGL {
             bool boolean_binding;
             int integer_binding;
             float float_binding;
-            Texture sampler2d_binding;
-            Texture cubemap_binding;
+            Texture texture_binding; // can be sampler to cubemap
             Vec2 vector2_binding;
             Vec3 vector3_binding;
             Vec4 vector4_binding;
             Mat4 mat4_binding;
         };
+
+        template<typename T>
+        BindingValue(T value) {
+            if constexpr (std::is_same_v<T, bool>) {
+                this->type = BindingValueType::BOOL;
+                this->boolean_binding = value;
+            } else if constexpr (std::is_same_v<T, int>) {
+                this->type = BindingValueType::INTEGER;
+                this->integer_binding = value;
+            } else if constexpr (std::is_same_v<T, float>) {
+                this->type = BindingValueType::FLOAT;
+                this->float_binding = value;
+            } else if constexpr (std::is_same_v<T, Texture>) {
+                if (value.type == TextureSamplerType::SAMPLER_2D) {
+                    this->type = BindingValueType::SAMPLER_2D;
+                    this->texture_binding = value;
+                } else if (value.type == TextureSamplerType::CUBEMAP_3D) {
+                    this->type = BindingValueType::CUBEMAP;
+                    this->texture_binding = value;
+                }
+            } else if constexpr (std::is_same_v<T, Vec2>) {
+                this->type = BindingValueType::VECTOR2;
+                this->vector2_binding = value;
+            } else if constexpr (std::is_same_v<T, Vec3>) {
+                this->type = BindingValueType::VECTOR3;
+                this->vector3_binding = value;
+            } else if constexpr (std::is_same_v<T, Vec4>) {
+                this->type = BindingValueType::VECTOR4;
+                this->vector4_binding = value;
+            } else if constexpr (std::is_same_v<T, Mat4>) {
+                this->type = BindingValueType::MAT4;
+                this->mat4_binding = value;
+            } else {
+                STATIC_ASSERT(false, "Unsupported BindingValue type");
+            }
+        }
     };
 
     struct Material {
@@ -113,7 +152,6 @@ struct OpenGL {
         void set_int(const char* name, int value);
         void set_float(const char* name, float value);
         void set_texture(const char* name, Texture texture);
-        void set_texture_cube(const char* name, Texture texture);
         void set_vec2(const char* name, const Vec2& value);
         void set_vec2(const char* name, float x, float y);
         void set_vec3(const char* name, const Vec3& value);
@@ -126,9 +164,10 @@ struct OpenGL {
     struct Pipeline {
 		u32 vao;
 		u32 shader_program;
-		RasterizerState raster;
+		RasterizerState rasterizer;
 		DepthState depth;
 		BlendState blend;
+        VertexLayout layout;
 		
 		static Pipeline create(PipelineDescriptor desc);
 	};
@@ -149,6 +188,10 @@ struct OpenGL {
             gl_error_check(glGenBuffers(1, &ret.id));
             gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
             gl_error_check(glBufferData(GL_ARRAY_BUFFER, buffer.count * sizeof(T), buffer.data, ret.gl_usage));
+
+            for (VertexAttribute attribute : pipeline.layout.attributes) {
+                bind_vertex_attribute(attribute.location, pipeline.layout.stride, attribute);
+            }
 
             return ret;
         }

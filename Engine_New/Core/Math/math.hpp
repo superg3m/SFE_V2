@@ -321,13 +321,6 @@ struct Quat {
 	bool operator!=(const Quat &right);
 };
 
-inline Mat4 Mat4::rotate(Mat4 mat, Quat quat) {
-	float theta;
-	Vec3 axis;
-	quat.angle_axis(theta, axis);
-	return Mat4::rotate(mat, theta, axis);
-}
-
 inline Mat4 Mat4::transform(Vec3 s, Quat r, Vec3 t) {
 	Mat4 scale_matrix = Mat4::scale(Mat4::identity(), s);
 	Mat4 rotation_matrix = Mat4::rotate(Mat4::identity(), r);

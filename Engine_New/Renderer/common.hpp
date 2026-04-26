@@ -56,13 +56,15 @@ struct VertexLayout {
     }
 	*/
 
-	VertexLayout(Vector<VertexAttribute> attributes) {
+
+	VertexLayout(Vector<VertexAttribute> attributes = {}) {
         this->stride = 0;
 		for (VertexAttribute desc : attributes) {
 			this->stride += (u32)desc.type * sizeof(float);
 		}
 
         this->stride_in_floats = this->stride / sizeof(float);
+		this->attributes = attributes;
     }
 };
 
@@ -73,7 +75,7 @@ struct DepthState {
 };
 
 struct BlendState {
-	bool enabled = true;
+	bool enabled = false;
 	// source = src_alpha;
 	// destination = one_minus_source_alpha;
 };
@@ -94,6 +96,7 @@ struct PipelineDescriptor {
 	BlendState blend;
 
 	PipelineDescriptor(VertexLayout layout, RasterizerState rasterizer, DepthState depth, BlendState blend) : layout(layout) {
+		this->layout = layout;
 		this->rasterizer = rasterizer;
 		this->depth = depth;
 		this->blend = blend;

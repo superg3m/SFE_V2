@@ -58,11 +58,11 @@ namespace OpenGL {
                     } break;
 
                     case BindingValueType::SAMPLER_2D: {
-                        this->set_texture(k.c_str(), v.sampler2d_binding);
+                        this->set_texture(k.c_str(), v.texture_binding);
                     } break;
 
                     case BindingValueType::CUBEMAP: {
-                        this->set_texture_cube( k.c_str(), v.cubemap_binding);
+                        this->set_texture_cube(k.c_str(), v.texture_binding);
                     } break;
 
                     case BindingValueType::VECTOR2: {

@@ -779,22 +779,35 @@ Mat4 Mat4::scale(Mat4 mat, float sx,float sy,float sz){
 }
 
 Mat4 Mat4::rotate(Mat4 mat, float theta, Vec3 axis) {
-    float r = DEGREES_TO_RAD(theta);
-    float c = cosf(r), s = sinf(r), t = 1-c;
+	float rad = DEGREES_TO_RAD(theta);
+	float c = cosf(rad);
+	float s = sinf(rad);
+	float t = 1.0f - c;
 
-    axis = axis.normalize();
-    float x=axis.x,y=axis.y,z=axis.z;
+	axis = axis.normalize();
+	float x = axis.x;
+	float y = axis.y;
+	float z = axis.z;
 
-    Mat4 R(
-        t*x*x+c,     t*x*y-z*s, t*x*z+y*s, 0,
-        t*x*y+z*s,   t*y*y+c,   t*y*z-x*s, 0,
-        t*x*z-y*s,   t*y*z+x*s, t*z*z+c,   0,
-        0,0,0,1
-    );
-    return R * mat;
+	Mat4 rot;
+	rot.v = {
+		Vec4(t * x * x + c,     t * x * y - z * s, t * x * z + y * s, 0.0f),
+		Vec4(t * x * y + z * s, t * y * y + c,     t * y * z - x * s, 0.0f),
+		Vec4(t * x * z - y * s, t * y * z + x * s, t * z * z + c,     0.0f),
+		Vec4(0.0f,              0.0f,              0.0f,              1.0f)
+	};
+
+	return rot * mat;
 }
 
-Mat4 Mat4::rotate(Mat4 mat, float theta,float x,float y,float z){
+Mat4 Mat4::rotate(Mat4 mat, Quat quat) {
+	float theta;
+	Vec3 axis;
+	quat.angle_axis(theta, axis);
+	return Mat4::rotate(mat, theta, axis);
+}
+
+Mat4 Mat4::rotate(Mat4 mat, float theta, float x,float y,float z){
     return rotate(mat, theta, Vec3(x,y,z));
 }
 

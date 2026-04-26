@@ -1,6 +1,28 @@
 #include <sfe.hpp>
 #include <GLFW/glfw3.h>
 
+using B = OpenGL;
+using Texture = typename B::Texture;
+using TextureHandle = Handle<Texture>;
+
+using VertexBuffer = typename B::VertexBuffer;
+using VertexBufferHandle = Handle<VertexBuffer>;
+
+using IndexBuffer = typename B::IndexBuffer;
+using IndexBufferHandle = Handle<IndexBuffer>;
+
+using CommandBuffer = typename B::CommandBuffer;
+using CommandBufferHandle = Handle<CommandBuffer>;
+
+using Pipeline = typename B::Pipeline;
+using PipelineHandle = Handle<Pipeline>;
+
+using Shader = typename B::Shader;
+using ShaderHandle = Handle<Shader>;
+
+using Material = typename B::Material;
+using MaterialHandle = Handle<Material>;
+
 struct Point {
     int x;
     int y;
@@ -391,7 +413,7 @@ s
         return -1;
     }
 
-    Renderer<OpenGL> renderer = {};
+    Renderer<B> renderer = {};
     Vector<Vertex> cube_vertices = {
         // Front face
         Vertex{Vec3(-1.0f, -1.0f, -1.0f), Vec3(0, 0, -1), Vec2(0, 0)},
@@ -442,7 +464,7 @@ s
     PipelineDescriptor pipeline_description = PipelineDescriptor(
         VertexLayout({
             {0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3},
-            {1, OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3},
+            {1, OFFSET_OF(Vertex, aNormal),   BufferStrideTypeInfo::VEC3},
             {2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2},
         }), 
         RasterizerState(), 
@@ -450,31 +472,36 @@ s
         BlendState()
     );
 
-    auto shader = renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
-    auto pipeline = renderer.create_pipeline(pipeline_description);
-    auto vbo = renderer.create_vertex_buffer(pipeline, cube_vertices);
-    auto ebo = renderer.create_index_buffer(pipeline, cube_indices);
-    auto material = renderer.create_material(shader);
+    ShaderHandle shader = renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
+    PipelineHandle pipeline = renderer.create_pipeline(pipeline_description);
+    VertexBufferHandle vbo = renderer.create_vertex_buffer(pipeline, cube_vertices);
+    IndexBufferHandle ebo = renderer.create_index_buffer(pipeline, cube_indices);
+    MaterialHandle material = renderer.create_material(shader);
+
+    TextureDescription texture_desc = {};
+    TextureHandle container_texture = renderer.create_texture(0, "../../Assets/Textures/container.jpg", texture_desc);
+    TextureHandle face_texture = renderer.create_texture(1, "../../Assets/Textures/awesomeface.png", texture_desc);
 
     float dt = 0.0f; // Time between current frame and last frame
-    float previous_time = 0.0f; // Time of last frame
+    float previous_time = glfwGetTime(); // Time of last frame
+    float accumulator = 0.0f;
     while (!glfwWindowShouldClose(engine.window)) {
         Temp frame_temp = Temp::begin(&arena);
 
         gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
-        gl_error_check(glClearColor(0.2f, 0.2f, 0.2f, 1));
+        gl_error_check(glClearColor(0.5f, 0.2f, 0.2f, 1));
 
         float current_time = glfwGetTime(); // Returns time in seconds
         dt = current_time - previous_time;
         previous_time = current_time;
+        accumulator += dt * 100;
 
         engine.update(dt);
 
         Mat4 model         = Mat4(1.0f);
         Mat4 view          = Mat4(1.0f);
         Mat4 projection    = Mat4(1.0f);
-        Quat rotation = Quat::from_angle_axis((float)glfwGetTime() / 2.0f, Vec3(0.0f, 1.0f, 0.0f));
-
+        Quat rotation = Quat::from_euler(Vec3(accumulator, accumulator, 0.0f));
         model = Mat4::scale(model, Vec3((sin((float)glfwGetTime()) + 2), 1, 1));
         model = Mat4::rotate(model, rotation);
         view  = Mat4::translate(view, Vec3(0.0f, 0.0f, -10.0f));
@@ -485,6 +512,11 @@ s
             {"uModel", model},
             {"uView", view},
             {"uProjection", projection},
+        }, arena_allocator)); // make this more explicit tbh
+
+        renderer.material_set_texture(material, Hashmap<const char *, TextureHandle>({
+            {"uContainer", container_texture},
+            {"uFace", face_texture},
         }, arena_allocator)); // make this more explicit tbh
 
         auto cmd = renderer.begin_frame();

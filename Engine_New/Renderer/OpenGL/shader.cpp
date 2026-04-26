@@ -157,20 +157,20 @@ void OpenGL::Shader::set_int(const char* name, int value) {
     gl_error_check(glUniform1i(this->get_uniform_location(name, GL_INT), value));
 }
 void OpenGL::Shader::set_texture(const char* name, Texture texture) {
-    // RUNTIME_ASSERT(texture.type == TextureSamplerType::SAMPLER_2D);
+    RUNTIME_ASSERT(texture.type == TextureSamplerType::SAMPLER_2D);
 
-    // gl_error_check(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
-    // gl_error_check(glBindTexture(GL_TEXTURE_2D, texture.id));
+    gl_error_check(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
+    gl_error_check(glBindTexture(GL_TEXTURE_2D, texture.id));
 
-    // gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_2D), texture.texture_unit));
+    gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_2D), texture.texture_unit));
 }
 void OpenGL::Shader::set_texture_cube(const char* name, Texture texture) {
-    // RUNTIME_ASSERT(texture.type == TextureSamplerType::CUBEMAP_3D);
+    RUNTIME_ASSERT(texture.type == TextureSamplerType::CUBEMAP_3D);
 
-    // gl_error_check(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
-    // gl_error_check(glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id));
+    gl_error_check(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
+    gl_error_check(glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id));
 
-    // gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_CUBE), texture.texture_unit));
+    gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_CUBE), texture.texture_unit));
 }
 void OpenGL::Shader::set_float(const char* name, float value) {
     gl_error_check(glUniform1f(this->get_uniform_location(name, GL_FLOAT), value));
@@ -216,11 +216,11 @@ void OpenGL::Shader::set_material(Material* material) {
             } break;
 
             case BindingValueType::SAMPLER_2D: {
-                this->set_texture(k, v.sampler2d_binding);
+                this->set_texture(k, v.texture_binding);
             } break;
 
             case BindingValueType::CUBEMAP: {
-                this->set_texture_cube( k, v.cubemap_binding);
+                this->set_texture_cube(k, v.texture_binding);
             } break;
 
             case BindingValueType::VECTOR2: {
