@@ -503,9 +503,8 @@ int main() {
 
         auto cmd = renderer.begin_frame();
             renderer.bind_pipeline(cmd, pipeline, shader);
-            renderer.bind_material(material);
             renderer.bind_vertex_buffer(cmd, vbo);
-            // renderer.bind_index_buffer(cmd, ebo);
+            renderer.bind_index_buffer(cmd, ebo);
             renderer.draw_mesh_entry(mesh_entry);
         renderer.end_frame(cmd);
 

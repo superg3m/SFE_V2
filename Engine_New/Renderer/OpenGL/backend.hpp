@@ -193,6 +193,8 @@ struct OpenGL {
                 bind_vertex_attribute(attribute.location, pipeline.layout.stride, attribute);
             }
 
+            gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
             return ret;
         }
 
@@ -226,6 +228,8 @@ struct OpenGL {
                 gl_error_check(glGenBuffers(1, &ret.id));
                 gl_error_check(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ret.id));
                 gl_error_check(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.count * sizeof(u32), indices.data, ret.gl_usage));
+
+                gl_error_check(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
             }
 
             return ret;
