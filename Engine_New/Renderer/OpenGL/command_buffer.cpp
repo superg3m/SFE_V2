@@ -1,7 +1,7 @@
 #include "backend.hpp"
 
-void OpenGL::CommandBuffer::bind_pipeline(OpenGL::Pipeline pipeline, OpenGL::Shader shader) {
-	shader.use();
+void OpenGL::CommandBuffer::bind_pipeline(OpenGL::Pipeline pipeline) {
+	glBindVertexArray(pipeline.vao);
 
 	if (pipeline.rasterizer.cull_enabled) {
 		glEnable(GL_CULL_FACE);
@@ -30,8 +30,6 @@ void OpenGL::CommandBuffer::bind_pipeline(OpenGL::Pipeline pipeline, OpenGL::Sha
 	} else {
 		glDisable(GL_BLEND);
 	}
-
-	glBindVertexArray(pipeline.vao);
 }
 
 void OpenGL::CommandBuffer::bind_vertex_buffer(OpenGL::VertexBuffer vbo) {

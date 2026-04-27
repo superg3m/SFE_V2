@@ -112,22 +112,19 @@ struct Renderer {
         backend.command_buffers.release(handle);
     }
 
-    void bind_pipeline(CommandBufferHandle cmd_handle, PipelineHandle pipeline_handle, ShaderHandle shader_handle) {
+    void bind_pipeline(CommandBufferHandle cmd_handle, PipelineHandle pipeline_handle) {
         CommandBuffer& cmd = backend.command_buffers.get(cmd_handle);
         Pipeline& pipeline = backend.pipelines.get(pipeline_handle);
-        Shader& shader = backend.shaders.get(shader_handle);
 
-        cmd.bind_pipeline(pipeline, shader);
+        cmd.bind_pipeline(pipeline);
     }
 
     void bind_material(MaterialHandle material_handle) {
-        if (material_handle == MaterialHandle::invalid()) {
-            LOG_WARN("Invalid Material Handle\n");
-            return;
-        }
+        RUNTIME_ASSERT(material_handle != MaterialHandle::invalid());
 
         Material& material = backend.materials.get(material_handle);
         Shader& shader = backend.shaders.get(material.shader_handle);
+        shader.use();
         shader.set_material(&material);
     }
 
@@ -154,11 +151,11 @@ struct Renderer {
     }
 
     template<typename T>
-    MeshEntryHandle create_mesh_entry(PipelineHandle pipeline_handle, Vector<T>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, MaterialHandle material_handle = MaterialHandle::invalid()) {
+    MeshEntryHandle create_mesh_entry(PipelineHandle pipeline_handle, MaterialHandle material_handle, Vector<T>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0) {
         MeshEntryHandle handle = backend.mesh_entries.acquire();
         MeshEntry& mesh_entry = backend.mesh_entries.get(handle);
         Pipeline& pipeline = backend.pipelines.get(pipeline_handle);
-        mesh_entry = MeshEntry::create(pipeline.layout, vertex_data, indices, material_handle, vertex_base, index_base);
+        mesh_entry = MeshEntry::create(pipeline.layout, material_handle, vertex_data, indices, vertex_base, index_base);
 
         return handle;
     }

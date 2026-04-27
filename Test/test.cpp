@@ -26,6 +26,176 @@ using MaterialHandle = Handle<Material>;
 using MeshEntry = typename B::MeshEntry;
 using MeshEntryHandle = Handle<MeshEntry>;
 
+Camera camera = Camera(0, 1, 10);
+bool mouse_captured = true;
+
+void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
+    static bool first = true;
+    static float last_mouse_x;
+    static float last_mouse_y;
+
+    if (first) {
+        last_mouse_x = mouse_x;
+        last_mouse_y = mouse_y;
+        first = false;
+        return;
+    }
+
+    float xoffset = mouse_x - last_mouse_x;
+    float yoffset = last_mouse_y - mouse_y;
+
+    last_mouse_x = mouse_x;
+    last_mouse_y = mouse_y;
+
+    if (mouse_captured) {
+        camera.process_mouse_movement(xoffset, yoffset);
+    }
+}
+
+struct RenderCommand {
+	PipelineHandle pipeline_handle;
+    VertexBufferHandle vbo;
+    IndexBufferHandle ebo;
+	MeshEntryHandle mesh_entry_handle;
+
+	Mat4 model = Mat4::identity();
+	//Mat4 view = glm::mat4(1); // TODO(Jovanni): eventually this will be handled by active camera! SO WE WILL REMOVE THIS
+	//Mat4 projection = glm::mat4(1); // (Jovanni): eventually this will be handled by active camera! SO WE WILL REMOVE THIS
+};
+
+struct RenderQueue {
+	PipelineHandle opaque_pipeline;
+	PipelineHandle shadow_pipeline;
+	PipelineHandle post_effects_pipeline;
+	PipelineHandle skybox_pipeline;
+    PipelineHandle transparent_pipeline;
+
+	Vector<RenderCommand> opaque_commands;
+	Vector<RenderCommand> shadow_commands;
+	Vector<RenderCommand> post_effects_commands;
+	Vector<RenderCommand> skybox_commands;
+    Vector<RenderCommand> transparent_commands;
+
+	RenderQueue(Allocator allocator) {
+        this->opaque_commands = Vector<RenderCommand>(allocator);
+        this->transparent_commands = Vector<RenderCommand>(allocator);
+        this->shadow_commands = Vector<RenderCommand>(allocator);
+    }
+
+	void submit(RenderCommand command) {
+        if (command.pipeline_handle == this->opaque_pipeline) {
+            this->opaque_commands.append(command);
+        } else if (command.pipeline_handle == this->shadow_pipeline) {
+            this->shadow_commands.append(command);
+        } else if (command.pipeline_handle == this->post_effects_pipeline) {
+            this->post_effects_commands.append(command);
+        } else if (command.pipeline_handle == this->skybox_pipeline) {
+            this->skybox_commands.append(command);
+        } else if (command.pipeline_handle == this->transparent_pipeline) {
+            this->transparent_commands.append(command);
+        } else {
+            RUNTIME_ASSERT(false);
+        }
+	}
+
+	void draw(Renderer<B>& renderer, Allocator& allocator) {
+        Mat4 view = Mat4::identity(); // camera.get_view_matrix();
+        Mat4 projection = Mat4::identity(); // camera.get_view_matrix();
+
+        CommandBufferHandle cmd = renderer.begin_frame();
+            renderer.bind_pipeline(cmd, this->opaque_pipeline);
+            for (RenderCommand& command : this->opaque_commands) {
+                renderer.bind_vertex_buffer(cmd, command.vbo);
+                renderer.bind_index_buffer(cmd, command.ebo);
+                MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
+                renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
+                    {"uModel", command.model},
+                    {"uView", view},
+                    {"uProjection", projection},
+                }, allocator));
+                renderer.draw_mesh_entry(command.mesh_entry_handle);
+            }
+        renderer.end_frame(cmd);
+
+        /*
+        cmd = renderer.begin_frame();
+            renderer.bind_pipeline(cmd, this->shadow_pipeline);
+            for (RenderCommand& command : this->shadow_commands) {
+                renderer.bind_vertex_buffer(cmd, command.vbo);
+                renderer.bind_index_buffer(cmd, command.ebo);
+                MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
+                renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
+                    {"uModel", command.model},
+                    {"uView", view},
+                    {"uProjection", projection},
+                }, allocator));
+                renderer.draw_mesh_entry(command.mesh_entry_handle);
+            }
+        renderer.end_frame(cmd);
+
+        cmd = renderer.begin_frame();
+            renderer.bind_pipeline(cmd, this->post_effects_pipeline);
+            for (RenderCommand& command : this->post_effects_commands) {
+                renderer.bind_vertex_buffer(cmd, command.vbo);
+                renderer.bind_index_buffer(cmd, command.ebo);
+                MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
+                renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
+                    {"uModel", command.model},
+                    {"uView", view},
+                    {"uProjection", projection},
+                }, allocator));
+                renderer.draw_mesh_entry(command.mesh_entry_handle);
+            }
+        renderer.end_frame(cmd);
+
+        cmd = renderer.begin_frame();
+            renderer.bind_pipeline(cmd, this->skybox_pipeline);
+            for (RenderCommand& command : this->skybox_commands) {
+                Mat4 skybox_view = view;
+                skybox_view.v[0].w = 0.0f;
+                skybox_view.v[1].w = 0.0f;
+                skybox_view.v[2].w = 0.0f;
+
+                renderer.bind_vertex_buffer(cmd, command.vbo);
+                renderer.bind_index_buffer(cmd, command.ebo);
+                MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
+                renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
+                    {"uModel", command.model},
+                    {"uView", skybox_view},
+                    {"uProjection", projection},
+                }, allocator));
+                renderer.draw_mesh_entry(command.mesh_entry_handle);
+            }
+        renderer.end_frame(cmd);
+
+        cmd = renderer.begin_frame();
+            renderer.bind_pipeline(cmd, this->transparent_pipeline);
+            for (RenderCommand& command : this->transparent_commands) {
+                Mat4 skybox_view = view;
+                skybox_view.v[0].w = 0.0f;
+                skybox_view.v[1].w = 0.0f;
+                skybox_view.v[2].w = 0.0f;
+
+                renderer.bind_vertex_buffer(cmd, command.vbo);
+                renderer.bind_index_buffer(cmd, command.ebo);
+                MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
+                renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
+                    {"uModel", command.model},
+                    {"uView", skybox_view},
+                    {"uProjection", projection},
+                }, allocator));
+                renderer.draw_mesh_entry(command.mesh_entry_handle);
+            }
+        renderer.end_frame(cmd);
+        */
+		
+        this->opaque_commands.clear();
+		this->shadow_commands.clear();
+		this->post_effects_commands.clear();
+		this->skybox_commands.clear();
+		this->transparent_commands.clear();
+	}
+};
 
 struct Point {
     int x;
@@ -292,7 +462,7 @@ GLFWwindow* GLFW_INIT() {
     }
 
     glfwSwapInterval(1);
-    // glfwSetInputMode(window, GLFW_CURSOR, mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+    glfwSetInputMode(window, GLFW_CURSOR, mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 
     gl_error_check(glEnable(GL_MULTISAMPLE));
     // glEnable(GL_CULL_FACE);
@@ -313,7 +483,7 @@ struct Engine {
         }
 
         this->input.init(allocator);
-        if (!INPUT_GLFW_SETUP(&this->input, this->window)) {
+        if (!INPUT_GLFW_SETUP(&this->input, this->window, nullptr, nullptr, mouse)) {
             return false;
         }
 
@@ -323,16 +493,41 @@ struct Engine {
     void update(float dt) {
         // active_scene.update(dt);
 
-        if (input.get_key(KEY_A, PRESSED)) {
-            LOG_ERROR("WOW\n");
-        }
-
         if (input.get_key_pressed(KEY_R)) {
             // this->asset_manager.reload_shaders();
         }
 
         if (input.get_key_pressed(KEY_ESCAPE)) {
             glfwSetWindowShouldClose(this->window, true);
+        }
+
+        if (input.get_key_pressed(KEY_C)) {
+            mouse_captured = !mouse_captured;
+            glfwSetInputMode(this->window, GLFW_CURSOR, mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+        }
+
+        if (input.get_key(KEY_SPACE, PRESSED|DOWN)) {
+            camera.process_keyboard(CameraDirection::UP, dt);
+        }
+
+        if (input.get_key(KEY_CTRL, PRESSED|DOWN)) {
+            camera.process_keyboard(CameraDirection::DOWN, dt);
+        }
+
+        if (input.get_key(KEY_W, PRESSED|DOWN)) {
+            camera.process_keyboard(CameraDirection::FORWARD, dt); 
+        }
+
+        if (input.get_key(KEY_A, PRESSED|DOWN)) {
+            camera.process_keyboard(CameraDirection::LEFT, dt); 
+        }
+
+        if (input.get_key(KEY_S, PRESSED|DOWN)) {
+            camera.process_keyboard(CameraDirection::BACKWARD, dt); 
+        }
+
+        if (input.get_key(KEY_D, PRESSED|DOWN)) {
+            camera.process_keyboard(CameraDirection::RIGHT, dt); 
         }
 
         input.poll();
@@ -389,14 +584,14 @@ int main() {
         Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(0,0,1), Vec2(0,1)}, // 7
 
         // Left face (x = -0.5)
-        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(-1,0,0), Vec2(1,0)}, // 8
+        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(-1,0,0), Vec2(0,1)}, // 8
         Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(-1,0,0), Vec2(1,1)}, // 9
-        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(-1,0,0), Vec2(0,1)}, // 10
+        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(-1,0,0), Vec2(1,0)}, // 10
         Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(-1,0,0), Vec2(0,0)}, // 11
 
         // Right face (x = +0.5)
-        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(1,0,0), Vec2(1,0)}, // 12
-        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(1,0,0), Vec2(0,1)}, // 13
+        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(1,0,0), Vec2(0,1)}, // 12
+        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(1,0,0), Vec2(1,0)}, // 13
         Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(1,0,0), Vec2(1,1)}, // 14
         Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(1,0,0), Vec2(0,0)}, // 15
 
@@ -466,7 +661,7 @@ int main() {
     TextureHandle container_texture = renderer.create_texture(0, "../../Assets/Textures/container.jpg", texture_desc);
     TextureHandle face_texture = renderer.create_texture(1, "../../Assets/Textures/awesomeface.png", texture_desc);
 
-    MeshEntryHandle mesh_entry = renderer.create_mesh_entry(pipeline, cube_vertices, cube_indices, 0, 0, material);
+    MeshEntryHandle mesh_entry = renderer.create_mesh_entry(pipeline, material, cube_vertices, cube_indices, 0, 0);
 
     float dt = 0.0f;
     float previous_time = glfwGetTime();
@@ -482,13 +677,11 @@ int main() {
         engine.update(dt);
 
         Mat4 model         = Mat4(1.0f);
-        Mat4 view          = Mat4(1.0f);
-        Mat4 projection    = Mat4(1.0f);
+        Mat4 view          = camera.get_view_matrix();
+        Mat4 projection    =  Mat4::perspective(camera.zoom, (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
         Quat rotation = Quat::from_euler(Vec3(accumulator, accumulator, 0.0f));
         model = Mat4::scale(model, Vec3((sin((float)glfwGetTime()) + 2), 1, 1));
         model = Mat4::rotate(model, rotation);
-        view  = Mat4::translate(view, Vec3(0.0f, 0.0f, -5.0f));
-        projection = Mat4::perspective(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
         
         renderer.material_set_mat4(material, Hashmap<const char*, Mat4>({
             {"uModel", model},
@@ -502,7 +695,7 @@ int main() {
         }, arena_allocator)); // make this more explicit tbh that you are using hte frame allocator
 
         auto cmd = renderer.begin_frame();
-            renderer.bind_pipeline(cmd, pipeline, shader);
+            renderer.bind_pipeline(cmd, pipeline);
             renderer.bind_vertex_buffer(cmd, vbo);
             renderer.bind_index_buffer(cmd, ebo);
             renderer.draw_mesh_entry(mesh_entry);

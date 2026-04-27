@@ -241,7 +241,7 @@ struct OpenGL {
 	};
 
 	struct CommandBuffer {
-		void bind_pipeline(OpenGL::Pipeline pipeline, OpenGL::Shader shader);
+		void bind_pipeline(OpenGL::Pipeline pipeline);
 		void bind_vertex_buffer(VertexBuffer vbo);
 		void bind_index_buffer(IndexBuffer ebo);
 		void draw_vertices(u32 vertex_base, u32 vertex_count);
@@ -261,7 +261,7 @@ struct OpenGL {
         AABB aabb = {};
 
         template<typename T>
-        static MeshEntry create(VertexLayout layout, Vector<T>& vertex_data, Vector<u32> indices = {}, Handle<OpenGL::Material> material_handle = Handle<OpenGL::Material>::invalid(), u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES) {
+        static MeshEntry create(VertexLayout layout, Handle<OpenGL::Material> material_handle, Vector<T>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES) {
             MeshEntry ret = {};
             ret.draw_type = draw_type;
             ret.vertex_count = (vertex_data.count * sizeof(T)) / layout.stride;
