@@ -8,6 +8,10 @@ String::String(const char* data, u64 length) {
 }
 
 bool String::operator==(const String& other) const {
+	if (this->data == other.data && this->length == other.length) {
+		return true;
+	}
+
 	return Memory::equal(this->data, this->length, other.data, other.length);
 }
 
@@ -261,4 +265,28 @@ void String::append(char* str, u64 &out_str_length, size_t str_capacity, const c
 
 void String::append(char* str, u64 &out_str_length, size_t str_capacity, char to_append) {
 	String::insert(str, out_str_length, str_capacity, to_append, out_str_length);
+}
+
+String String::between_delimiters(const char* str, u64 str_length, const char* start_delimitor, u64 start_delimitor_length, const char* end_delimitor, u64 end_delimitor_length) {
+	RUNTIME_ASSERT(str);
+	RUNTIME_ASSERT(start_delimitor);
+	RUNTIME_ASSERT(end_delimitor);
+	RUNTIME_ASSERT(!String::equal(start_delimitor, start_delimitor_length, end_delimitor, end_delimitor_length));
+
+	s64 start_delimitor_index = String::index_of(str, str_length, start_delimitor, start_delimitor_length); 
+	s64 end_delimitor_index = String::index_of(str, str_length, end_delimitor, end_delimitor_length);
+	if (start_delimitor_index == -1 || end_delimitor_index == -1) {
+		return String(nullptr, 0);
+	}
+
+	if (start_delimitor_index == -1 || end_delimitor_index == -1) {
+		return String(nullptr, 0);
+	} else if (start_delimitor_index > end_delimitor_index) {
+		return String(nullptr, 0); // The start delimtor is after the end delimitor
+	}
+	
+	u64 start_str_index = (u64)((u64)start_delimitor_index + start_delimitor_length);
+	String ret = String(str + start_str_index, (u64)end_delimitor_index - start_str_index);
+
+	return ret;
 }

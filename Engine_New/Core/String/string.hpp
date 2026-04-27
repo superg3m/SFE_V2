@@ -35,4 +35,6 @@ struct String {
     static void append(char* str, u64 &str_length_out, size_t str_capacity, char to_append);
     static void insert(char* str, u64 &str_length_out, size_t str_capacity, const char* to_insert, u64 to_insert_length, u64 index);
     static void insert(char* str, u64 &str_length_out, size_t str_capacity, char to_insert, u64 index);
+
+    static String between_delimiters(const char* str, u64 str_length, const char* start_delimitor, u64 start_delimitor_length, const char* end_delimitor, u64 end_delimitor_length);
 };
