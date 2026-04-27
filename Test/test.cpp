@@ -65,26 +65,90 @@ struct RenderCommand {
 
 struct RenderQueue {
 	PipelineHandle opaque_pipeline;
+	PipelineHandle opaque_wireframe_pipeline;
 	PipelineHandle shadow_pipeline;
 	PipelineHandle post_effects_pipeline;
 	PipelineHandle skybox_pipeline;
     PipelineHandle transparent_pipeline;
 
 	Vector<RenderCommand> opaque_commands;
+	Vector<RenderCommand> opaque_wireframe_commands;
 	Vector<RenderCommand> shadow_commands;
 	Vector<RenderCommand> post_effects_commands;
 	Vector<RenderCommand> skybox_commands;
     Vector<RenderCommand> transparent_commands;
 
-	RenderQueue(Allocator allocator) {
-        this->opaque_commands = Vector<RenderCommand>(allocator);
+    RenderQueue() = default;
+	RenderQueue(Allocator allocator, Renderer<B>& renderer) {
+        VertexLayout layout = VertexLayout(Vector<VertexAttribute>({
+            {0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3, false},
+            {1, OFFSET_OF(Vertex, aNormal),   BufferStrideTypeInfo::VEC3, false},
+            {2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2, false},
+        }, allocator));
+
+        PipelineDescriptor opaque_pipeline_descriptor = PipelineDescriptor(
+            layout,
+            RasterizerState{
+                .cull_enabled = true,
+                .cull_face_back = true,
+                .ccw_winding = true,
+                .fill = true
+            }, 
+            DepthState{
+
+            }, 
+            BlendState{
+                .enabled = false
+            }
+        );
+
+        PipelineDescriptor opaque_wireframe_pipeline_descriptor = PipelineDescriptor(
+            layout,
+            RasterizerState{
+                .cull_enabled = true,
+                .cull_face_back = true,
+                .ccw_winding = true,
+                .fill = false
+            }, 
+            DepthState{
+
+            }, 
+            BlendState{
+                .enabled = false
+            }
+        );
+
+        /*
+        PipelineDescriptor pipeline_particle_description = PipelineDescriptor(
+            VertexLayout({
+                {4, pipeline_description.layout.stride, BufferStrideTypeInfo::VEC3, true},
+                {5, pipeline_description.layout.stride + sizeof(Vec3),   BufferStrideTypeInfo::VEC3, true},
+            }),
+            RasterizerState(), 
+            DepthState(), 
+            BlendState()
+        );
+        */;
+
+        this->opaque_pipeline = renderer.create_pipeline(opaque_pipeline_descriptor);
+        this->opaque_wireframe_pipeline = renderer.create_pipeline(opaque_wireframe_pipeline_descriptor);
+        // this->shadow_pipeline = renderer.create_pipeline();
+        // this->post_effects_pipeline = renderer.create_pipeline(pipeline_description);
+        // this->skybox_pipeline = renderer.create_pipeline(pipeline_description);
+        // this->transparent_pipeline = renderer.create_pipeline(pipeline_description);
+
+	    this->opaque_commands = Vector<RenderCommand>(allocator);
+	    this->shadow_commands = Vector<RenderCommand>(allocator);
+	    this->post_effects_commands = Vector<RenderCommand>(allocator);
+	    this->skybox_commands = Vector<RenderCommand>(allocator);
         this->transparent_commands = Vector<RenderCommand>(allocator);
-        this->shadow_commands = Vector<RenderCommand>(allocator);
     }
 
 	void submit(RenderCommand command) {
         if (command.pipeline_handle == this->opaque_pipeline) {
             this->opaque_commands.append(command);
+        } else if (command.pipeline_handle == this->opaque_wireframe_pipeline) {
+            this->opaque_wireframe_commands.append(command);
         } else if (command.pipeline_handle == this->shadow_pipeline) {
             this->shadow_commands.append(command);
         } else if (command.pipeline_handle == this->post_effects_pipeline) {
@@ -105,6 +169,21 @@ struct RenderQueue {
         CommandBufferHandle cmd = renderer.begin_frame();
             renderer.bind_pipeline(cmd, this->opaque_pipeline);
             for (RenderCommand& command : this->opaque_commands) {
+                renderer.bind_vertex_buffer(cmd, command.vbo);
+                renderer.bind_index_buffer(cmd, command.ebo);
+                MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
+                renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
+                    {"uModel", command.model},
+                    {"uView", view},
+                    {"uProjection", projection},
+                }, allocator));
+                renderer.draw_mesh_entry(command.mesh_entry_handle);
+            }
+        renderer.end_frame(cmd);
+
+        cmd = renderer.begin_frame();
+            renderer.bind_pipeline(cmd, this->opaque_wireframe_pipeline);
+            for (RenderCommand& command : this->opaque_wireframe_commands) {
                 renderer.bind_vertex_buffer(cmd, command.vbo);
                 renderer.bind_index_buffer(cmd, command.ebo);
                 MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
@@ -475,7 +554,9 @@ GLFWwindow* GLFW_INIT() {
 struct Engine {
     GLFWwindow* window;
     Input input;
-
+    Renderer<B> renderer;
+    RenderQueue render_queue;
+    
     bool init(Allocator allocator) {
         this->window = GLFW_INIT();
         if (!this->window) {
@@ -487,6 +568,7 @@ struct Engine {
             return false;
         }
 
+        this->render_queue = RenderQueue(allocator, this->renderer);
         return true;
     }
 
@@ -569,7 +651,6 @@ int main() {
         return -1;
     }
 
-    Renderer<B> renderer = {};
     Vector<Vertex> cube_vertices = {
         // Back face (z = -0.5)
         Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,0,-1), Vec2(0,0)}, // 0
@@ -619,49 +700,19 @@ int main() {
         20, 21, 22, 21, 20, 23  // Top
     };
 
-    PipelineDescriptor pipeline_description = PipelineDescriptor(
-        VertexLayout({
-            {0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3, false},
-            {1, OFFSET_OF(Vertex, aNormal),   BufferStrideTypeInfo::VEC3, false},
-            {2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2, false},
-        }),
-        RasterizerState{
-            .cull_enabled = true,
-	        .cull_face_back = true,
-            .ccw_winding = true,
-	        .fill = true
-        }, 
-        DepthState{
+    // TODO(Jovanni): I want some way to convey pipeline is similar in structure to another pipeline
+    // maybe I will say PNT_opaque_pipeline
 
-        }, 
-        BlendState{
-            .enabled = false
-        }
-    );
-
-    /*
-    PipelineDescriptor pipeline_particle_description = PipelineDescriptor(
-        VertexLayout({
-            {4, pipeline_description.layout.stride, BufferStrideTypeInfo::VEC3, true},
-            {5, pipeline_description.layout.stride + sizeof(Vec3),   BufferStrideTypeInfo::VEC3, true},
-        }),
-        RasterizerState(), 
-        DepthState(), 
-        BlendState()
-    );
-    */;
-
-    ShaderHandle shader = renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
-    PipelineHandle pipeline = renderer.create_pipeline(pipeline_description);
-    VertexBufferHandle vbo = renderer.create_vertex_buffer(pipeline, cube_vertices);
-    IndexBufferHandle ebo = renderer.create_index_buffer(pipeline, cube_indices);
-    MaterialHandle material = renderer.create_material(shader);
+    ShaderHandle shader = engine.renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
+    VertexBufferHandle vbo = engine.renderer.create_vertex_buffer(engine.render_queue.opaque_wireframe_pipeline , cube_vertices); // maybe this hsould just take a layout?
+    IndexBufferHandle ebo = engine.renderer.create_index_buffer(engine.render_queue.opaque_wireframe_pipeline , cube_indices); // maybe this hsould just take a layout?
+    MaterialHandle material = engine.renderer.create_material(shader);
 
     TextureDescription texture_desc = {};
-    TextureHandle container_texture = renderer.create_texture(0, "../../Assets/Textures/container.jpg", texture_desc);
-    TextureHandle face_texture = renderer.create_texture(1, "../../Assets/Textures/awesomeface.png", texture_desc);
+    TextureHandle container_texture = engine.renderer.create_texture(0, "../../Assets/Textures/container.jpg", texture_desc);
+    TextureHandle face_texture = engine.renderer.create_texture(1, "../../Assets/Textures/awesomeface.png", texture_desc);
 
-    MeshEntryHandle mesh_entry = renderer.create_mesh_entry(pipeline, material, cube_vertices, cube_indices, 0, 0);
+    MeshEntryHandle mesh_entry = engine.renderer.create_mesh_entry(engine.render_queue.opaque_wireframe_pipeline , material, cube_vertices, cube_indices, 0, 0);
 
     float dt = 0.0f;
     float previous_time = glfwGetTime();
@@ -683,23 +734,23 @@ int main() {
         model = Mat4::scale(model, Vec3((sin((float)glfwGetTime()) + 2), 1, 1));
         model = Mat4::rotate(model, rotation);
         
-        renderer.material_set_mat4(material, Hashmap<const char*, Mat4>({
+        engine.renderer.material_set_mat4(material, Hashmap<const char*, Mat4>({
             {"uModel", model},
             {"uView", view},
             {"uProjection", projection},
         }, arena_allocator)); // make this more explicit tbh that you are using hte frame allocator
 
-        renderer.material_set_texture(material, Hashmap<const char*, TextureHandle>({
+        engine.renderer.material_set_texture(material, Hashmap<const char*, TextureHandle>({
             {"uContainer", container_texture},
             {"uFace", face_texture},
         }, arena_allocator)); // make this more explicit tbh that you are using hte frame allocator
 
-        auto cmd = renderer.begin_frame();
-            renderer.bind_pipeline(cmd, pipeline);
-            renderer.bind_vertex_buffer(cmd, vbo);
-            renderer.bind_index_buffer(cmd, ebo);
-            renderer.draw_mesh_entry(mesh_entry);
-        renderer.end_frame(cmd);
+        auto cmd = engine.renderer.begin_frame();
+            engine.renderer.bind_pipeline(cmd, engine.render_queue.opaque_wireframe_pipeline);
+            engine.renderer.bind_vertex_buffer(cmd, vbo);
+            engine.renderer.bind_index_buffer(cmd, ebo);
+            engine.renderer.draw_mesh_entry(mesh_entry);
+        engine.renderer.end_frame(cmd);
 
         glfwSwapBuffers(engine.window);
         glfwPollEvents();
