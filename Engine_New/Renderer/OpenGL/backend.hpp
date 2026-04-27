@@ -3,7 +3,10 @@
 #include "../common.hpp"
 #include <glad/glad.h>
 #include <concepts>
-#include <typeinfo>
+
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
 
 void _GL_ERROR_CHECK(const char* file, int line);
 #define ENABLE_GL_ERROR_CHECK
@@ -13,6 +16,7 @@ void _GL_ERROR_CHECK(const char* file, int line);
     #define gl_error_check(glCall) glCall
 #endif
 
+Mat4 convert_assimp_matrix_to_glm(const aiMatrix4x4& from);
 void bind_vertex_attribute(int location, u32 stride, VertexAttribute attribute);
 AABB calculate_aabb(Vector<Vertex>& vertices, int base_vertex, int vertex_count);
 
@@ -26,8 +30,8 @@ struct OpenGL {
         TextureSamplerType type = TextureSamplerType::SAMPLER_2D;
 
         static void flip_vertically_in_place(u8* data, int width, int height);
-        static Texture load_from_file(u32 texture_unit, const char* path, TextureDescription& desc);
-        static Texture load_from_memory(u32 texture_unit, const u8* data, int width, int height, int channels, TextureDescription& desc);
+        static Texture load_from_file(u32 texture_unit, const char* path, TextureDescription desc);
+        static Texture load_from_memory(u32 texture_unit, const u8* data, int width, int height, int channels, TextureDescription desc);
         static Texture load_cube_map(u32 texture_unit, Vector<const char*> cube_map_texture_paths);
     };
 
@@ -345,244 +349,18 @@ struct OpenGL {
         Vector<MeshEntry> entries;
         AABB aabb;
 
-        static Mesh create(VertexLayout& layout, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0) {
-            Mesh ret = {};
-            ret.vbo = VertexBuffer::create(layout, vertex_data);
-            ret.ebo = IndexBuffer::create(layout, indices);
-            
-            return ret;
-        }
+        // static Mesh create(VertexLayout& layout, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0);
+        static Mesh cube(Handle<Material> material_handle);
+        static Mesh axis_aligned_bounding_box(AABB aabb, Handle<Material> material_handle);
+        static Mesh axis_aligned_bounding_box(Handle<Material> material_handle);
+        static Mesh load_from_file(OpenGL& backend, Handle<Shader> shader_handle, const char* path);
 
-        static Mesh cube(Handle<Material> material_handle) {
-            Vector<Vertex> cube_vertices = {
-                // Front face
-                Vertex{Vec3(-1.0f, -1.0f, -1.0f), Vec3(0, 0, -1), Vec2(0, 0)},
-                Vertex{Vec3( 1.0f, -1.0f, -1.0f), Vec3(0, 0, -1), Vec2(1, 0)},
-                Vertex{Vec3( 1.0f,  1.0f, -1.0f), Vec3(0, 0, -1), Vec2(1, 1)},
-                Vertex{Vec3(-1.0f,  1.0f, -1.0f), Vec3(0, 0, -1), Vec2(0, 1)},
-
-                // Back face
-                Vertex{Vec3(-1.0f, -1.0f, 1.0f), Vec3(0, 0, 1), Vec2(0, 0)},
-                Vertex{Vec3( 1.0f, -1.0f, 1.0f), Vec3(0, 0, 1), Vec2(1, 0)},
-                Vertex{Vec3( 1.0f,  1.0f, 1.0f), Vec3(0, 0, 1), Vec2(1, 1)},
-                Vertex{Vec3(-1.0f,  1.0f, 1.0f), Vec3(0, 0, 1), Vec2(0, 1)},
-
-                // Left face
-                Vertex{Vec3(-1.0f, -1.0f,  1.0f), Vec3(-1, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(-1.0f, -1.0f, -1.0f), Vec3(-1, 0, 0), Vec2(1, 0)},
-                Vertex{Vec3(-1.0f,  1.0f, -1.0f), Vec3(-1, 0, 0), Vec2(1, 1)},
-                Vertex{Vec3(-1.0f,  1.0f,  1.0f), Vec3(-1, 0, 0), Vec2(0, 1)},
-
-                // Right face
-                Vertex{Vec3( 1.0f, -1.0f, -1.0f), Vec3(1, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3( 1.0f, -1.0f,  1.0f), Vec3(1, 0, 0), Vec2(1, 0)},
-                Vertex{Vec3( 1.0f,  1.0f,  1.0f), Vec3(1, 0, 0), Vec2(1, 1)},
-                Vertex{Vec3( 1.0f,  1.0f, -1.0f), Vec3(1, 0, 0), Vec2(0, 1)},
-
-                // Bottom face
-                Vertex{Vec3(-1.0f, -1.0f, -1.0f), Vec3(0, -1, 0), Vec2(0, 1)},
-                Vertex{Vec3( 1.0f, -1.0f, -1.0f), Vec3(0, -1, 0), Vec2(1, 1)},
-                Vertex{Vec3( 1.0f, -1.0f,  1.0f), Vec3(0, -1, 0), Vec2(1, 0)},
-                Vertex{Vec3(-1.0f, -1.0f,  1.0f), Vec3(0, -1, 0), Vec2(0, 0)},
-
-                // Top face
-                Vertex{Vec3(-1.0f,  1.0f, -1.0f), Vec3(0, 1, 0), Vec2(0, 1)},
-                Vertex{Vec3( 1.0f,  1.0f, -1.0f), Vec3(0, 1, 0), Vec2(1, 1)},
-                Vertex{Vec3( 1.0f,  1.0f,  1.0f), Vec3(0, 1, 0), Vec2(1, 0)},
-                Vertex{Vec3(-1.0f,  1.0f,  1.0f), Vec3(0, 1, 0), Vec2(0, 0)},
-            };
-
-            Vector<unsigned int> cube_indices = {
-                0,  1,  2,  2,  3,  0,  // Front
-                4,  5,  6,  6,  7,  4,  // Back
-                8,  9,  10, 10, 11, 8,  // Left
-                12, 13, 14, 14, 15, 12, // Right
-                16, 17, 18, 18, 19, 16, // Bottom
-                20, 21, 22, 22, 23, 20  // Top
-            };
-
-
-            Mesh ret;
-            ret.vertices = cube_vertices;
-            ret.indices = cube_indices;
-            ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_TRIANGLES));  
-            ret.setup();
-
-            return ret;
-        }
-
-        static Mesh AABB(AABB aabb, Handle<Material> material_handle) {
-            // Vec3 center = aabb.getCenter();
-            Vec3 extents = aabb.extents();
-            float length = extents.x * 2.0f;
-            float height = extents.y * 2.0f;
-            float width  = extents.z * 2.0f;
-
-            // bottom and top
-            //  4          2
-            //  ------------
-            //  |          |
-            //  |          |
-            //  |          |
-            //  ------------
-            //  0          1
-
-            Vec3 bottom_0 = aabb.min;
-            Vec3 bottom_1 = Vec3(aabb.min.x + length, aabb.min.y, aabb.min.z);
-            Vec3 bottom_2 = Vec3(aabb.min.x + length, aabb.min.y, aabb.min.z + width);
-            Vec3 bottom_3 = Vec3(aabb.min.x, aabb.min.y, aabb.min.z + width);
-
-            Vec3 top_0 = Vec3(aabb.min.x, aabb.min.y + height, aabb.min.z);
-            Vec3 top_1 = Vec3(aabb.min.x + length, aabb.min.y + height, aabb.min.z);
-            Vec3 top_2 = aabb.max;
-            Vec3 top_3 = Vec3(aabb.min.x, aabb.min.y + height, aabb.min.z + width);
-
-            Vector<Vertex> aabb_vertices = {
-                // Bottom face
-                Vertex{Vec3(bottom_0), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(bottom_1), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(bottom_1), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(bottom_2), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(bottom_2), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(bottom_3), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(bottom_3), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(bottom_0), Vec3(0, 0, 0), Vec2(0, 0)},
-
-                // Top Vec3(face
-                Vertex{Vec3(top_0), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(top_1), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(top_1), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(top_2), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(top_2), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(top_3), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(top_3), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(top_0), Vec3(0, 0, 0), Vec2(0, 0)},
-
-                // Vertical edges
-                Vertex{Vec3(bottom_0), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(top_0), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(bottom_1), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(top_1), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(bottom_2), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(top_2), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(bottom_3), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(top_3), Vec3(0, 0, 0), Vec2(0, 0)},
-            };
-
-            Mesh ret;
-            ret.vertices = aabb_vertices;
-            ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_LINES));  
-            ret.setup();
-
-            return ret;
-        }
-
-        static Mesh AABB(Handle<Material> material_handle) {
-            Vector<Vertex> aabb_vertices = {
-                // Bottom face
-                Vertex{Vec3(-0.5f, -0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3( 0.5f, -0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3( 0.5f, -0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3( 0.5f, -0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3( 0.5f, -0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(-0.5f, -0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(-0.5f, -0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(-0.5f, -0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-
-                // Top Vec3(face
-                Vertex{Vec3(-0.5f, 0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3( 0.5f, 0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3( 0.5f, 0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3( 0.5f, 0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3( 0.5f, 0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(-0.5f, 0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(-0.5f, 0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(-0.5f, 0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-
-                // Vertical edges
-                Vertex{Vec3(-0.5f, -0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(-0.5f, 0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3( 0.5f, -0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3( 0.5f, 0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3( 0.5f, -0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3( 0.5f, 0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-                Vertex{Vec3(-0.5f, -0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(-0.5f, 0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
-            };
-
-            Mesh ret;
-            ret.vertices = aabb_vertices;
-            ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_LINES));  
-            ret.setup();
-
-            return ret;
-        }
-
-        static Mesh load_from_file(MaterialMap& materials, Shader* shader, std::string path) {
-            Mesh ret = {};
-            Assimp::Importer importer;
-            unsigned int assimp_flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;
-            const aiScene* scene = importer.ReadFile(path, assimp_flags);
-            if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
-                LOG_ERROR("ASSIMP ERROR: %s\n", importer.GetErrorString());
-            }
-
-            unsigned int total_vertex_count = 0;
-            unsigned int total_index_count = 0;
-            for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
-                total_vertex_count += scene->mMeshes[i]->mNumVertices;
-                total_index_count  += scene->mMeshes[i]->mNumFaces * 3;
-            }
-
-            ret.vertices.reserve(total_vertex_count);
-            ret.indices.reserve(total_index_count);
-
-            int index = path.find_last_of("/");
-            if (index == std::string::npos) {
-                index = path.find_last_of("\\");
-                RUNTIME_ASSERT(index != std::string::npos);
-            }
-
-            std::string directory = path.substr(0, index);
-            for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
-                const aiMaterial* ai_material = scene->mMaterials[i];
-                MaterialKey material_key = {};
-                material_key.name = path;
-                material_key.material_index = i;
-                materials[material_key].shader = shader;
-
-                /*
-                aiColor4D ambient_color(0.0f, 0.0f, 0.0f, 0.0f);
-                if (ai_material->Get(AI_MATKEY_COLOR_AMBIENT, ambient_color) == AI_SUCCESS) {
-                    this->materials[i].ambient_color.r = ambient_color.r;
-                    this->materials[i].ambient_color.g = ambient_color.g;
-                    this->materials[i].ambient_color.b = ambient_color.b;
-                }
-
-
-                aiColor3D diffuse_color(0.0f, 0.0f, 0.0f);
-                if (ai_material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse_color) == AI_SUCCESS) {
-                    this->materials[i].diffuse_color.r = diffuse_color.r;
-                    this->materials[i].diffuse_color.g = diffuse_color.g;
-                    this->materials[i].diffuse_color.b = diffuse_color.b;
-                }
-
-                aiColor3D specular_color(0.0f, 0.0f, 0.0f);
-                if (ai_material->Get(AI_MATKEY_COLOR_SPECULAR, specular_color) == AI_SUCCESS) {
-                    this->materials[i].specular_color.r = specular_color.r;
-                    this->materials[i].specular_color.g = specular_color.g;
-                    this->materials[i].specular_color.b = specular_color.b;
-                }
-
-                float opacity = 1.0f;
-                if (ai_material->Get(AI_MATKEY_OPACITY, opacity) == AI_SUCCESS) {
-                    this->materials[i].opacity = opacity;
-                } else {
-                    // LOG_WARN("Mesh Failed opacity matkey?\n");
-                }
-                */
-
-                load_assimp_texture(materials, material_key, i, scene,  directory, aiTextureType_DIFFUSE, Material::DIFFUSE_TEXTURE);
-            }
-
-            MaterialKey material_key = {};
-            material_key.name = path;
-
-            ret.process_node(material_key, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
-            ret.setup();
-
-            ret.vertices.clear();
-            ret.vertices.shrink_to_fit();
-
-            ret.indices.clear();
-            ret.indices.shrink_to_fit();
-
-            return ret;
-        }
-
-        private:
-            Vector<Vertex> vertices;
-            Vector<u32> indices;
-            void process_node(MaterialKey material_key, aiNode* node, const aiScene* scene, Mat4 parent_transform);
-            MeshEntry process_mesh(MaterialKey material_key, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
-            void setup();
-        }
+    private:
+        Vector<Vertex> vertices;
+        Vector<u32> indices;
+        void process_node(Hashmap<int, Handle<Material>>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform);
+        MeshEntry process_mesh(Hashmap<int, Handle<Material>>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
+        void setup();
     };
 
     void bind_layout(OpenGL::VertexLayout layout) {

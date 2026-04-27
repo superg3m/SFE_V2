@@ -10,7 +10,7 @@ void OpenGL::Texture::flip_vertically_in_place(u8* data, int width, int height) 
 	}
 }
 
-OpenGL::Texture OpenGL::Texture::load_from_file(u32 texture_unit, const char* path, TextureDescription& desc) {
+OpenGL::Texture OpenGL::Texture::load_from_file(u32 texture_unit, const char* path, TextureDescription desc) {
 	RUNTIME_ASSERT_MSG(Platform::file_exists(path), "Texture path: '%s' doesn't exist!\n", path);
 
 	GLenum TEXTURE_VERTICAL_FLIP = desc.vertical_flip;
@@ -32,7 +32,7 @@ OpenGL::Texture OpenGL::Texture::load_from_file(u32 texture_unit, const char* pa
 	return ret;
 }
 
-OpenGL::Texture OpenGL::Texture::load_from_memory(u32 texture_unit, const u8* data, int width, int height, int nrChannels, TextureDescription& desc) {
+OpenGL::Texture OpenGL::Texture::load_from_memory(u32 texture_unit, const u8* data, int width, int height, int nrChannels, TextureDescription desc) {
 	if (!data || width <= 0 || height <= 0 || nrChannels == 0) {
 		RUNTIME_ASSERT_MSG(false, "TextureLoader | Invalid input data for loadTextureFromMemory!\n");
 	}

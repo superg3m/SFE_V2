@@ -55,7 +55,7 @@ struct Vector {
         const size_t old_allocation_size = sizeof(T) * this->count;
         const size_t new_allocation_size = sizeof(T) * count;
         if (new_allocation_size > total_allocation_size) {
-            this->data = (T*)this->allocator.malloc(this->data, old_allocation_size, new_allocation_size, alignof(T));
+            this->data = (T*)this->allocator.realloc(this->data, old_allocation_size, new_allocation_size, alignof(T));
             this->capacity = count;
         }
     }

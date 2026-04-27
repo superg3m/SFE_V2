@@ -5,6 +5,7 @@
 #include "command_buffer.cpp"
 #include "shader.cpp"
 #include "material.cpp"
+#include "mesh.cpp"
 
 #include <float.h>
 
@@ -55,54 +56,6 @@ void bind_vertex_attribute(int location, u32 stride, VertexAttribute attribute) 
 
 		gl_error_check(glVertexAttribDivisor(location, attribute.instanced));
 	}
-}
-
-AABB calculate_aabb(Vector<Vertex>& vertices, int base_vertex, int vertex_count) {
-	float x_min = FLT_MAX;
-	float y_min = FLT_MAX;
-	float z_min = FLT_MAX;
-
-	float x_max = FLT_MIN;
-	float y_max = FLT_MIN;
-	float z_max = FLT_MIN;
-	for (int i = base_vertex; i < base_vertex + vertex_count; i++) {
-		const Vertex v = vertices[i];
-		float x = v.aPosition.x;
-		float y = v.aPosition.y;
-		float z = v.aPosition.z;
-
-		if (x_min > x) {
-			x_min = x;
-		} else if (x_max < x) {
-			x_max = x;
-		}
-
-		if (y_min > y) {
-			y_min = y;
-		} else if (y_max < y) {
-			y_max = y;
-		}
-
-		if (z_min > z) {
-			z_min = z;
-		} else if (z_max < z) {
-			z_max = z;
-		}
-	}
-
-	Vec3 center  = Vec3(
-		(x_max + x_min) / 2.0f,
-		(y_max + y_min) / 2.0f,
-		(z_max + z_min) / 2.0f
-	);
-
-	Vec3 extents = Vec3(
-		(x_max - x_min) / 2.0f,
-		(y_max - y_min) / 2.0f,
-		(z_max - z_min) / 2.0f
-	);
-
-	return AABB::from_center_extents(center, extents);
 }
 
 /*
