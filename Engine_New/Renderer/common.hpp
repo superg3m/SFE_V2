@@ -61,6 +61,19 @@ struct PipelineDescriptor {
 	}
 };
 
+enum class BindingValueType {
+	BOOL,
+	INTEGER,
+	FLOAT,
+	TEXTURE_HANDLE,
+	SAMPLER_2D,
+	CUBEMAP,
+	VECTOR2,
+	VECTOR3,
+	VECTOR4,
+	MAT4,
+};
+
 /*
 struct RenderObject {
     VertexBufferHandle vbo;

@@ -7,7 +7,7 @@ template<typename T>
 struct Handle {
 	s32 index = INVALID_HANDLE_INDEX;
 	u32 generation = 0;
-
+	
 	static Handle<T> create(u32 index, u32 generation) {
 		Handle<T> ret = {};
 		ret.index = index;
@@ -36,7 +36,7 @@ struct Handle {
 
 template<typename T>
 struct Slot {
-	bool allocated = false; // I could get rid of this and just say if (generation > 0) then that equals allocated
+	bool allocated = false;
 	u32 generation = 0;
 	T data;
 };

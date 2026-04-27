@@ -1,34 +1,6 @@
 #include <sfe.hpp>
 #include <GLFW/glfw3.h>
 
-using B = OpenGL;
-using Texture = typename B::Texture;
-using TextureHandle = Handle<Texture>;
-
-using VertexBuffer = typename B::VertexBuffer;
-using VertexBufferHandle = Handle<VertexBuffer>;
-
-using IndexBuffer = typename B::IndexBuffer;
-using IndexBufferHandle = Handle<IndexBuffer>;
-
-using CommandBuffer = typename B::CommandBuffer;
-using CommandBufferHandle = Handle<CommandBuffer>;
-
-using Pipeline = typename B::Pipeline;
-using PipelineHandle = Handle<Pipeline>;
-
-using Shader = typename B::Shader;
-using ShaderHandle = Handle<Shader>;
-
-using Material = typename B::Material;
-using MaterialHandle = Handle<Material>;
-
-using MeshEntry = typename B::MeshEntry;
-using MeshEntryHandle = Handle<MeshEntry>;
-
-using VertexLayout = typename B::VertexLayout;
-using VertexLayoutHandle = Handle<VertexLayout>;
-
 Camera camera = Camera(0, 1, 10);
 bool mouse_captured = true;
 
@@ -84,7 +56,7 @@ struct RenderQueue {
     Vector<RenderCommand> transparent_commands;
 
     RenderQueue() = default;
-	RenderQueue(Allocator allocator, Renderer<B>& renderer) {
+	RenderQueue(Allocator allocator, Renderer& renderer) {
         VertexLayout layout = VertexLayout(Vector<VertexAttribute>({
             {0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3, false},
             {1, OFFSET_OF(Vertex, aNormal),   BufferStrideTypeInfo::VEC3, false},
@@ -166,7 +138,7 @@ struct RenderQueue {
         }
 	}
 
-	void draw(Renderer<B>& renderer, Allocator& allocator) {
+	void draw(Renderer& renderer, Allocator& allocator) {
         // Mat4 view = Mat4::identity(); // camera.get_view_matrix();
         // Mat4 projection = Mat4::identity(); // camera.get_view_matrix();
 
@@ -546,7 +518,7 @@ GLFWwindow* GLFW_INIT() {
 struct Engine {
     GLFWwindow* window;
     Input input;
-    Renderer<B> renderer;
+    Renderer renderer;
     RenderQueue render_queue;
     
     bool init(Allocator allocator) {
@@ -706,6 +678,10 @@ int main() {
 
     MeshEntryHandle mesh_entry = engine.renderer.create_mesh_entry(engine.render_queue.pnt_layout, material, cube_vertices, cube_indices, 0, 0);
 
+
+    MeshHandle backpack_mesh = engine.renderer.create_mesh("backpack/backpack.obj", shader);
+    // MeshHandle default_aabb_mesh = OpenGL::Mesh::AABB();
+
     bool pipeline_switch = true;
     Timer timer = Timer::create();
     timer.start(5.0f);
@@ -730,13 +706,10 @@ int main() {
         model = Mat4::scale(model, Vec3((sin((float)glfwGetTime()) + 2), 1, 1));
         model = Mat4::rotate(model, rotation);
         
-        engine.renderer.material_set_mat4(material, Hashmap<const char*, Mat4>({
+        engine.renderer.material_set_uniforms(material, Hashmap<const char*, BindingValue>({
             {"uModel", model},
             {"uView", view},
             {"uProjection", projection},
-        }, arena_allocator)); // make this more explicit tbh that you are using hte frame allocator
-
-        engine.renderer.material_set_texture(material, Hashmap<const char*, TextureHandle>({
             {"uContainer", container_texture},
             {"uFace", face_texture},
         }, arena_allocator)); // make this more explicit tbh that you are using hte frame allocator

@@ -319,7 +319,7 @@ The end goal of this project is the following:
 - [] Multiple Cameras
 - [] Animations
 - [] Show entity heiarchy
-- [] pickable entities (probably ray based)
+- [] pickable entities (probably ray based) (maybe frame buffer)
 - [] Hot reloading
 - [] Material system thats nice and hotswappable
 - [] Scene system with nice lighting abilities (spotlight, sunlight, pointlights)

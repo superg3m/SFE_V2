@@ -21,7 +21,7 @@ struct Vector {
         this->data = nullptr;
         this->allocator = allocator;
 	}
-    
+
     Vector(std::initializer_list<T> list, Allocator allocator = Allocator::invalid()) {
         this->count = list.size();
         this->capacity = (this->count * 2) ? (this->count * 2) : DEFAULT_CAPACITY;

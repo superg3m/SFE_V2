@@ -82,13 +82,6 @@ struct Entity {
 
     static Entity* load_gltf(const char* path);
 
-    template<typename T> 
-	T* GetMyComponent();
-
-    COMPONENT(HealthComponent)
-	COMPONENT(MeshComponent)
-	COMPONENT(StatusComponent)
-
     template<typename T>
     T* GetComponent() {
         return this->HasComponent<T>() ? this->GetMyComponent<T>() : nullptr;
@@ -114,6 +107,13 @@ struct Entity {
             this->components.erase(it);
         }
 	}
+
+    template<typename T> 
+	T* GetMyComponent();
+
+    COMPONENT(HealthComponent)
+	COMPONENT(MeshComponent)
+	COMPONENT(StatusComponent)
 
 private:
 	Entity(const char* name) {

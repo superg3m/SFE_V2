@@ -2,36 +2,43 @@
 
 #include "common.hpp"
 #include "OpenGL/backend.hpp"
+// #include "Vulkan/backend.hpp"
+// #include "DirectX/backend.hpp"
 
-template <typename B> // Backend
+using B = OpenGL;
+using Texture = typename B::Texture;
+using TextureHandle = Handle<Texture>;
+
+using VertexBuffer = typename B::VertexBuffer;
+using VertexBufferHandle = Handle<VertexBuffer>;
+
+using IndexBuffer = typename B::IndexBuffer;
+using IndexBufferHandle = Handle<IndexBuffer>;
+
+using CommandBuffer = typename B::CommandBuffer;
+using CommandBufferHandle = Handle<CommandBuffer>;
+
+using Pipeline = typename B::Pipeline;
+using PipelineHandle = Handle<Pipeline>;
+
+using Shader = typename B::Shader;
+using ShaderHandle = Handle<Shader>;
+
+using Material = typename B::Material;
+using MaterialHandle = Handle<Material>;
+
+using MeshEntry = typename B::MeshEntry;
+using MeshEntryHandle = Handle<MeshEntry>;
+
+using MeshEntry = typename B::MeshEntry;
+using MeshEntryHandle = Handle<MeshEntry>;
+
+using VertexLayout = typename B::VertexLayout;
+using VertexLayoutHandle = Handle<VertexLayout>;
+
+using BindingValue = typename B::BindingValue;
+
 struct Renderer {
-    using Texture = typename B::Texture;
-    using TextureHandle = Handle<Texture>;
-
-    using VertexBuffer = typename B::VertexBuffer;
-    using VertexBufferHandle = Handle<VertexBuffer>;
-
-    using IndexBuffer = typename B::IndexBuffer;
-    using IndexBufferHandle = Handle<IndexBuffer>;
-
-    using CommandBuffer = typename B::CommandBuffer;
-    using CommandBufferHandle = Handle<CommandBuffer>;
-
-    using Pipeline = typename B::Pipeline;
-    using PipelineHandle = Handle<Pipeline>;
-
-    using Shader = typename B::Shader;
-    using ShaderHandle = Handle<Shader>;
-
-    using Material = typename B::Material;
-    using MaterialHandle = Handle<Material>;
-
-    using MeshEntry = typename B::MeshEntry;
-    using MeshEntryHandle = Handle<MeshEntry>;
-
-    using VertexLayout = typename B::VertexLayout;
-    using VertexLayoutHandle = Handle<VertexLayout>;
-
     B backend;
 
     TextureHandle create_texture(u32 texture_unit, const char* path, TextureDescription& desc) {
@@ -105,21 +112,21 @@ struct Renderer {
         return handle;
     }
 
-    void material_set_mat4(MaterialHandle handle, Hashmap<const char*, Mat4> bindings) {
+    void material_set_uniforms(MaterialHandle handle, Hashmap<const char*, BindingValue> bindings) {
         Material& material = backend.materials.get(handle);
         for (auto entry : bindings) {
-            material.set_mat4(entry.key, entry.value);
+            const char* key = entry.key;
+            BindingValue value = entry.value;
+
+            if (value.type == BindingValueType::TEXTURE_HANDLE) {
+                Texture& texture = this->backend.textures.get(value.texture_handle);
+                material.set_uniform(key, texture);
+            } else {
+                material.set_uniform(key, value);
+            }
         }
     }
 
-    void material_set_texture(MaterialHandle handle, Hashmap<const char*, TextureHandle> bindings) {
-        Material& material = backend.materials.get(handle);
-        for (auto entry : bindings) {
-            Texture& texture = this->backend.textures.get(entry.value);
-            material.set_texture(entry.key, texture);
-        }
-    }
-    
     // TODO(Jovanni): Account for framebuffer
     CommandBufferHandle begin_frame(u32 framebuffer = 0) {
         CommandBufferHandle handle = backend.command_buffers.acquire();
