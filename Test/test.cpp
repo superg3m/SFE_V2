@@ -365,49 +365,6 @@ int main() {
 
     LOG_INFO("All tests passed\n");
 
-    // Renderer<Vulkan> renderer = Renderer<Vulkan>::create();
-    /*
-    float vertices[];
-    BufferHandle vbo = renderer.CreateBuffer({
-        .size = sizeof(vertices),
-        .usage = BufferUsage::Vertex
-    }, vertices);
-
-    VertexLayout particleLayout = {
-        .stride = sizeof(QuadVertex),
-        .attributes = {
-            // per-vertex (mesh)
-            { .location = 0, .format = VEC3, .offset = 0, .instanced = false },
-
-            // per-instance position
-            { .location = 8, .format = VEC3, .offset = 0, .inputRate = true },
-
-            // per-instance color
-            { .location = 9, .format = VEC3, .offset = 0, .inputRate = true }
-        }
-    };
-
-    PipelineHandle particlePipe = renderer.CreatePipeline({
-        .layout = particleLayout,
-        .blend = { .enabled = true },
-        .depth = { .depth_test = true, .depth_write = false }
-    });
-s
-    // Frame loop
-    auto texture renderer.create_texture(path, texture_description);
-
-    auto cmd = renderer.begin_frame(window, framebuffer);
-        cmd.bind_pipeline(particlePipe);
-        cmd.bind_vertex_buffer(0, quadVBO);
-        cmd.bind_vertex_buffer(1, particlePosVBO);
-        cmd.bind_vertex_buffer(2, particleColorVBO);
-        cmd.draw_index_instanced(particle_mesh.index_count, PARTICLE_COUNT);
-    renderer.end_frame(window);
-
-    glfwSwapBuffers(engine.window);
-    glfwPollEvents();
-    */
-
     Engine engine = {};
     if (!engine.init(arena_allocator)) {
         return -1;
@@ -494,13 +451,13 @@ s
     TextureHandle container_texture = renderer.create_texture(0, "../../Assets/Textures/container.jpg", texture_desc);
     TextureHandle face_texture = renderer.create_texture(1, "../../Assets/Textures/awesomeface.png", texture_desc);
 
-    float dt = 0.0f; // Time between current frame and last frame
-    float previous_time = glfwGetTime(); // Time of last frame
+    float dt = 0.0f;
+    float previous_time = glfwGetTime();
     float accumulator = 0.0f;
     while (!glfwWindowShouldClose(engine.window)) {
         Temp frame_temp = Temp::begin(&arena);
 
-        float current_time = glfwGetTime(); // Returns time in seconds
+        float current_time = glfwGetTime();
         dt = current_time - previous_time;
         previous_time = current_time;
         accumulator += dt * 100;
@@ -516,7 +473,6 @@ s
         view  = Mat4::translate(view, Vec3(0.0f, 0.0f, -10.0f));
         projection = Mat4::perspective(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
         
-        // currently this is using a general allocator make it use the frame_allocator!
         renderer.material_set_mat4(material, Hashmap<const char*, Mat4>({
             {"uModel", model},
             {"uView", view},
