@@ -81,7 +81,7 @@ struct BlendState {
 };
 
 struct RasterizerState {
-	// bool enabled = true;
+	// bool cull_enabled = true;
 	// bool cull_face = Back;
 	// bool front_face = CCW;
 	// bool fill = true;

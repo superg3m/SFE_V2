@@ -254,15 +254,10 @@ int main(int argc, char** argv) {
 
 /*
 TODO(Jovanni):
-- [] change glm to my own math
-- [] change containers to my containers
-- [] String
-- [] switch all this pointer nonsense to handles... for the assets
-- [] Look at video and see where I can start abstracting the engine and application.
-- [X] Mesh should just have VAO, Entries
-- [X] entity manager, should have like all the entities[256], should have:
+- [] Mesh should just have VAO, Entries
+- [] entity manager, should have like all the entities[256], should have:
     std::vector<Entity*> QuerySetComponentList<MeshComponent, GravityComponent...>()
-- [x] Scene
+- [] Scene
 - [] active camera
 
 - [] probably you can just add a 

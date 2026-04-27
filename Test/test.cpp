@@ -319,7 +319,7 @@ struct Engine {
     void update(float dt) {
         // active_scene.update(dt);
 
-        if (input.get_key(KEY_A, PRESSED|RELEASED)) {
+        if (input.get_key(KEY_A, PRESSED)) {
             LOG_ERROR("WOW\n");
         }
 
@@ -463,14 +463,26 @@ s
 
     PipelineDescriptor pipeline_description = PipelineDescriptor(
         VertexLayout({
-            {0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3},
-            {1, OFFSET_OF(Vertex, aNormal),   BufferStrideTypeInfo::VEC3},
-            {2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2},
-        }), 
+            {0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3, false},
+            {1, OFFSET_OF(Vertex, aNormal),   BufferStrideTypeInfo::VEC3, false},
+            {2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2, false},
+        }),
+        RasterizerState(), 
+        DepthState(), 
+        BlendState{.enabled = false}
+    );
+
+    /*
+    PipelineDescriptor pipeline_particle_description = PipelineDescriptor(
+        VertexLayout({
+            {4, pipeline_description.layout.stride, BufferStrideTypeInfo::VEC3, true},
+            {5, pipeline_description.layout.stride + sizeof(Vec3),   BufferStrideTypeInfo::VEC3, true},
+        }),
         RasterizerState(), 
         DepthState(), 
         BlendState()
     );
+    */;
 
     ShaderHandle shader = renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
     PipelineHandle pipeline = renderer.create_pipeline(pipeline_description);
@@ -487,9 +499,6 @@ s
     float accumulator = 0.0f;
     while (!glfwWindowShouldClose(engine.window)) {
         Temp frame_temp = Temp::begin(&arena);
-
-        gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
-        gl_error_check(glClearColor(0.5f, 0.2f, 0.2f, 1));
 
         float current_time = glfwGetTime(); // Returns time in seconds
         dt = current_time - previous_time;
@@ -508,13 +517,13 @@ s
         projection = Mat4::perspective(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
         
         // currently this is using a general allocator make it use the frame_allocator!
-        renderer.material_set_mat4(material, Hashmap<const char *, Mat4>({
+        renderer.material_set_mat4(material, Hashmap<const char*, Mat4>({
             {"uModel", model},
             {"uView", view},
             {"uProjection", projection},
         }, arena_allocator)); // make this more explicit tbh
 
-        renderer.material_set_texture(material, Hashmap<const char *, TextureHandle>({
+        renderer.material_set_texture(material, Hashmap<const char*, TextureHandle>({
             {"uContainer", container_texture},
             {"uFace", face_texture},
         }, arena_allocator)); // make this more explicit tbh

@@ -247,39 +247,23 @@ struct OpenGL {
 		void end_frame();
 	};
 
-    // TODO(Jovanni): For now just allow triangles, but later parameterize this?
-    void draw_vertices(u32 vertex_base, u32 vertex_count, u32 instance_count = 0) {
-        if (instance_count) {
-            gl_error_check(glDrawArraysInstanced(
-                GL_TRIANGLES,
-                vertex_base,
-                vertex_count,
-                instance_count
-            ));
-        } else {
-            gl_error_check(glDrawArrays(
-                GL_TRIANGLES,
-                vertex_base,
-                vertex_count
-            )); 
-        }
+    // TODO(Jovanni): For now just allow triangles, but later parameterize this? TRY INSTANCE STUF AGQAIN WIHT THE COUNT
+    void draw_vertices(u32 vertex_base, u32 vertex_count, u32 instance_count = 1) {
+        gl_error_check(glDrawArraysInstanced(
+            GL_TRIANGLES,
+            vertex_base,
+            vertex_count,
+            instance_count
+        ));
     }
 
     // TODO(Jovanni): For now just allow triangles, but later parameterize this?
-    void draw_indices(u32 vertex_base, u32 index_base, u32 index_count, u32 instance_count = 0) {
-        if (instance_count) {
-            gl_error_check(glDrawElementsInstancedBaseVertex(
-                GL_TRIANGLES, index_count,
-                GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * index_base),
-                instance_count, vertex_base
-            ));
-        } else {
-            gl_error_check(glDrawElementsBaseVertex(
-                GL_TRIANGLES, index_count, GL_UNSIGNED_INT, 
-                (void*)(sizeof(u32) * index_base), 
-                vertex_base
-            ));
-        }
+    void draw_indices(u32 vertex_base, u32 index_base, u32 index_count, u32 instance_count = 1) {
+        gl_error_check(glDrawElementsInstancedBaseVertex(
+            GL_TRIANGLES, index_count,
+            GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * index_base),
+            instance_count, vertex_base
+        ));
     }
 
     s32 BOUND_VAO_ID = -1;

@@ -49,6 +49,9 @@ void OpenGL::CommandBuffer::draw_indexed(u32 index_base, u32 index_count) {}
 
 void OpenGL::CommandBuffer::begin_frame(u32 framebuffer) {
 	// glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+	gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));
+	gl_error_check(glClearColor(0.5f, 0.2f, 0.2f, 1));
 }
 
 void OpenGL::CommandBuffer::end_frame() {
