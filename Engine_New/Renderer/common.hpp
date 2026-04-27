@@ -81,12 +81,10 @@ struct BlendState {
 };
 
 struct RasterizerState {
-	// bool cull_enabled = true;
-	// bool cull_face = Back;
-	// bool front_face = CCW;
-	// bool fill = true;
-
-	// RasterizerState create();
+	bool cull_enabled = true;
+	bool cull_face_back = true;
+	bool ccw_winding = true;
+	bool fill = true;
 };
 
 struct PipelineDescriptor {

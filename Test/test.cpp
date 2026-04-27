@@ -23,6 +23,10 @@ using ShaderHandle = Handle<Shader>;
 using Material = typename B::Material;
 using MaterialHandle = Handle<Material>;
 
+using MeshEntry = typename B::MeshEntry;
+using MeshEntryHandle = Handle<MeshEntry>;
+
+
 struct Point {
     int x;
     int y;
@@ -372,50 +376,68 @@ int main() {
 
     Renderer<B> renderer = {};
     Vector<Vertex> cube_vertices = {
-        // Front face
-        Vertex{Vec3(-1.0f, -1.0f, -1.0f), Vec3(0, 0, -1), Vec2(0, 0)},
-        Vertex{Vec3( 1.0f, -1.0f, -1.0f), Vec3(0, 0, -1), Vec2(1, 0)},
-        Vertex{Vec3( 1.0f,  1.0f, -1.0f), Vec3(0, 0, -1), Vec2(1, 1)},
-        Vertex{Vec3(-1.0f,  1.0f, -1.0f), Vec3(0, 0, -1), Vec2(0, 1)},
+        // Back face (z = -0.5)
+        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,0,-1), Vec2(0,0)},
+        Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(0,0,-1), Vec2(1,1)},
+        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(0,0,-1), Vec2(1,0)},
 
-        // Back face
-        Vertex{Vec3(-1.0f, -1.0f, 1.0f), Vec3(0, 0, 1), Vec2(0, 0)},
-        Vertex{Vec3( 1.0f, -1.0f, 1.0f), Vec3(0, 0, 1), Vec2(1, 0)},
-        Vertex{Vec3( 1.0f,  1.0f, 1.0f), Vec3(0, 0, 1), Vec2(1, 1)},
-        Vertex{Vec3(-1.0f,  1.0f, 1.0f), Vec3(0, 0, 1), Vec2(0, 1)},
+        Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(0,0,-1), Vec2(1,1)},
+        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,0,-1), Vec2(0,0)},
+        Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(0,0,-1), Vec2(0,1)},
 
-        // Left face
-        Vertex{Vec3(-1.0f, -1.0f,  1.0f), Vec3(-1, 0, 0), Vec2(0, 0)},
-        Vertex{Vec3(-1.0f, -1.0f, -1.0f), Vec3(-1, 0, 0), Vec2(1, 0)},
-        Vertex{Vec3(-1.0f,  1.0f, -1.0f), Vec3(-1, 0, 0), Vec2(1, 1)},
-        Vertex{Vec3(-1.0f,  1.0f,  1.0f), Vec3(-1, 0, 0), Vec2(0, 1)},
+        // Front face (z = +0.5)
+        Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(0,0,1), Vec2(0,0)},
+        Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(0,0,1), Vec2(1,0)},
+        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,0,1), Vec2(1,1)},
 
-        // Right face
-        Vertex{Vec3( 1.0f, -1.0f, -1.0f), Vec3(1, 0, 0), Vec2(0, 0)},
-        Vertex{Vec3( 1.0f, -1.0f,  1.0f), Vec3(1, 0, 0), Vec2(1, 0)},
-        Vertex{Vec3( 1.0f,  1.0f,  1.0f), Vec3(1, 0, 0), Vec2(1, 1)},
-        Vertex{Vec3( 1.0f,  1.0f, -1.0f), Vec3(1, 0, 0), Vec2(0, 1)},
+        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,0,1), Vec2(1,1)},
+        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(0,0,1), Vec2(0,1)},
+        Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(0,0,1), Vec2(0,0)},
 
-        // Bottom face
-        Vertex{Vec3(-1.0f, -1.0f, -1.0f), Vec3(0, -1, 0), Vec2(0, 1)},
-        Vertex{Vec3( 1.0f, -1.0f, -1.0f), Vec3(0, -1, 0), Vec2(1, 1)},
-        Vertex{Vec3( 1.0f, -1.0f,  1.0f), Vec3(0, -1, 0), Vec2(1, 0)},
-        Vertex{Vec3(-1.0f, -1.0f,  1.0f), Vec3(0, -1, 0), Vec2(0, 0)},
+        // Left face (x = -0.5)
+        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(-1,0,0), Vec2(1,0)},
+        Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(-1,0,0), Vec2(1,1)},
+        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(-1,0,0), Vec2(0,1)},
 
-        // Top face
-        Vertex{Vec3(-1.0f,  1.0f, -1.0f), Vec3(0, 1, 0), Vec2(0, 1)},
-        Vertex{Vec3( 1.0f,  1.0f, -1.0f), Vec3(0, 1, 0), Vec2(1, 1)},
-        Vertex{Vec3( 1.0f,  1.0f,  1.0f), Vec3(0, 1, 0), Vec2(1, 0)},
-        Vertex{Vec3(-1.0f,  1.0f,  1.0f), Vec3(0, 1, 0), Vec2(0, 0)},
+        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(-1,0,0), Vec2(0,1)},
+        Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(-1,0,0), Vec2(0,0)},
+        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(-1,0,0), Vec2(1,0)},
+
+        // Right face (x = +0.5)
+        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(1,0,0), Vec2(1,0)},
+        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(1,0,0), Vec2(0,1)},
+        Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(1,0,0), Vec2(1,1)},
+
+        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(1,0,0), Vec2(0,1)},
+        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(1,0,0), Vec2(1,0)},
+        Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(1,0,0), Vec2(0,0)},
+
+        // Bottom face (y = -0.5)
+        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,-1,0), Vec2(0,1)},
+        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(0,-1,0), Vec2(1,1)},
+        Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(0,-1,0), Vec2(1,0)},
+
+        Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(0,-1,0), Vec2(1,0)},
+        Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(0,-1,0), Vec2(0,0)},
+        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,-1,0), Vec2(0,1)},
+
+        // Top face (y = +0.5)
+        Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(0,1,0), Vec2(0,1)},
+        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,1,0), Vec2(1,0)},
+        Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(0,1,0), Vec2(1,1)},
+
+        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,1,0), Vec2(1,0)},
+        Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(0,1,0), Vec2(0,1)},
+        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(0,1,0), Vec2(0,0)},
     };
 
     Vector<u32> cube_indices = {
-        0,  1,  2,  2,  3,  0,  // Front
-        4,  5,  6,  6,  7,  4,  // Back
-        8,  9,  10, 10, 11, 8,  // Left
-        12, 13, 14, 14, 15, 12, // Right
-        16, 17, 18, 18, 19, 16, // Bottom
-        20, 21, 22, 22, 23, 20  // Top
+        0,  2,  1,  2,  0,  3,  // Front
+        4,  6,  5,  6,  4,  7,  // Back
+        8,  10, 9,  10, 8,  11, // Left
+        12, 14, 13, 14, 12, 15, // Right
+        16, 18, 17, 18, 16, 19, // Bottom
+        20, 22, 21, 22, 20, 23  // Top
     };
 
     PipelineDescriptor pipeline_description = PipelineDescriptor(
@@ -424,9 +446,18 @@ int main() {
             {1, OFFSET_OF(Vertex, aNormal),   BufferStrideTypeInfo::VEC3, false},
             {2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2, false},
         }),
-        RasterizerState(), 
-        DepthState(), 
-        BlendState{.enabled = false}
+        RasterizerState{
+            .cull_enabled = true,
+	        .cull_face_back = true,
+            .ccw_winding = true,
+	        .fill = true
+        }, 
+        DepthState{
+
+        }, 
+        BlendState{
+            .enabled = false
+        }
     );
 
     /*
@@ -444,12 +475,14 @@ int main() {
     ShaderHandle shader = renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
     PipelineHandle pipeline = renderer.create_pipeline(pipeline_description);
     VertexBufferHandle vbo = renderer.create_vertex_buffer(pipeline, cube_vertices);
-    IndexBufferHandle ebo = renderer.create_index_buffer(pipeline, cube_indices);
+    // IndexBufferHandle ebo = renderer.create_index_buffer(pipeline, cube_indices);
     MaterialHandle material = renderer.create_material(shader);
 
     TextureDescription texture_desc = {};
     TextureHandle container_texture = renderer.create_texture(0, "../../Assets/Textures/container.jpg", texture_desc);
     TextureHandle face_texture = renderer.create_texture(1, "../../Assets/Textures/awesomeface.png", texture_desc);
+
+    MeshEntryHandle mesh_entry = renderer.create_mesh_entry(pipeline, cube_vertices, {}, 0, 0, material);
 
     float dt = 0.0f;
     float previous_time = glfwGetTime();
@@ -460,7 +493,7 @@ int main() {
         float current_time = glfwGetTime();
         dt = current_time - previous_time;
         previous_time = current_time;
-        accumulator += dt * 100;
+        accumulator += dt * 50;
 
         engine.update(dt);
 
@@ -470,7 +503,7 @@ int main() {
         Quat rotation = Quat::from_euler(Vec3(accumulator, accumulator, 0.0f));
         model = Mat4::scale(model, Vec3((sin((float)glfwGetTime()) + 2), 1, 1));
         model = Mat4::rotate(model, rotation);
-        view  = Mat4::translate(view, Vec3(0.0f, 0.0f, -10.0f));
+        view  = Mat4::translate(view, Vec3(0.0f, 0.0f, -5.0f));
         projection = Mat4::perspective(45.0f, (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
         
         renderer.material_set_mat4(material, Hashmap<const char*, Mat4>({
@@ -486,10 +519,10 @@ int main() {
 
         auto cmd = renderer.begin_frame();
             renderer.bind_pipeline(cmd, pipeline, shader);
-            renderer.bind_material(shader, material);
+            renderer.bind_material(material);
             renderer.bind_vertex_buffer(cmd, vbo);
-            renderer.bind_index_buffer(cmd, ebo);
-            renderer.draw_indices(0, 0, cube_indices.count);
+            // renderer.bind_index_buffer(cmd, ebo);
+            renderer.draw_mesh_entry(mesh_entry);
         renderer.end_frame(cmd);
 
         glfwSwapBuffers(engine.window);

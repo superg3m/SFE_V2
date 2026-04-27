@@ -140,12 +140,12 @@ struct OpenGL {
     struct Material {
         static constexpr const char* DIFFUSE_TEXTURE = "uDiffuseTexture"; // texture unit = aiTextureType_DIFFUSE
 
-        Shader* shader = nullptr;
+        Handle<OpenGL::Shader> shader_handle = Handle<OpenGL::Shader>::invalid();
         Hashmap<const char*, BindingValue> bindings;
 
         Material() = default;
-        Material(OpenGL::Shader* shader) {
-            this->shader = shader;
+        Material(Handle<OpenGL::Shader> shader_handle) {
+            this->shader_handle = shader_handle;
         }
 
         void set_bool(const char* name, bool value);
@@ -247,6 +247,29 @@ struct OpenGL {
 		void end_frame();
 	};
 
+    struct MeshEntry {
+        GLenum draw_type = GL_TRIANGLES;
+        u32 vertex_count = 0;
+        u32 index_count  = 0;
+        u32 vertex_base  = 0; // starting offset to next vertex in the vertex buffer
+        u32 index_base   = 0; // offset to next index in the index buffer
+        Handle<OpenGL::Material> material_handle = Handle<OpenGL::Material>::invalid();
+        AABB aabb = {};
+
+        template<typename T>
+        static MeshEntry create(VertexLayout layout, Vector<T>& vertex_data, Vector<u32> indices = {}, Handle<OpenGL::Material> material_handle = Handle<OpenGL::Material>::invalid(), u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES) {
+            MeshEntry ret = {};
+            ret.draw_type = draw_type;
+            ret.vertex_count = (vertex_data.count * sizeof(T)) / layout.stride;
+            ret.index_count = indices.count;
+            ret.vertex_base  = vertex_base;
+            ret.index_base   = index_base;
+            ret.material_handle = material_handle;
+
+            return ret;
+        }
+    };
+
     // TODO(Jovanni): For now just allow triangles, but later parameterize this? TRY INSTANCE STUF AGQAIN WIHT THE COUNT
     void draw_vertices(u32 vertex_base, u32 vertex_count, u32 instance_count = 1) {
         gl_error_check(glDrawArraysInstanced(
@@ -281,4 +304,5 @@ struct OpenGL {
 	Registry<OpenGL::IndexBuffer, 256> ebos;
 	Registry<OpenGL::CommandBuffer, 256> command_buffers;
 	Registry<OpenGL::Material, 256> materials;
+	Registry<OpenGL::MeshEntry, 256> mesh_entries;
 };

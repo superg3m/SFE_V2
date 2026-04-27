@@ -3,17 +3,15 @@
 void OpenGL::CommandBuffer::bind_pipeline(OpenGL::Pipeline pipeline, OpenGL::Shader shader) {
 	shader.use();
 
-	/*
-	if (p.raster.cull_enabled) {
+	if (pipeline.rasterizer.cull_enabled) {
 		glEnable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
+		glCullFace(pipeline.rasterizer.cull_face_back ? GL_BACK : GL_FRONT);
 	} else {
 		glDisable(GL_CULL_FACE);
 	}
-	*/
 
-	glFrontFace(GL_CCW);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	glFrontFace(pipeline.rasterizer.ccw_winding ? GL_CCW : GL_CW);
+	glPolygonMode(GL_FRONT_AND_BACK, pipeline.rasterizer.fill ? GL_FILL : GL_POLYGON_MODE);
 
 	// 3. Depth state
 	if (pipeline.depth.depth_testing) {

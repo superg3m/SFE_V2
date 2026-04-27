@@ -26,6 +26,9 @@ struct Renderer {
     using Material = typename B::Material;
     using MaterialHandle = Handle<Material>;
 
+    using MeshEntry = typename B::MeshEntry;
+    using MeshEntryHandle = Handle<MeshEntry>;
+
     B backend;
 
     TextureHandle create_texture(u32 texture_unit, const char* path, TextureDescription& desc) {
@@ -73,8 +76,7 @@ struct Renderer {
     MaterialHandle create_material(ShaderHandle shader_handle) {
         MaterialHandle handle = backend.materials.acquire();
         Material& material = backend.materials.get(handle);
-        Shader& shader = backend.shaders.get(shader_handle);
-        material = Material(&shader);
+        material = Material(shader_handle);
 
         return handle;
     }
@@ -118,10 +120,14 @@ struct Renderer {
         cmd.bind_pipeline(pipeline, shader);
     }
 
-    void bind_material(ShaderHandle shader_handle, MaterialHandle material_handle) {
-        Shader& shader = backend.shaders.get(shader_handle);
-        Material& material = backend.materials.get(material_handle);
+    void bind_material(MaterialHandle material_handle) {
+        if (material_handle == MaterialHandle::invalid()) {
+            LOG_WARN("Invalid Material Handle\n");
+            return;
+        }
 
+        Material& material = backend.materials.get(material_handle);
+        Shader& shader = backend.shaders.get(material.shader_handle);
         shader.set_material(&material);
     }
 
@@ -143,6 +149,16 @@ struct Renderer {
         PipelineHandle handle = backend.pipelines.acquire();
         Pipeline& pipeline = backend.pipelines.get(handle);
         pipeline = Pipeline::create(desc);
+
+        return handle;
+    }
+
+    template<typename T>
+    MeshEntryHandle create_mesh_entry(PipelineHandle pipeline_handle, Vector<T>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, MaterialHandle material_handle = MaterialHandle::invalid()) {
+        MeshEntryHandle handle = backend.mesh_entries.acquire();
+        MeshEntry& mesh_entry = backend.mesh_entries.get(handle);
+        Pipeline& pipeline = backend.pipelines.get(pipeline_handle);
+        mesh_entry = MeshEntry::create(pipeline.layout, vertex_data, indices, material_handle, vertex_base, index_base);
 
         return handle;
     }
@@ -168,5 +184,16 @@ struct Renderer {
     // TODO(Jovanni): For now just allow triangles, but later parameterize this?
     void draw_indices(u32 vertex_base, u32 index_base, u32 index_count, u32 instance_count = 1) {
         backend.draw_indices(vertex_base, index_base, index_count, instance_count);
+    }
+
+    void draw_mesh_entry(MeshEntryHandle mesh_entry_handle, u32 instance_count = 1) {
+        MeshEntry& entry = backend.mesh_entries.get(mesh_entry_handle);
+        this->bind_material(entry.material_handle);
+
+        if (entry.index_count) {
+            backend.draw_indices(entry.vertex_base, entry.index_base, entry.index_count, instance_count);
+        } else {
+            backend.draw_vertices(entry.vertex_base, entry.vertex_count, instance_count);
+        }
     }
 };
