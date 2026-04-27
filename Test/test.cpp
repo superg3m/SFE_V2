@@ -377,67 +377,51 @@ int main() {
     Renderer<B> renderer = {};
     Vector<Vertex> cube_vertices = {
         // Back face (z = -0.5)
-        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,0,-1), Vec2(0,0)},
-        Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(0,0,-1), Vec2(1,1)},
-        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(0,0,-1), Vec2(1,0)},
-
-        Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(0,0,-1), Vec2(1,1)},
-        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,0,-1), Vec2(0,0)},
-        Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(0,0,-1), Vec2(0,1)},
+        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,0,-1), Vec2(0,0)}, // 0
+        Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(0,0,-1), Vec2(1,1)}, // 1
+        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(0,0,-1), Vec2(1,0)}, // 2
+        Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(0,0,-1), Vec2(0,1)}, // 3
 
         // Front face (z = +0.5)
-        Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(0,0,1), Vec2(0,0)},
-        Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(0,0,1), Vec2(1,0)},
-        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,0,1), Vec2(1,1)},
-
-        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,0,1), Vec2(1,1)},
-        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(0,0,1), Vec2(0,1)},
-        Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(0,0,1), Vec2(0,0)},
+        Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(0,0,1), Vec2(0,0)}, // 4
+        Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(0,0,1), Vec2(1,0)}, // 5
+        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,0,1), Vec2(1,1)}, // 6
+        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(0,0,1), Vec2(0,1)}, // 7
 
         // Left face (x = -0.5)
-        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(-1,0,0), Vec2(1,0)},
-        Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(-1,0,0), Vec2(1,1)},
-        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(-1,0,0), Vec2(0,1)},
-
-        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(-1,0,0), Vec2(0,1)},
-        Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(-1,0,0), Vec2(0,0)},
-        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(-1,0,0), Vec2(1,0)},
+        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(-1,0,0), Vec2(1,0)}, // 8
+        Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(-1,0,0), Vec2(1,1)}, // 9
+        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(-1,0,0), Vec2(0,1)}, // 10
+        Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(-1,0,0), Vec2(0,0)}, // 11
 
         // Right face (x = +0.5)
-        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(1,0,0), Vec2(1,0)},
-        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(1,0,0), Vec2(0,1)},
-        Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(1,0,0), Vec2(1,1)},
-
-        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(1,0,0), Vec2(0,1)},
-        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(1,0,0), Vec2(1,0)},
-        Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(1,0,0), Vec2(0,0)},
+        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(1,0,0), Vec2(1,0)}, // 12
+        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(1,0,0), Vec2(0,1)}, // 13
+        Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(1,0,0), Vec2(1,1)}, // 14
+        Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(1,0,0), Vec2(0,0)}, // 15
 
         // Bottom face (y = -0.5)
-        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,-1,0), Vec2(0,1)},
-        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(0,-1,0), Vec2(1,1)},
-        Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(0,-1,0), Vec2(1,0)},
-
-        Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(0,-1,0), Vec2(1,0)},
-        Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(0,-1,0), Vec2(0,0)},
-        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,-1,0), Vec2(0,1)},
+        Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,-1,0), Vec2(0,1)}, // 16
+        Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(0,-1,0), Vec2(1,1)}, // 17
+        Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(0,-1,0), Vec2(1,0)}, // 18
+        Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(0,-1,0), Vec2(0,0)}, // 19
 
         // Top face (y = +0.5)
-        Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(0,1,0), Vec2(0,1)},
-        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,1,0), Vec2(1,0)},
-        Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(0,1,0), Vec2(1,1)},
-
-        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,1,0), Vec2(1,0)},
-        Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(0,1,0), Vec2(0,1)},
-        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(0,1,0), Vec2(0,0)},
+        Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(0,1,0), Vec2(0,1)}, // 20
+        Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,1,0), Vec2(1,0)}, // 21
+        Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(0,1,0), Vec2(1,1)}, // 22
+        Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(0,1,0), Vec2(0,0)}, // 23
     };
 
     Vector<u32> cube_indices = {
-        0,  2,  1,  2,  0,  3,  // Front
-        4,  6,  5,  6,  4,  7,  // Back
-        8,  10, 9,  10, 8,  11, // Left
-        12, 14, 13, 14, 12, 15, // Right
-        16, 18, 17, 18, 16, 19, // Bottom
-        20, 22, 21, 22, 20, 23  // Top
+        0,  1,  2,  1,  0,  3,  // Front
+        4,  5,  6,  6,  7,  4,  // Back
+
+        8,  9,  10, 10, 11, 8,  // Left
+        12, 13, 14, 13, 12, 15, // Right
+
+        16, 17, 18, 18, 19, 16, // Bottom
+        20, 21, 22, 21, 20, 23  // Top
     };
 
     PipelineDescriptor pipeline_description = PipelineDescriptor(
@@ -475,14 +459,14 @@ int main() {
     ShaderHandle shader = renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
     PipelineHandle pipeline = renderer.create_pipeline(pipeline_description);
     VertexBufferHandle vbo = renderer.create_vertex_buffer(pipeline, cube_vertices);
-    // IndexBufferHandle ebo = renderer.create_index_buffer(pipeline, cube_indices);
+    IndexBufferHandle ebo = renderer.create_index_buffer(pipeline, cube_indices);
     MaterialHandle material = renderer.create_material(shader);
 
     TextureDescription texture_desc = {};
     TextureHandle container_texture = renderer.create_texture(0, "../../Assets/Textures/container.jpg", texture_desc);
     TextureHandle face_texture = renderer.create_texture(1, "../../Assets/Textures/awesomeface.png", texture_desc);
 
-    MeshEntryHandle mesh_entry = renderer.create_mesh_entry(pipeline, cube_vertices, {}, 0, 0, material);
+    MeshEntryHandle mesh_entry = renderer.create_mesh_entry(pipeline, cube_vertices, cube_indices, 0, 0, material);
 
     float dt = 0.0f;
     float previous_time = glfwGetTime();
