@@ -521,12 +521,12 @@ s
             {"uModel", model},
             {"uView", view},
             {"uProjection", projection},
-        }, arena_allocator)); // make this more explicit tbh
+        }, arena_allocator)); // make this more explicit tbh that you are using hte frame allocator
 
         renderer.material_set_texture(material, Hashmap<const char*, TextureHandle>({
             {"uContainer", container_texture},
             {"uFace", face_texture},
-        }, arena_allocator)); // make this more explicit tbh
+        }, arena_allocator)); // make this more explicit tbh that you are using hte frame allocator
 
         auto cmd = renderer.begin_frame();
             renderer.bind_pipeline(cmd, pipeline, shader);
