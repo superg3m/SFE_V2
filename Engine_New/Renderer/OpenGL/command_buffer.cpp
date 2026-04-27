@@ -1,8 +1,6 @@
 #include "backend.hpp"
 
 void OpenGL::CommandBuffer::bind_pipeline(OpenGL::Pipeline pipeline) {
-	glBindVertexArray(pipeline.vao);
-
 	if (pipeline.rasterizer.cull_enabled) {
 		gl_error_check(glEnable(GL_CULL_FACE));
 		gl_error_check(glCullFace(pipeline.rasterizer.cull_face_back ? GL_BACK : GL_FRONT));
@@ -13,7 +11,6 @@ void OpenGL::CommandBuffer::bind_pipeline(OpenGL::Pipeline pipeline) {
 	gl_error_check(glFrontFace(pipeline.rasterizer.ccw_winding ? GL_CCW : GL_CW));
 	gl_error_check(glPolygonMode(GL_FRONT_AND_BACK, pipeline.rasterizer.fill ? GL_FILL : GL_LINE));
 
-	// 3. Depth state
 	if (pipeline.depth.depth_testing) {
 		gl_error_check(glEnable(GL_DEPTH_TEST));
 		gl_error_check(glDepthFunc(GL_LESS));
@@ -23,7 +20,6 @@ void OpenGL::CommandBuffer::bind_pipeline(OpenGL::Pipeline pipeline) {
 
 	gl_error_check(glDepthMask(pipeline.depth.depth_write ? GL_TRUE : GL_FALSE));
 
-	// 4. Blend state
 	if (pipeline.blend.enabled) {
 		gl_error_check(glEnable(GL_BLEND));
 		gl_error_check(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));

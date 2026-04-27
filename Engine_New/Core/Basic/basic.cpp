@@ -35,7 +35,11 @@ bool Timer::tick(float dt) {
 	if (!this->should_tick) return false;
 
 	this->elapsed = this->elapsed + dt;
-	return this->elapsed <= this->duration;
+	return this->elapsed >= this->duration;
+}
+
+void Timer::reset() {
+	this->elapsed = 0.0f;
 }
 
 void Timer::stop() {

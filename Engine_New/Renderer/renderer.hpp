@@ -29,6 +29,9 @@ struct Renderer {
     using MeshEntry = typename B::MeshEntry;
     using MeshEntryHandle = Handle<MeshEntry>;
 
+    using VertexLayout = typename B::VertexLayout;
+    using VertexLayoutHandle = Handle<VertexLayout>;
+
     B backend;
 
     TextureHandle create_texture(u32 texture_unit, const char* path, TextureDescription& desc) {
@@ -47,28 +50,49 @@ struct Renderer {
         return handle;
     }
 
+    VertexLayoutHandle create_layout(VertexLayout new_layout) {
+        VertexLayoutHandle handle = backend.layouts.acquire();
+        VertexLayout& layout = backend.layouts.get(handle);
+        layout = new_layout;
+
+        return handle;
+    }
+
+    VertexLayoutHandle create_layout(Vector<VertexAttribute> attributes) {
+        VertexLayoutHandle handle = backend.layouts.acquire();
+        VertexLayout& layout = backend.layouts.get(handle);
+        layout = VertexLayout(attributes);
+
+        return handle;
+    }
+
+    void bind_layout(VertexLayoutHandle handle) {
+        VertexLayout& layout = backend.layouts.get(handle);
+        this->backend.bind_layout(layout);
+    }
+
     template<typename T>
-    VertexBufferHandle create_vertex_buffer(PipelineHandle pipeline_handle, Vector<T>& buffer, bool dynamic = false) {
-        Pipeline& pipeline = backend.pipelines.get(pipeline_handle);
+    VertexBufferHandle create_vertex_buffer(VertexLayoutHandle layout_handle, Vector<T>& buffer, bool dynamic = false) {
+        VertexLayout& layout = backend.layouts.get(layout_handle);
         VertexBufferHandle handle = backend.vbos.acquire();
         VertexBuffer& vbo = backend.vbos.get(handle);
-        vbo = VertexBuffer::create(pipeline, buffer, dynamic);
+        vbo = VertexBuffer::create(layout, buffer, dynamic);
 
         return handle;
     }
 
     template<typename T>
-    void update_vertex_buffer(PipelineHandle pipeline_handle, VertexBufferHandle handle, Vector<T>& data, u32 offset = 0) {
-        Pipeline& pipeline = backend.pipelines.get(pipeline_handle);
+    void update_vertex_buffer(VertexLayoutHandle layout_handle, VertexBufferHandle handle, Vector<T>& data, u32 offset = 0) {
+        VertexLayout& layout = backend.layouts.get(layout_handle);
         VertexBuffer& vbo = backend.vbos.get(handle);
-        vbo->update_buffer(pipeline, data, offset);
+        vbo->update_buffer(layout, data, offset);
     }
 
-    IndexBufferHandle create_index_buffer(PipelineHandle pipeline_handle, Vector<u32>& buffer, bool dynamic = false) {
-        Pipeline& pipeline = backend.pipelines.get(pipeline_handle);
+    IndexBufferHandle create_index_buffer(VertexLayoutHandle layout_handle, Vector<u32>& buffer, bool dynamic = false) {
+        VertexLayout& layout = backend.layouts.get(layout_handle);
         IndexBufferHandle handle = backend.ebos.acquire();
         IndexBuffer& ebo = backend.ebos.get(handle);
-        ebo = IndexBuffer::create(pipeline, buffer, dynamic);
+        ebo = IndexBuffer::create(layout, buffer, dynamic);
 
         return handle;
     }
@@ -151,11 +175,11 @@ struct Renderer {
     }
 
     template<typename T>
-    MeshEntryHandle create_mesh_entry(PipelineHandle pipeline_handle, MaterialHandle material_handle, Vector<T>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0) {
+    MeshEntryHandle create_mesh_entry(VertexLayoutHandle layout_handle, MaterialHandle material_handle, Vector<T>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0) {
         MeshEntryHandle handle = backend.mesh_entries.acquire();
         MeshEntry& mesh_entry = backend.mesh_entries.get(handle);
-        Pipeline& pipeline = backend.pipelines.get(pipeline_handle);
-        mesh_entry = MeshEntry::create(pipeline.layout, material_handle, vertex_data, indices, vertex_base, index_base);
+        VertexLayout& layout = backend.layouts.get(layout_handle);
+        mesh_entry = MeshEntry::create(layout, material_handle, vertex_data, indices, vertex_base, index_base);
 
         return handle;
     }

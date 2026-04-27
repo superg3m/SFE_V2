@@ -30,44 +30,6 @@ struct VertexAttribute {
 	bool instanced = false;
 };
 
-static u32 compute_stride_from_elements(Vector<VertexAttribute>& layout) {
-	u32 stride = 0;
-	for (VertexAttribute desc : layout) {
-		stride += (u32)desc.type * sizeof(float);
-	}
-
-	return stride;
-}
-
-struct VertexLayout {
-	u32 stride;
-	u32 stride_in_floats; // stride / sizeof(float)
-	Vector<VertexAttribute> attributes;
-
-	/*
-	static VertexLayout& PNT() {
-        static VertexLayout layout = VertexLayout({
-            {OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3},
-            {OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3},
-            {OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2},
-        });
-
-        return layout;
-    }
-	*/
-
-
-	VertexLayout(Vector<VertexAttribute> attributes = {}) {
-        this->stride = 0;
-		for (VertexAttribute desc : attributes) {
-			this->stride += (u32)desc.type * sizeof(float);
-		}
-
-        this->stride_in_floats = this->stride / sizeof(float);
-		this->attributes = attributes;
-    }
-};
-
 struct DepthState {
 	bool depth_testing = true;
 	bool depth_write = true;
@@ -88,13 +50,11 @@ struct RasterizerState {
 };
 
 struct PipelineDescriptor {
-	VertexLayout layout;
 	RasterizerState rasterizer;
 	DepthState depth;
 	BlendState blend;
 
-	PipelineDescriptor(VertexLayout layout, RasterizerState rasterizer, DepthState depth, BlendState blend) : layout(layout) {
-		this->layout = layout;
+	PipelineDescriptor(RasterizerState rasterizer, DepthState depth, BlendState blend) {
 		this->rasterizer = rasterizer;
 		this->depth = depth;
 		this->blend = blend;

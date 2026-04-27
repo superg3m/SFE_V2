@@ -26,6 +26,9 @@ using MaterialHandle = Handle<Material>;
 using MeshEntry = typename B::MeshEntry;
 using MeshEntryHandle = Handle<MeshEntry>;
 
+using VertexLayout = typename B::VertexLayout;
+using VertexLayoutHandle = Handle<VertexLayout>;
+
 Camera camera = Camera(0, 1, 10);
 bool mouse_captured = true;
 
@@ -64,6 +67,8 @@ struct RenderCommand {
 };
 
 struct RenderQueue {
+    VertexLayoutHandle pnt_layout;
+
 	PipelineHandle opaque_pipeline;
 	PipelineHandle opaque_wireframe_pipeline;
 	PipelineHandle shadow_pipeline;
@@ -87,7 +92,6 @@ struct RenderQueue {
         }, allocator));
 
         PipelineDescriptor opaque_pipeline_descriptor = PipelineDescriptor(
-            layout,
             RasterizerState{
                 .cull_enabled = true,
                 .cull_face_back = true,
@@ -103,7 +107,6 @@ struct RenderQueue {
         );
 
         PipelineDescriptor opaque_wireframe_pipeline_descriptor = PipelineDescriptor(
-            layout,
             RasterizerState{
                 .cull_enabled = true,
                 .cull_face_back = true,
@@ -130,6 +133,7 @@ struct RenderQueue {
         );
         */;
 
+        this->pnt_layout = renderer.create_layout(VertexLayout::PNT());
         this->opaque_pipeline = renderer.create_pipeline(opaque_pipeline_descriptor);
         this->opaque_wireframe_pipeline = renderer.create_pipeline(opaque_wireframe_pipeline_descriptor);
         // this->shadow_pipeline = renderer.create_pipeline();
@@ -163,35 +167,23 @@ struct RenderQueue {
 	}
 
 	void draw(Renderer<B>& renderer, Allocator& allocator) {
-        Mat4 view = Mat4::identity(); // camera.get_view_matrix();
-        Mat4 projection = Mat4::identity(); // camera.get_view_matrix();
+        // Mat4 view = Mat4::identity(); // camera.get_view_matrix();
+        // Mat4 projection = Mat4::identity(); // camera.get_view_matrix();
+
+        renderer.bind_layout(this->pnt_layout);
 
         CommandBufferHandle cmd = renderer.begin_frame();
             renderer.bind_pipeline(cmd, this->opaque_pipeline);
             for (RenderCommand& command : this->opaque_commands) {
                 renderer.bind_vertex_buffer(cmd, command.vbo);
                 renderer.bind_index_buffer(cmd, command.ebo);
-                MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
-                renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
-                    {"uModel", command.model},
-                    {"uView", view},
-                    {"uProjection", projection},
-                }, allocator));
                 renderer.draw_mesh_entry(command.mesh_entry_handle);
             }
-        renderer.end_frame(cmd);
 
-        cmd = renderer.begin_frame();
             renderer.bind_pipeline(cmd, this->opaque_wireframe_pipeline);
             for (RenderCommand& command : this->opaque_wireframe_commands) {
                 renderer.bind_vertex_buffer(cmd, command.vbo);
                 renderer.bind_index_buffer(cmd, command.ebo);
-                MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
-                renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
-                    {"uModel", command.model},
-                    {"uView", view},
-                    {"uProjection", projection},
-                }, allocator));
                 renderer.draw_mesh_entry(command.mesh_entry_handle);
             }
         renderer.end_frame(cmd);
@@ -704,15 +696,19 @@ int main() {
     // maybe I will say PNT_opaque_pipeline
 
     ShaderHandle shader = engine.renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
-    VertexBufferHandle vbo = engine.renderer.create_vertex_buffer(engine.render_queue.opaque_wireframe_pipeline , cube_vertices); // maybe this hsould just take a layout?
-    IndexBufferHandle ebo = engine.renderer.create_index_buffer(engine.render_queue.opaque_wireframe_pipeline , cube_indices); // maybe this hsould just take a layout?
+    VertexBufferHandle vbo = engine.renderer.create_vertex_buffer(engine.render_queue.pnt_layout, cube_vertices); // maybe this hsould just take a layout?
+    IndexBufferHandle ebo = engine.renderer.create_index_buffer(engine.render_queue.pnt_layout, cube_indices); // maybe this hsould just take a layout?
     MaterialHandle material = engine.renderer.create_material(shader);
 
     TextureDescription texture_desc = {};
     TextureHandle container_texture = engine.renderer.create_texture(0, "../../Assets/Textures/container.jpg", texture_desc);
     TextureHandle face_texture = engine.renderer.create_texture(1, "../../Assets/Textures/awesomeface.png", texture_desc);
 
-    MeshEntryHandle mesh_entry = engine.renderer.create_mesh_entry(engine.render_queue.opaque_wireframe_pipeline , material, cube_vertices, cube_indices, 0, 0);
+    MeshEntryHandle mesh_entry = engine.renderer.create_mesh_entry(engine.render_queue.pnt_layout, material, cube_vertices, cube_indices, 0, 0);
+
+    bool pipeline_switch = true;
+    Timer timer = Timer::create();
+    timer.start(5.0f);
 
     float dt = 0.0f;
     float previous_time = glfwGetTime();
@@ -745,12 +741,20 @@ int main() {
             {"uFace", face_texture},
         }, arena_allocator)); // make this more explicit tbh that you are using hte frame allocator
 
-        auto cmd = engine.renderer.begin_frame();
-            engine.renderer.bind_pipeline(cmd, engine.render_queue.opaque_wireframe_pipeline);
-            engine.renderer.bind_vertex_buffer(cmd, vbo);
-            engine.renderer.bind_index_buffer(cmd, ebo);
-            engine.renderer.draw_mesh_entry(mesh_entry);
-        engine.renderer.end_frame(cmd);
+        if (timer.tick(dt)) {
+            LOG_DEBUG("TICK\n");
+            pipeline_switch = !pipeline_switch;
+            timer.reset();
+        }
+
+        RenderCommand command = {
+            .pipeline_handle = pipeline_switch ? engine.render_queue.opaque_pipeline : engine.render_queue.opaque_wireframe_pipeline,
+            .vbo = vbo,
+            .ebo = ebo,
+            .mesh_entry_handle = mesh_entry,
+        };
+        engine.render_queue.submit(command);
+        engine.render_queue.draw(engine.renderer, arena_allocator);
 
         glfwSwapBuffers(engine.window);
         glfwPollEvents();

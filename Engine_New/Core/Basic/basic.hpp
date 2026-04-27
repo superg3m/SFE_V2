@@ -43,6 +43,7 @@ struct Timer {
 	static Timer create();
 	void start(float duration);
 	bool tick(float dt);
+	void reset();
 	void stop();
 };
 
