@@ -27,232 +27,6 @@ void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
 	}
 }
 
-struct RenderCommand {
-	PipelineHandle pipeline;
-	VertexArrayObject vao;
-	VertexBuffer vbo;
-	IndexBuffer ebo;
-	MeshEntry mesh_entry;
-	Mat4 model = Mat4::identity();
-	Mat4 view = Mat4::identity();
-	Mat4 projection = Mat4::identity();
-	
-	RenderCommand(PipelineHandle pipeline, VertexArrayObject vao, VertexBuffer vbo, IndexBuffer ebo, MeshEntry mesh_entry, Mat4 model, Mat4 view, Mat4 projection) {
-		this->pipeline = pipeline;
-		this->vao = vao;
-		this->vbo = vbo;
-		this->ebo = ebo;
-		this->mesh_entry = mesh_entry;
-		this->model = model;
-		this->view = view;
-		this->projection = projection;
-	}
-};
-
-struct RenderQueue {
-	PipelineHandle opaque_pipeline;
-	PipelineHandle opaque_wireframe_pipeline;
-	PipelineHandle shadow_pipeline;
-	PipelineHandle post_effects_pipeline;
-	PipelineHandle skybox_pipeline;
-	PipelineHandle transparent_pipeline;
-
-	Vector<RenderCommand> opaque_commands;
-	Vector<RenderCommand> opaque_wireframe_commands;
-	Vector<RenderCommand> shadow_commands;
-	Vector<RenderCommand> post_effects_commands;
-	Vector<RenderCommand> skybox_commands;
-	Vector<RenderCommand> transparent_commands;
-
-	RenderQueue() = default;
-	RenderQueue(Allocator allocator, Renderer& renderer) {
-		PipelineDescriptor opaque_pipeline_descriptor = PipelineDescriptor(
-			RasterizerState{
-				.cull_enabled = true,
-				.cull_face_back = true,
-				.ccw_winding = true,
-				.fill = true
-			}, 
-			DepthState{
-
-			}, 
-			BlendState{
-				.enabled = false
-			}
-		);
-
-		PipelineDescriptor opaque_wireframe_pipeline_descriptor = PipelineDescriptor(
-			RasterizerState{
-				.cull_enabled = true,
-				.cull_face_back = true,
-				.ccw_winding = true,
-				.fill = false
-			}, 
-			DepthState{
-
-			}, 
-			BlendState{
-				.enabled = false
-			}
-		);
-
-		/*
-		PipelineDescriptor pipeline_particle_description = PipelineDescriptor(
-			VertexLayout({
-				{4, pipeline_description.layout.stride, BufferStrideTypeInfo::VEC3, true},
-				{5, pipeline_description.layout.stride + sizeof(Vec3),   BufferStrideTypeInfo::VEC3, true},
-			}),
-			RasterizerState(), 
-			DepthState(), 
-			BlendState()
-		);
-		*/;
-
-		this->opaque_pipeline = renderer.create_pipeline(opaque_pipeline_descriptor);
-		this->opaque_wireframe_pipeline = renderer.create_pipeline(opaque_wireframe_pipeline_descriptor);
-		// this->shadow_pipeline = renderer.create_pipeline();
-		// this->post_effects_pipeline = renderer.create_pipeline(pipeline_description);
-		// this->skybox_pipeline = renderer.create_pipeline(pipeline_description);
-		// this->transparent_pipeline = renderer.create_pipeline(pipeline_description);
-
-		this->opaque_commands = Vector<RenderCommand>(allocator);
-		this->shadow_commands = Vector<RenderCommand>(allocator);
-		this->post_effects_commands = Vector<RenderCommand>(allocator);
-		this->skybox_commands = Vector<RenderCommand>(allocator);
-		this->transparent_commands = Vector<RenderCommand>(allocator);
-	}
-
-	void submit(RenderCommand command) {
-		if (command.pipeline == this->opaque_pipeline) {
-			this->opaque_commands.append(command);
-		} else if (command.pipeline == this->opaque_wireframe_pipeline) {
-			this->opaque_wireframe_commands.append(command);
-		} else if (command.pipeline == this->shadow_pipeline) {
-			this->shadow_commands.append(command);
-		} else if (command.pipeline == this->post_effects_pipeline) {
-			this->post_effects_commands.append(command);
-		} else if (command.pipeline == this->skybox_pipeline) {
-			this->skybox_commands.append(command);
-		} else if (command.pipeline == this->transparent_pipeline) {
-			this->transparent_commands.append(command);
-		} else {
-			RUNTIME_ASSERT(false);
-		}
-	}
-
-	void draw(Renderer& renderer, Allocator& allocator) {
-		// Mat4 view = Mat4::identity(); // camera.get_view_matrix();
-		// Mat4 projection = Mat4::identity(); // camera.get_view_matrix();
-
-		CommandBufferHandle cmd = renderer.begin_frame();
-			renderer.bind_pipeline(cmd, this->opaque_pipeline);
-			for (RenderCommand& command : this->opaque_commands) {
-				renderer.bind_vertex_array(cmd, command.vao);
-				renderer.bind_vertex_buffer(cmd, command.vbo);
-				renderer.bind_index_buffer(cmd, command.ebo);
-				renderer.material_set_uniforms(command.mesh_entry.material_handle, Hashmap<const char*, BindingValue>({
-					{"uModel", command.model},
-					{"uView", command.view},
-					{"uProjection", command.projection},
-				}, allocator));
-				renderer.draw_mesh_entry(cmd, command.vao, command.mesh_entry);
-			}
-
-			renderer.bind_pipeline(cmd, this->opaque_wireframe_pipeline);
-			for (RenderCommand& command : this->opaque_wireframe_commands) {
-				renderer.bind_vertex_array(cmd, command.vao);
-				renderer.bind_vertex_buffer(cmd, command.vbo);
-				renderer.bind_index_buffer(cmd, command.ebo);
-				renderer.material_set_uniforms(command.mesh_entry.material_handle, Hashmap<const char*, BindingValue>({
-					{"uModel", command.model},
-					{"uView", command.view},
-					{"uProjection", command.projection},
-				}, allocator));
-				renderer.draw_mesh_entry(cmd, command.vao, command.mesh_entry);
-			}
-		renderer.end_frame(cmd);
-
-		/*
-		cmd = renderer.begin_frame();
-			renderer.bind_pipeline(cmd, this->shadow_pipeline);
-			for (RenderCommand& command : this->shadow_commands) {
-				renderer.bind_vertex_buffer(cmd, command.vbo);
-				renderer.bind_index_buffer(cmd, command.ebo);
-				MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
-				renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
-					{"uModel", command.model},
-					{"uView", view},
-					{"uProjection", projection},
-				}, allocator));
-				renderer.draw_mesh_entry(command.mesh_entry_handle);
-			}
-		renderer.end_frame(cmd);
-
-		cmd = renderer.begin_frame();
-			renderer.bind_pipeline(cmd, this->post_effects_pipeline);
-			for (RenderCommand& command : this->post_effects_commands) {
-				renderer.bind_vertex_buffer(cmd, command.vbo);
-				renderer.bind_index_buffer(cmd, command.ebo);
-				MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
-				renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
-					{"uModel", command.model},
-					{"uView", view},
-					{"uProjection", projection},
-				}, allocator));
-				renderer.draw_mesh_entry(command.mesh_entry_handle);
-			}
-		renderer.end_frame(cmd);
-
-		cmd = renderer.begin_frame();
-			renderer.bind_pipeline(cmd, this->skybox_pipeline);
-			for (RenderCommand& command : this->skybox_commands) {
-				Mat4 skybox_view = view;
-				skybox_view.v[0].w = 0.0f;
-				skybox_view.v[1].w = 0.0f;
-				skybox_view.v[2].w = 0.0f;
-
-				renderer.bind_vertex_buffer(cmd, command.vbo);
-				renderer.bind_index_buffer(cmd, command.ebo);
-				MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
-				renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
-					{"uModel", command.model},
-					{"uView", skybox_view},
-					{"uProjection", projection},
-				}, allocator));
-				renderer.draw_mesh_entry(command.mesh_entry_handle);
-			}
-		renderer.end_frame(cmd);
-
-		cmd = renderer.begin_frame();
-			renderer.bind_pipeline(cmd, this->transparent_pipeline);
-			for (RenderCommand& command : this->transparent_commands) {
-				Mat4 skybox_view = view;
-				skybox_view.v[0].w = 0.0f;
-				skybox_view.v[1].w = 0.0f;
-				skybox_view.v[2].w = 0.0f;
-
-				renderer.bind_vertex_buffer(cmd, command.vbo);
-				renderer.bind_index_buffer(cmd, command.ebo);
-				MeshEntry& mesh_entry = renderer.backend.mesh_entries.get(command.mesh_entry_handle);
-				renderer.material_set_mat4(mesh_entry.material_handle, Hashmap<const char*, Mat4>({
-					{"uModel", command.model},
-					{"uView", skybox_view},
-					{"uProjection", projection},
-				}, allocator));
-				renderer.draw_mesh_entry(command.mesh_entry_handle);
-			}
-		renderer.end_frame(cmd);
-		*/
-		
-		this->opaque_commands.clear();
-		this->opaque_wireframe_commands.clear();
-		this->shadow_commands.clear();
-		this->post_effects_commands.clear();
-		this->skybox_commands.clear();
-		this->transparent_commands.clear();
-	}
-};
-
 struct Point {
 	int x;
 	int y;
@@ -532,7 +306,6 @@ struct Engine {
 	GLFWwindow* window;
 	Input input;
 	Renderer renderer;
-	RenderQueue queue;
 	
 	bool init(Allocator allocator) {
 		this->window = GLFW_INIT();
@@ -545,7 +318,7 @@ struct Engine {
 			return false;
 		}
 
-		this->queue = RenderQueue(allocator, this->renderer);
+		this->renderer = Renderer::create(allocator);
 		return true;
 	}
 
@@ -594,7 +367,7 @@ struct Engine {
 };
 
 int main() {
-	constexpr int CAPACITY = KB(500);
+	constexpr int CAPACITY = KB(250);
 	u8 program_memory[CAPACITY];
 	Arena arena = Arena::fixed(program_memory, CAPACITY);
 	Allocator arena_allocator = arena.to_allocator();
@@ -728,7 +501,7 @@ int main() {
 		for (OpenGL::MeshEntry& entry : backpack_mesh.entries) {
 			// PipelineHandle pipeline, VertexArrayObjectHandle vao, VertexBufferHandle vbo, IndexBufferHandle ebo, MeshEntry mesh_entry, Mat4 model = Mat4::identity()
 			RenderCommand command = RenderCommand(
-				pipeline_switch ? engine.queue.opaque_pipeline : engine.queue.opaque_wireframe_pipeline,
+				pipeline_switch ? engine.renderer.opaque_pipeline : engine.renderer.opaque_wireframe_pipeline,
 				backpack_mesh.vao,
 				backpack_mesh.vbo,
 				backpack_mesh.ebo,
@@ -737,9 +510,9 @@ int main() {
 				view,
 				projection
 			);
-			engine.queue.submit(command);
+			engine.renderer.submit(command);
 		}
-		engine.queue.draw(engine.renderer, arena_allocator);
+		engine.renderer.draw(arena_allocator);
 
 		glfwSwapBuffers(engine.window);
 		glfwPollEvents();
