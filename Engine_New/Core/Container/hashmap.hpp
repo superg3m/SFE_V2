@@ -96,6 +96,10 @@ struct Hashmap {
     };
 
     Iterator begin() {
+        if (!this->entries) {
+            return Iterator(entries + capacity, entries + capacity);
+        }
+
         return Iterator(entries, entries + capacity);
     }
 

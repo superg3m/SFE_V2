@@ -60,36 +60,36 @@ INTERNAL_LINKAGE AABB calculate_aabb(Vector<Vertex>& vertices, int base_vertex, 
 	return AABB::from_center_extents(center, extents);
 }
 
-INTERNAL_LINKAGE void load_assimp_texture(OpenGL::Material material, int i, const aiScene* scene, String directory, aiTextureType ai_texture_type, const char* name) {
-    const aiMaterial* ai_material = scene->mMaterials[i];
-    if (ai_material->GetTextureCount(ai_texture_type) <= 0) {
-        return;
-    }
+INTERNAL_LINKAGE void load_assimp_texture(OpenGL::Material& material, int i, const aiScene* scene, String directory, aiTextureType ai_texture_type, const char* name) {
+	const aiMaterial* ai_material = scene->mMaterials[i];
+	if (ai_material->GetTextureCount(ai_texture_type) <= 0) {
+		return;
+	}
 
-    aiString str;
-    if (ai_material->GetTexture(ai_texture_type, 0, &str, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
-        const char* texture_path = str.C_Str();
-    	char filename[512] = {};
+	aiString str;
+	if (ai_material->GetTexture(ai_texture_type, 0, &str, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
+		const char* texture_path = str.C_Str();
+		char filename[512] = {};
 		u64 length = 0; 
 		String::append(filename, length, 512, directory.data, directory.length);
 		String::append(filename, length, 512, '/');
 		String::append(filename, length, 512,  texture_path, String::cstr_length(texture_path));
 
-        const aiTexture* ai_texture = scene->GetEmbeddedTexture(str.C_Str());
-        if (ai_texture) {
-            int width, height, nrChannel = 0;
-            u8* image_data = stbi_load_from_memory((u8*)ai_texture->pcData, ai_texture->mWidth, &width, &height, &nrChannel, 0);
-            OpenGL::Texture texture = OpenGL::Texture::load_from_memory(ai_texture_type, image_data, width, height, nrChannel, {});
+		const aiTexture* ai_texture = scene->GetEmbeddedTexture(str.C_Str());
+		if (ai_texture) {
+			int width, height, nrChannel = 0;
+			u8* image_data = stbi_load_from_memory((u8*)ai_texture->pcData, ai_texture->mWidth, &width, &height, &nrChannel, 0);
+			OpenGL::Texture texture = OpenGL::Texture::load_from_memory(ai_texture_type, image_data, width, height, nrChannel, {});
 
-            LOG_DEBUG("Material: %d | has embedded Texture of type: %s\n", i, name);
-            material.set_uniform(name, texture);
-        } else {
-            LOG_DEBUG("Material: %d | has external texture of type: %s\n", i, name);
-            material.set_uniform(name, OpenGL::Texture::load_from_file(ai_texture_type, filename, {}));
-        }
-    } else {
-        LOG_ERROR("Failed to get texture path for material: %d | type: %s\n", i, name);
-    }
+			LOG_DEBUG("Material: %d | has embedded Texture of type: %s\n", i, name);
+			material.set_uniform(name, texture);
+		} else {
+			LOG_DEBUG("Material: %d | has external texture of type: %s\n", i, name);
+			material.set_uniform(name, OpenGL::Texture::load_from_file(ai_texture_type, filename, {}));
+		}
+	} else {
+		LOG_ERROR("Failed to get texture path for material: %d | type: %s\n", i, name);
+	}
 }
 
 OpenGL::MeshEntry OpenGL::MeshEntry::create(VertexLayout layout, Handle<OpenGL::Material> material_handle, Vector<Vertex>& vertex_data, Vector<u32> indices, u32 vertex_base, u32 index_base, GLenum draw_type) {
@@ -198,24 +198,24 @@ void OpenGL::Mesh::process_node(Hashmap<int, Handle<Material>>& map, aiNode* nod
     }
 }
 
-void OpenGL::Mesh::setup() {
+void OpenGL::Mesh::setup(VertexLayout layout) {
     this->aabb = calculate_aabb(this->vertices, 0, this->vertices.count);
     for (MeshEntry& entry : entries) {
         entry.aabb = calculate_aabb(this->vertices, entry.vertex_base, entry.vertex_count);
     }
 
-    this->vao = VertexArrayObject::create();
-    this->vbo = VertexBuffer::create(this->vao, VertexLayout::PNT(), this->vertices);
+    this->vao = VertexArrayObject::create(layout);
+    this->vbo = VertexBuffer::create(this->vao, this->vertices);
     this->ebo = IndexBuffer::create(this->vao, this->indices);
 }
 
 
-OpenGL::Mesh OpenGL::Mesh::create(VertexLayout& layout, Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indices, GLenum draw_type, u32 vertex_base, u32 index_base ) {
+OpenGL::Mesh OpenGL::Mesh::create(VertexLayout layout, Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indices, GLenum draw_type, u32 vertex_base, u32 index_base ) {
 	Mesh ret = {};
     ret.vertices = vertices;
     ret.indices = indices;
     ret.entries.append(MeshEntry::create(layout, material_handle, vertices, indices, vertex_base, index_base, draw_type));
-    ret.setup();
+    ret.setup(layout);
 	
 	return ret;
 }
@@ -273,7 +273,7 @@ OpenGL::Mesh OpenGL::Mesh::cube(Handle<Material> material_handle) {
 	ret.vertices = cube_vertices;
 	ret.indices = cube_indices;
 	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_TRIANGLES));
-    ret.setup();
+    ret.setup(VertexLayout::PNT());
 
 	return ret;
 }
@@ -327,7 +327,7 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_h
 	Mesh ret;
 	ret.vertices = aabb_vertices;
 	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_LINES));  
-	ret.setup();
+	ret.setup(VertexLayout::PNT());
 
 	return ret;
 }
@@ -356,7 +356,7 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_h
 	Mesh ret;
 	ret.vertices = aabb_vertices;
 	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_LINES));
-    ret.setup();
+    ret.setup(VertexLayout::PNT());
 
 	return ret;
 }
@@ -431,7 +431,7 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL& backend, Handle<OpenGL::Shader
 	}
 
 	ret.process_node(material_index_to_material_handle, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
-    ret.setup();
+    ret.setup(VertexLayout::PNT());
 
 	ret.vertices.clear();
 	ret.indices.clear();

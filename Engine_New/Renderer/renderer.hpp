@@ -33,8 +33,8 @@ using MeshEntryHandle = Handle<MeshEntry>;
 using Mesh = typename B::Mesh;
 using MeshHandle = Handle<Mesh>;
 
-using VertexLayout = typename B::VertexLayout;
-using VertexLayoutHandle = Handle<VertexLayout>;
+using VertexArrayObject = typename B::VertexArrayObject;
+using VertexArrayObjectHandle = Handle<VertexArrayObject>;
 
 using BindingValue = typename B::BindingValue;
 
@@ -57,49 +57,47 @@ struct Renderer {
         return handle;
     }
 
-    VertexLayoutHandle create_layout(VertexLayout new_layout) {
-        VertexLayoutHandle handle = backend.layouts.acquire();
-        VertexLayout& layout = backend.layouts.get(handle);
-        layout = new_layout;
-
-        return handle;
+    void bind_vertex_array(CommandBufferHandle cmd_handle, VertexArrayObject vao) {
+        CommandBuffer& cmd = backend.command_buffers.get(cmd_handle);
+        cmd.bind_vertex_array(vao);
     }
 
-    VertexLayoutHandle create_layout(Vector<VertexAttribute> attributes) {
-        VertexLayoutHandle handle = backend.layouts.acquire();
-        VertexLayout& layout = backend.layouts.get(handle);
-        layout = VertexLayout(attributes);
-
-        return handle;
+    void bind_vertex_array(CommandBufferHandle cmd_handle, VertexArrayObjectHandle vao_handle) {
+        CommandBuffer& cmd = backend.command_buffers.get(cmd_handle);
+        VertexArrayObject& vao = backend.vaos.get(vao_handle);
+        cmd.bind_vertex_array(vao);
     }
 
-    void bind_layout(VertexLayoutHandle handle) {
-        VertexLayout& layout = backend.layouts.get(handle);
-        this->backend.bind_layout(layout);
+    VertexArrayObjectHandle create_vertex_array_object(VertexLayout layout) {
+        VertexArrayObjectHandle handle = backend.vaos.acquire();
+        VertexArrayObject& vao = backend.vaos.get(handle);
+        vao = VertexArrayObject::create(layout);
+
+        return handle;
     }
 
     template<typename T>
-    VertexBufferHandle create_vertex_buffer(VertexLayoutHandle layout_handle, Vector<T>& buffer, bool dynamic = false) {
-        VertexLayout& layout = backend.layouts.get(layout_handle);
+    VertexBufferHandle create_vertex_buffer(VertexArrayObjectHandle vao_handle, Vector<T>& buffer, bool dynamic = false) {
+        VertexArrayObject& vao = backend.vaos.get(vao_handle);
         VertexBufferHandle handle = backend.vbos.acquire();
         VertexBuffer& vbo = backend.vbos.get(handle);
-        vbo = VertexBuffer::create(layout, buffer, dynamic);
+        vbo = VertexBuffer::create(vao, buffer, dynamic);
 
         return handle;
     }
 
     template<typename T>
-    void update_vertex_buffer(VertexLayoutHandle layout_handle, VertexBufferHandle handle, Vector<T>& data, u32 offset = 0) {
-        VertexLayout& layout = backend.layouts.get(layout_handle);
+    void update_vertex_buffer(VertexArrayObjectHandle vao_handle, VertexBufferHandle handle, Vector<T>& data, u32 offset = 0) {
+        VertexArrayObject& vao = backend.vaos.get(vao_handle);
         VertexBuffer& vbo = backend.vbos.get(handle);
-        vbo->update_buffer(layout, data, offset);
+        vbo->update_buffer(vao, data, offset);
     }
 
-    IndexBufferHandle create_index_buffer(VertexLayoutHandle layout_handle, Vector<u32>& buffer, bool dynamic = false) {
-        VertexLayout& layout = backend.layouts.get(layout_handle);
+    IndexBufferHandle create_index_buffer(VertexArrayObjectHandle vao_handle, Vector<u32>& buffer, bool dynamic = false) {
+        VertexArrayObject& vao = backend.vaos.get(vao_handle);
         IndexBufferHandle handle = backend.ebos.acquire();
         IndexBuffer& ebo = backend.ebos.get(handle);
-        ebo = IndexBuffer::create(layout, buffer, dynamic);
+        ebo = IndexBuffer::create(vao, buffer, dynamic);
 
         return handle;
     }
@@ -159,17 +157,25 @@ struct Renderer {
         shader.set_material(&material);
     }
 
+    void bind_vertex_buffer(CommandBufferHandle cmd_handle, VertexBuffer vbo) {
+        CommandBuffer& cmd = backend.command_buffers.get(cmd_handle);
+        cmd.bind_vertex_buffer(vbo);
+    }
+
     void bind_vertex_buffer(CommandBufferHandle cmd_handle, VertexBufferHandle vbo_handle) {
         CommandBuffer& cmd = backend.command_buffers.get(cmd_handle);
         VertexBuffer& vbo = backend.vbos.get(vbo_handle);
-
         cmd.bind_vertex_buffer(vbo);
+    }
+
+    void bind_index_buffer(CommandBufferHandle cmd_handle, IndexBuffer ebo) {
+        CommandBuffer& cmd = backend.command_buffers.get(cmd_handle);
+        cmd.bind_index_buffer(ebo);
     }
 
     void bind_index_buffer(CommandBufferHandle cmd_handle, IndexBufferHandle ebo_handle) {
         CommandBuffer& cmd = backend.command_buffers.get(cmd_handle);
         IndexBuffer& ebo = backend.ebos.get(ebo_handle);
-
         cmd.bind_index_buffer(ebo);
     }
 
@@ -205,10 +211,9 @@ struct Renderer {
         return handle;
     }
 
-    MeshHandle create_mesh(Vector<VertexAttributes layout_handle, Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indicies = {}) {
+    MeshHandle create_mesh(VertexLayout layout, Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indicies = {}) {
         MeshHandle handle = backend.meshes.acquire();
         Mesh& mesh = backend.meshes.get(handle);
-        VertexLayout& layout = backend.layouts.get(layout_handle);
         mesh = Mesh::create(layout, material_handle, vertices, indicies);
 
         return handle;
@@ -245,9 +250,9 @@ struct Renderer {
         this->backend.draw_indices(vertex_base, index_base, index_count, instance_count);
     }
 
-    void draw_entry_mesh(VertexLayoutHandle layout_handle, MeshEntryHandle mesh_handle, u32 instance_count = 1) {
-        MeshEntry& entry = this->backend.mesh_entries.get(mesh_handle);
-        this->bind_layout(layout_handle);
+    void draw_mesh_entry(CommandBufferHandle cmd_handle, VertexArrayObject vao, MeshEntry entry, u32 instance_count = 1) {
+        CommandBuffer& cmd = this->backend.command_buffers.get(cmd_handle);
+        cmd.bind_vertex_array(vao);
         this->bind_material(entry.material_handle);
         if (entry.index_count) {
             this->backend.draw_indices(entry.vertex_base, entry.index_base, entry.index_count, instance_count);
@@ -256,9 +261,23 @@ struct Renderer {
         }
     }
 
-    void draw_mesh(MeshHandle mesh_handle, u32 instance_count = 1) {
+    void draw_mesh_entry(CommandBufferHandle cmd_handle, VertexArrayObjectHandle vao_handle, MeshEntryHandle mesh_entry_handle, u32 instance_count = 1) {
+        MeshEntry& entry = this->backend.mesh_entries.get(mesh_entry_handle);
+        CommandBuffer& cmd = this->backend.command_buffers.get(cmd_handle);
+        VertexArrayObject& vao = this->backend.vaos.get(vao_handle);
+        cmd.bind_vertex_array(vao);
+        this->bind_material(entry.material_handle);
+        if (entry.index_count) {
+            this->backend.draw_indices(entry.vertex_base, entry.index_base, entry.index_count, instance_count);
+        } else {
+            this->backend.draw_vertices(entry.vertex_base, entry.vertex_count, instance_count);
+        }
+    }
+
+    void draw_mesh(CommandBufferHandle cmd_handle, MeshHandle mesh_handle, u32 instance_count = 1) {
         Mesh& mesh = this->backend.meshes.get(mesh_handle);
-        this->backend.bind_layout(mesh.layout);
+        CommandBuffer& cmd = this->backend.command_buffers.get(cmd_handle);
+        cmd.bind_vertex_array(mesh.vao);
         for (MeshEntry& entry : mesh.entries) {
             this->bind_material(entry.material_handle);
             if (entry.index_count) {

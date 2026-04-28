@@ -207,9 +207,11 @@ struct OpenGL {
 
     struct VertexArrayObject {
         u32 id;
+        VertexLayout layout;
 
-        static VertexArrayObject create() {
+        static VertexArrayObject create(VertexLayout layout) {
             VertexArrayObject ret = {};
+            ret.layout = layout;
 
             glGenVertexArrays(1, &ret.id);
             glBindVertexArray(ret.id);
@@ -227,7 +229,7 @@ struct OpenGL {
             Because of mac opengl I actually need to create the pipeline first
         */
         template<typename T>
-        static VertexBuffer create(VertexArrayObject vao, VertexLayout layout, Vector<T>& buffer, bool dynamic = true) {
+        static VertexBuffer create(VertexArrayObject vao, Vector<T>& buffer, bool dynamic = true) {
             VertexBuffer ret = {};
             ret.gl_usage = dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 
@@ -236,8 +238,8 @@ struct OpenGL {
             gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
             gl_error_check(glBufferData(GL_ARRAY_BUFFER, buffer.count * sizeof(T), buffer.data, ret.gl_usage));
 
-            for (VertexAttribute attribute : layout.attributes) {
-                bind_vertex_attribute(attribute.location, layout.stride, attribute);
+            for (VertexAttribute attribute : vao.layout.attributes) {
+                bind_vertex_attribute(attribute.location, vao.layout.stride, attribute);
             }
 
             gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -309,14 +311,13 @@ struct OpenGL {
 
      // mesh is just geometry the actual material is something you submit with it
     struct Mesh {
-        VertexLayout layout = {};
         VertexArrayObject vao = {};
         VertexBuffer vbo = {};
         IndexBuffer ebo = {};
         Vector<MeshEntry> entries;
         AABB aabb;
 
-        static Mesh create(VertexLayout& layout, Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
+        static Mesh create(VertexLayout layout, Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
         static Mesh cube(Handle<Material> material_handle);
         static Mesh axis_aligned_bounding_box(Handle<Material> material_handle, AABB aabb);
         static Mesh axis_aligned_bounding_box(Handle<Material> material_handle);
@@ -327,7 +328,7 @@ struct OpenGL {
         Vector<u32> indices;
         void process_node(Hashmap<int, Handle<Material>>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform);
         MeshEntry process_mesh(Hashmap<int, Handle<Material>>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
-        void setup();
+        void setup(VertexLayout layout);
     };
 
     // TODO(Jovanni): For now just allow triangles, but later parameterize this? TRY INSTANCE STUF AGQAIN WIHT THE COUNT
