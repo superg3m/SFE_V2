@@ -125,7 +125,7 @@ namespace Platform {
 		return library;
 	}
 
-	DLL* free_dll(DLL* dll, Error& error)  {
+	DLL* free_dll(DLL* dll)  {
 		RUNTIME_ASSERT(dll);
 		FreeLibrary((HMODULE)dll);
 

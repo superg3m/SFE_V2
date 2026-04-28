@@ -1,5 +1,45 @@
 #include "engine.hpp"
 
+INTERNAL_LINKAGE Platform::DLL* dll = nullptr;
+INTERNAL_LINKAGE const char* dll_name = "application.dll";
+INTERNAL_LINKAGE const char* temp_dll_name = "application_temp.dll";
+INTERNAL_LINKAGE Platform::FileTime last_write_time = {};
+
+void load_application_function_pointers(ApplicationInitalizeFunc** application_init, ApplicationUpdateFunc** application_update, ApplicationRenderFunc** application_render) {
+    if (dll) {
+        Platform::free_dll(dll);
+        *application_update = nullptr;
+        *application_render = nullptr;
+        dll    = nullptr;
+    }
+
+	Platform::copy_file(dll_name, temp_dll_name, true);
+	
+	last_write_time = Platform::get_file_modification_time(dll_name);
+
+	Error err = Error::SUCCESS;
+    dll = Platform::load_dll(temp_dll_name, err);
+    RUNTIME_ASSERT_MSG(err == Error::SUCCESS, "Failed to load dll | %s\n", error_get_string(err));
+
+	Error err = Error::SUCCESS;
+	if (application_init) {
+		*application_init = (ApplicationInitalizeFunc*)Platform::get_function_address(dll, "application_init", err);
+		if (err != Error::SUCCESS) {
+			LOG_ERROR("Failed to find application_init | Error: %s", error_get_string(err));
+		}
+	}
+
+	*application_update = (ApplicationUpdateFunc*)Platform::get_function_address(dll, "application_update", err);
+	if (err != Error::SUCCESS) {
+		LOG_ERROR("Failed to find application_init | Error: %s", error_get_string(err));
+	}
+
+	*application_render = (ApplicationRenderFunc*)Platform::get_function_address(dll, "application_render", err);
+	if (err != Error::SUCCESS) {
+		LOG_ERROR("Failed to find application_init | Error: %s", error_get_string(err));
+	}
+}
+
 Camera camera = Camera(0, 1, 10);
 bool mouse_captured = true;
 
@@ -95,25 +135,11 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 	this->renderer = Renderer::create(permenant_allocator, frame_allocator);
 
 	Error err = Error::SUCCESS;
-	DLL* dll = Platform::load_dll("game.dll", err);
+	Platform::DLL* dll = Platform::load_dll("game.dll", err);
 	if (err != Error::SUCCESS) {
 		LOG_ERROR("Failed to find game.dll | Error: %s", error_get_string(err));
 	} else {
-		err = Error::SUCCESS;
-		this->application_init = (ApplicationInitalizeFunc*)Platform::get_function_address(dll, "application_init", err);
-		if (err != Error::SUCCESS) {
-			LOG_ERROR("Failed to find application_init | Error: %s", error_get_string(err));
-		}
-
-		this->application_update = (ApplicationUpdateFunc*)Platform::get_function_address(dll, "application_update", err);
-		if (err != Error::SUCCESS) {
-			LOG_ERROR("Failed to find application_init | Error: %s", error_get_string(err));
-		}
-
-		this->application_render = (ApplicationRenderFunc*)Platform::get_function_address(dll, "application_render", err);
-		if (err != Error::SUCCESS) {
-			LOG_ERROR("Failed to find application_init | Error: %s", error_get_string(err));
-		}
+		load_application_function_pointers(&this->application_init, &this->application_update, &this->application_render);
 	}
 
 	if (application_init) application_init(this);
@@ -161,7 +187,10 @@ void Engine::update(float dt) {
 		camera.process_keyboard(CameraDirection::RIGHT, dt); 
 	}
 
-	Platform::get_file_modification_time()
+	Platform::FileTime new_time = Platform::get_file_modification_time(dll_name);
+	if (Platform::compare_file_modification_time(new_time, last_write_time)) {
+		load_application_function_pointers(nullptr, &this->application_update, &this->application_render);
+	}
 
 	if (this->application_update) application_update(dt);
 

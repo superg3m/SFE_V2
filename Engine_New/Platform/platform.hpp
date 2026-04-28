@@ -2,16 +2,16 @@
 
 #include "../Core/core.hpp"
 
-typedef void DLL;
-struct FileTime {
-	#if defined(PLATFORM_WINDOWS)
-		FILETIME time;
-	#else
-		time_t time;
-	#endif
-};
-
 namespace Platform {
+	typedef void DLL;
+	struct FileTime {
+		#if defined(PLATFORM_WINDOWS)
+			FILETIME time;
+		#else
+			time_t time;
+		#endif
+	};
+
 	bool initialize();
 	void shutdown();
 	void sleep(u32 ms);
@@ -27,7 +27,7 @@ namespace Platform {
 	bool copy_file(const char* source_path, const char* dest_path, bool block_until_success = true);
 	u8* read_entire_file(Allocator a, const char* file_path, size_t& out_file_size, Error& error);
 	DLL* load_dll(const char* dll_path, Error& error);
-	DLL* free_dll(DLL* dll, Error& error);
+	DLL* free_dll(DLL* dll);
 	void* get_function_address(DLL* dll, const char* proc_name, Error& error);
 
 	char* get_executable_directory();
