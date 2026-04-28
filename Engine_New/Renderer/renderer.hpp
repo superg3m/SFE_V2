@@ -63,8 +63,8 @@ struct Renderer {
 	Vector<RenderCommand> post_effects_commands;
 	Vector<RenderCommand> skybox_commands;
 	Vector<RenderCommand> transparent_commands;
-
-    static Renderer create(Allocator allocator) {
+ 
+    static Renderer create(Allocator permanent_allocator, Allocator frame_allocator) {
         Renderer ret = {};
 
 		PipelineDescriptor opaque_pipeline_descriptor = PipelineDescriptor(
@@ -116,11 +116,11 @@ struct Renderer {
 		// this->skybox_pipeline = renderer.create_pipeline(pipeline_description);
 		// this->transparent_pipeline = renderer.create_pipeline(pipeline_description);
 
-		ret.opaque_commands = Vector<RenderCommand>(allocator);
-		ret.shadow_commands = Vector<RenderCommand>(allocator);
-		ret.post_effects_commands = Vector<RenderCommand>(allocator);
-		ret.skybox_commands = Vector<RenderCommand>(allocator);
-		ret.transparent_commands = Vector<RenderCommand>(allocator);
+		ret.opaque_commands = Vector<RenderCommand>(frame_allocator);
+		ret.shadow_commands = Vector<RenderCommand>(frame_allocator);
+		ret.post_effects_commands = Vector<RenderCommand>(frame_allocator);
+		ret.skybox_commands = Vector<RenderCommand>(frame_allocator);
+		ret.transparent_commands = Vector<RenderCommand>(frame_allocator);
 
         return ret;
 	}
