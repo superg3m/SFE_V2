@@ -594,3 +594,6 @@ int main() {
 
 // ok it kind of defeats the purpose when I have to use the rendere.backend.registry
 // figure out how to fix this...
+
+// this will turn into a dll
+// the idea is just to submit commands
