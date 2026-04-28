@@ -30,8 +30,8 @@ using MaterialHandle = Handle<Material>;
 using MeshEntry = typename B::MeshEntry;
 using MeshEntryHandle = Handle<MeshEntry>;
 
-using MeshEntry = typename B::MeshEntry;
-using MeshEntryHandle = Handle<MeshEntry>;
+using Mesh = typename B::Mesh;
+using MeshHandle = Handle<Mesh>;
 
 using VertexLayout = typename B::VertexLayout;
 using VertexLayoutHandle = Handle<VertexLayout>;
@@ -181,12 +181,43 @@ struct Renderer {
         return handle;
     }
 
-    template<typename T>
-    MeshEntryHandle create_mesh_entry(VertexLayoutHandle layout_handle, MaterialHandle material_handle, Vector<T>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0) {
-        MeshEntryHandle handle = backend.mesh_entries.acquire();
-        MeshEntry& mesh_entry = backend.mesh_entries.get(handle);
+    MeshHandle create_mesh_cube(Handle<Material> material_handle) {
+        MeshHandle handle = backend.meshes.acquire();
+        Mesh& mesh = backend.meshes.get(handle);
+        mesh = Mesh::cube(material_handle);
+
+        return handle;
+    }
+
+    MeshHandle create_mesh_aabb(Handle<Material> material_handle) {
+        MeshHandle handle = backend.meshes.acquire();
+        Mesh& mesh = backend.meshes.get(handle);
+        mesh = Mesh::axis_aligned_bounding_box(material_handle);
+
+        return handle;
+    }
+
+    MeshHandle create_mesh_aabb(Handle<Material> material_handle, AABB aabb) {
+        MeshHandle handle = backend.meshes.acquire();
+        Mesh& mesh = backend.meshes.get(handle);
+        mesh = Mesh::axis_aligned_bounding_box(material_handle, aabb);
+
+        return handle;
+    }
+
+    MeshHandle create_mesh(Vector<VertexAttributes layout_handle, Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indicies = {}) {
+        MeshHandle handle = backend.meshes.acquire();
+        Mesh& mesh = backend.meshes.get(handle);
         VertexLayout& layout = backend.layouts.get(layout_handle);
-        mesh_entry = MeshEntry::create(layout, material_handle, vertex_data, indices, vertex_base, index_base);
+        mesh = Mesh::create(layout, material_handle, vertices, indicies);
+
+        return handle;
+    }
+
+    MeshHandle create_mesh(ShaderHandle shader_handle, const char* path) {
+        MeshHandle handle = backend.meshes.acquire();
+        Mesh& mesh = backend.meshes.get(handle);
+        mesh = Mesh::load_from_file(this->backend,  shader_handle, path);
 
         return handle;
     }
@@ -206,22 +237,35 @@ struct Renderer {
 
     // TODO(Jovanni): For now just allow triangles, but later parameterize this?
     void draw_vertices(u32 vertex_base, u32 vertex_count, u32 instance_count = 1) {
-        backend.draw_vertices(vertex_base, vertex_count);
+        this->backend.draw_vertices(vertex_base, vertex_count, instance_count);
     }
 
     // TODO(Jovanni): For now just allow triangles, but later parameterize this?
     void draw_indices(u32 vertex_base, u32 index_base, u32 index_count, u32 instance_count = 1) {
-        backend.draw_indices(vertex_base, index_base, index_count, instance_count);
+        this->backend.draw_indices(vertex_base, index_base, index_count, instance_count);
     }
 
-    void draw_mesh_entry(MeshEntryHandle mesh_entry_handle, u32 instance_count = 1) {
-        MeshEntry& entry = backend.mesh_entries.get(mesh_entry_handle);
+    void draw_entry_mesh(VertexLayoutHandle layout_handle, MeshEntryHandle mesh_handle, u32 instance_count = 1) {
+        MeshEntry& entry = this->backend.mesh_entries.get(mesh_handle);
+        this->bind_layout(layout_handle);
         this->bind_material(entry.material_handle);
-
         if (entry.index_count) {
-            backend.draw_indices(entry.vertex_base, entry.index_base, entry.index_count, instance_count);
+            this->backend.draw_indices(entry.vertex_base, entry.index_base, entry.index_count, instance_count);
         } else {
-            backend.draw_vertices(entry.vertex_base, entry.vertex_count, instance_count);
+            this->backend.draw_vertices(entry.vertex_base, entry.vertex_count, instance_count);
+        }
+    }
+
+    void draw_mesh(MeshHandle mesh_handle, u32 instance_count = 1) {
+        Mesh& mesh = this->backend.meshes.get(mesh_handle);
+        this->backend.bind_layout(mesh.layout);
+        for (MeshEntry& entry : mesh.entries) {
+            this->bind_material(entry.material_handle);
+            if (entry.index_count) {
+                this->backend.draw_indices(entry.vertex_base, entry.index_base, entry.index_count, instance_count);
+            } else {
+                backend.draw_vertices(entry.vertex_base, entry.vertex_count, instance_count);
+            }
         }
     }
 };

@@ -19,6 +19,7 @@ from c_build.source.Manager import *
 
 cc: CompilerConfig = CompilerConfig(
     compiler_name = C_BUILD_COMPILER_NAME() if C_BUILD_IS_DEPENDENCY() else "INVALID_COMPILER",
+    compiler_std_version="c++20"
 )
 
 pc: ProjectConfig = ProjectConfig(

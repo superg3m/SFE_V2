@@ -16,9 +16,7 @@ void _GL_ERROR_CHECK(const char* file, int line);
     #define gl_error_check(glCall) glCall
 #endif
 
-Mat4 convert_assimp_matrix_to_glm(const aiMatrix4x4& from);
 void bind_vertex_attribute(int location, u32 stride, VertexAttribute attribute);
-AABB calculate_aabb(Vector<Vertex>& vertices, int base_vertex, int vertex_count);
 
 struct OpenGL {
     struct Texture {
@@ -207,36 +205,17 @@ struct OpenGL {
 		static Pipeline create(PipelineDescriptor desc);
 	};
 
-    struct VertexLayout {
-        u32 vao;
-        u32 stride;
-        u32 stride_in_floats; // stride / sizeof(float)
-        Vector<VertexAttribute> attributes;
+    struct VertexArrayObject {
+        u32 id;
 
-        static VertexLayout& PNT() {
-            static VertexLayout layout = VertexLayout({
-                VertexAttribute{0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3, false},
-                VertexAttribute{1, OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3, false},
-                VertexAttribute{2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2, false},
-            });
+        static VertexArrayObject create() {
+            VertexArrayObject ret = {};
 
-            return layout;
-        }
-
-        VertexLayout() = default;
-        VertexLayout(Vector<VertexAttribute> attributes) {
-            this->stride = 0;
-            for (VertexAttribute desc : attributes) {
-                this->stride += (u32)desc.type * sizeof(float);
-            }
-
-            this->stride_in_floats = this->stride / sizeof(float);
-            this->attributes = attributes;
-        
-            glGenVertexArrays(1, &this->vao);
-            glBindVertexArray(this->vao);
-
+            glGenVertexArrays(1, &ret.id);
+            glBindVertexArray(ret.id);
             glBindVertexArray(0);
+
+            return ret;
         }
     };
 
@@ -248,11 +227,11 @@ struct OpenGL {
             Because of mac opengl I actually need to create the pipeline first
         */
         template<typename T>
-        static VertexBuffer create(OpenGL::VertexLayout layout, Vector<T>& buffer, bool dynamic = true) {
+        static VertexBuffer create(VertexArrayObject vao, VertexLayout layout, Vector<T>& buffer, bool dynamic = true) {
             VertexBuffer ret = {};
             ret.gl_usage = dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 
-            gl_error_check(glBindVertexArray(layout.vao));
+            gl_error_check(glBindVertexArray(vao.id));
             gl_error_check(glGenBuffers(1, &ret.id));
             gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
             gl_error_check(glBufferData(GL_ARRAY_BUFFER, buffer.count * sizeof(T), buffer.data, ret.gl_usage));
@@ -267,10 +246,10 @@ struct OpenGL {
         }
 
         template<typename T>
-        void update_buffer(OpenGL::VertexLayout layout, Vector<T>& buffer, s64 offset = 0) {
+        void update_buffer(VertexArrayObject vao, Vector<T>& buffer, s64 offset = 0) {
             RUNTIME_ASSERT(this->gl_usage == GL_DYNAMIC_DRAW);
 
-            gl_error_check(glBindVertexArray(layout.vao)); // might want to cache this
+            gl_error_check(glBindVertexArray(vao.id)); // might want to cache this
             gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, this->id));
 -
             #if 0
@@ -287,12 +266,12 @@ struct OpenGL {
 	struct IndexBuffer {
         u32 id;
         GLenum gl_usage;
-        static IndexBuffer create(OpenGL::VertexLayout layout, Vector<u32>& indices, bool dynamic = false) {
+        static IndexBuffer create(VertexArrayObject vao, Vector<u32>& indices, bool dynamic = false) {
             IndexBuffer ret = {};
             ret.gl_usage = dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 
             if (indices.count) {
-                gl_error_check(glBindVertexArray(layout.vao));
+                gl_error_check(glBindVertexArray(vao.id));
                 gl_error_check(glGenBuffers(1, &ret.id));
                 gl_error_check(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ret.id));
                 gl_error_check(glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.count * sizeof(u32), indices.data, ret.gl_usage));
@@ -302,14 +281,11 @@ struct OpenGL {
 
             return ret;
         }
-
-        void bind() {
-            gl_error_check(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->id));
-        }
 	};
 
 	struct CommandBuffer {
 		void bind_pipeline(OpenGL::Pipeline pipeline);
+        void bind_vertex_array(OpenGL::VertexArrayObject vao);
 		void bind_vertex_buffer(VertexBuffer vbo);
 		void bind_index_buffer(IndexBuffer ebo);
 		void draw_vertices(u32 vertex_base, u32 vertex_count);
@@ -328,30 +304,21 @@ struct OpenGL {
         Handle<OpenGL::Material> material_handle = Handle<OpenGL::Material>::invalid();
         AABB aabb = {};
 
-        static MeshEntry create(VertexLayout layout, Handle<OpenGL::Material> material_handle, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES) {
-            MeshEntry ret = {};
-            ret.draw_type = draw_type;
-            ret.vertex_count = (vertex_data.count * sizeof(Vertex)) / layout.stride;
-            ret.index_count = indices.count;
-            ret.vertex_base  = vertex_base;
-            ret.index_base   = index_base;
-            ret.material_handle = material_handle;
-            ret.aabb = calculate_aabb(vertex_data, vertex_base, ret.vertex_count);
-
-            return ret;
-        }
+        static MeshEntry create(VertexLayout layout, Handle<OpenGL::Material> material_handle, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES);
     };
 
      // mesh is just geometry the actual material is something you submit with it
     struct Mesh {
+        VertexLayout layout = {};
+        VertexArrayObject vao = {};
         VertexBuffer vbo = {};
         IndexBuffer ebo = {};
         Vector<MeshEntry> entries;
         AABB aabb;
 
-        // static Mesh create(VertexLayout& layout, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 base_vertex = 0, u32 base_index = 0);
+        static Mesh create(VertexLayout& layout, Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
         static Mesh cube(Handle<Material> material_handle);
-        static Mesh axis_aligned_bounding_box(AABB aabb, Handle<Material> material_handle);
+        static Mesh axis_aligned_bounding_box(Handle<Material> material_handle, AABB aabb);
         static Mesh axis_aligned_bounding_box(Handle<Material> material_handle);
         static Mesh load_from_file(OpenGL& backend, Handle<Shader> shader_handle, const char* path);
 
@@ -362,10 +329,6 @@ struct OpenGL {
         MeshEntry process_mesh(Hashmap<int, Handle<Material>>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
         void setup();
     };
-
-    void bind_layout(OpenGL::VertexLayout layout) {
-        gl_error_check(glBindVertexArray(layout.vao));
-    }
 
     // TODO(Jovanni): For now just allow triangles, but later parameterize this? TRY INSTANCE STUF AGQAIN WIHT THE COUNT
     void draw_vertices(u32 vertex_base, u32 vertex_count, u32 instance_count = 1) {
@@ -394,13 +357,14 @@ struct OpenGL {
     bool WIREFRAME = false;
     int DRAW_CALL_COUNT = 0;
 
-	Registry<OpenGL::VertexLayout, 256> layouts;
     Registry<OpenGL::Texture, 256> textures;
 	Registry<OpenGL::Pipeline, 256> pipelines;
 	Registry<OpenGL::Shader, 256> shaders;
+	Registry<OpenGL::VertexArrayObject, 256> vaos;
 	Registry<OpenGL::VertexBuffer, 256> vbos;
 	Registry<OpenGL::IndexBuffer, 256> ebos;
 	Registry<OpenGL::CommandBuffer, 256> command_buffers;
 	Registry<OpenGL::Material, 256> materials;
 	Registry<OpenGL::MeshEntry, 256> mesh_entries;
+	Registry<OpenGL::Mesh, 256> meshes;
 };

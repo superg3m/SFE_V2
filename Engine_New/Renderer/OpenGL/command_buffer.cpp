@@ -28,6 +28,10 @@ void OpenGL::CommandBuffer::bind_pipeline(OpenGL::Pipeline pipeline) {
 	}
 }
 
+void bind_vertex_array(OpenGL::VertexArrayObject vao) {
+	gl_error_check(glBindVertexArray(vao.id));
+}
+
 void OpenGL::CommandBuffer::bind_vertex_buffer(OpenGL::VertexBuffer vbo) {
 	gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, vbo.id));
 }

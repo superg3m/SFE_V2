@@ -51,20 +51,37 @@ struct Vector {
     }
 
     void reserve(u64 count) {
+        if (this->allocator == Allocator::invalid()) {
+            this->allocator = Allocator::general();
+        }
+
         const size_t total_allocation_size = sizeof(T) * this->capacity;
         const size_t old_allocation_size = sizeof(T) * this->count;
         const size_t new_allocation_size = sizeof(T) * count;
+        if (this->data == nullptr) {
+            this->data = (T*)this->allocator.malloc(new_allocation_size, alignof(T));
+        }
+
         if (new_allocation_size > total_allocation_size) {
             this->data = (T*)this->allocator.realloc(this->data, old_allocation_size, new_allocation_size, alignof(T));
-            this->capacity = count;
         }
+
+        this->capacity = count;
     }
 
 	void resize(u64 count) {
+        if (this->allocator == Allocator::invalid()) {
+            this->allocator = Allocator::general();
+        }
+
         const size_t total_allocation_size = sizeof(T) * this->capacity;
         const size_t old_allocation_size = sizeof(T) * this->count;
         const size_t new_allocation_size = sizeof(T) * count;
-        if ((this->data == nullptr) || new_allocation_size > total_allocation_size) {
+        if (this->data == nullptr) {
+            this->data = (T*)this->allocator.malloc(new_allocation_size, alignof(T));
+        }
+
+        if (new_allocation_size > total_allocation_size) {
             this->data = (T*)this->allocator.realloc(this->data, old_allocation_size, new_allocation_size, alignof(T));
         }
 

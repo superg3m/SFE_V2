@@ -38,7 +38,7 @@ template<typename T>
 struct Slot {
 	bool allocated = false;
 	u32 generation = 0;
-	T data;
+	T data = {};
 };
 
 template<typename T, int N>
@@ -73,7 +73,7 @@ struct Registry {
 		}
 		*/
 
-		Memory::zero(&this->slots[handle.index].data, sizeof(T));
+		this->slots[handle.index].data = T();
 		return handle;
 	}
 

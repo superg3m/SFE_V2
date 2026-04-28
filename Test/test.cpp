@@ -28,19 +28,27 @@ void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
 }
 
 struct RenderCommand {
-	PipelineHandle pipeline_handle;
+	PipelineHandle pipeline;
+    VertexLayoutHandle layout;
     VertexBufferHandle vbo;
     IndexBufferHandle ebo;
-	MeshEntryHandle mesh_entry_handle;
+	MeshEntryHandle mesh_entry;
 
 	Mat4 model = Mat4::identity();
 	//Mat4 view = glm::mat4(1); // TODO(Jovanni): eventually this will be handled by active camera! SO WE WILL REMOVE THIS
 	//Mat4 projection = glm::mat4(1); // (Jovanni): eventually this will be handled by active camera! SO WE WILL REMOVE THIS
+    
+    RenderCommand(PipelineHandle pipeline, VertexLayoutHandle layout, VertexBufferHandle vbo, IndexBufferHandle ebo, MeshEntryHandle mesh_entry, Mat4 model) {
+        this->pipeline = pipeline;
+        this->layout = layout;
+        this->vbo = vbo;
+        this->ebo = ebo;
+        this->mesh_entry = mesh_entry;
+        this->model = model;
+    }
 };
 
 struct RenderQueue {
-    VertexLayoutHandle pnt_layout;
-
 	PipelineHandle opaque_pipeline;
 	PipelineHandle opaque_wireframe_pipeline;
 	PipelineHandle shadow_pipeline;
@@ -57,12 +65,6 @@ struct RenderQueue {
 
     RenderQueue() = default;
 	RenderQueue(Allocator allocator, Renderer& renderer) {
-        VertexLayout layout = VertexLayout(Vector<VertexAttribute>({
-            {0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3, false},
-            {1, OFFSET_OF(Vertex, aNormal),   BufferStrideTypeInfo::VEC3, false},
-            {2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2, false},
-        }, allocator));
-
         PipelineDescriptor opaque_pipeline_descriptor = PipelineDescriptor(
             RasterizerState{
                 .cull_enabled = true,
@@ -105,7 +107,6 @@ struct RenderQueue {
         );
         */;
 
-        this->pnt_layout = renderer.create_layout(VertexLayout::PNT());
         this->opaque_pipeline = renderer.create_pipeline(opaque_pipeline_descriptor);
         this->opaque_wireframe_pipeline = renderer.create_pipeline(opaque_wireframe_pipeline_descriptor);
         // this->shadow_pipeline = renderer.create_pipeline();
@@ -121,17 +122,17 @@ struct RenderQueue {
     }
 
 	void submit(RenderCommand command) {
-        if (command.pipeline_handle == this->opaque_pipeline) {
+        if (command.pipeline == this->opaque_pipeline) {
             this->opaque_commands.append(command);
-        } else if (command.pipeline_handle == this->opaque_wireframe_pipeline) {
+        } else if (command.pipeline == this->opaque_wireframe_pipeline) {
             this->opaque_wireframe_commands.append(command);
-        } else if (command.pipeline_handle == this->shadow_pipeline) {
+        } else if (command.pipeline == this->shadow_pipeline) {
             this->shadow_commands.append(command);
-        } else if (command.pipeline_handle == this->post_effects_pipeline) {
+        } else if (command.pipeline == this->post_effects_pipeline) {
             this->post_effects_commands.append(command);
-        } else if (command.pipeline_handle == this->skybox_pipeline) {
+        } else if (command.pipeline == this->skybox_pipeline) {
             this->skybox_commands.append(command);
-        } else if (command.pipeline_handle == this->transparent_pipeline) {
+        } else if (command.pipeline == this->transparent_pipeline) {
             this->transparent_commands.append(command);
         } else {
             RUNTIME_ASSERT(false);
@@ -142,21 +143,22 @@ struct RenderQueue {
         // Mat4 view = Mat4::identity(); // camera.get_view_matrix();
         // Mat4 projection = Mat4::identity(); // camera.get_view_matrix();
 
-        renderer.bind_layout(this->pnt_layout);
-
         CommandBufferHandle cmd = renderer.begin_frame();
+           
             renderer.bind_pipeline(cmd, this->opaque_pipeline);
             for (RenderCommand& command : this->opaque_commands) {
+                renderer.bind_layout(command.layout); // this needs to be cached
                 renderer.bind_vertex_buffer(cmd, command.vbo);
                 renderer.bind_index_buffer(cmd, command.ebo);
-                renderer.draw_mesh_entry(command.mesh_entry_handle);
+                renderer.draw_entry_mesh(command.layout, command.mesh_entry);
             }
 
             renderer.bind_pipeline(cmd, this->opaque_wireframe_pipeline);
             for (RenderCommand& command : this->opaque_wireframe_commands) {
+                renderer.bind_layout(command.layout); // this needs to be cached
                 renderer.bind_vertex_buffer(cmd, command.vbo);
                 renderer.bind_index_buffer(cmd, command.ebo);
-                renderer.draw_mesh_entry(command.mesh_entry_handle);
+                renderer.draw_entry_mesh(command.layout, command.mesh_entry);
             }
         renderer.end_frame(cmd);
 
@@ -676,10 +678,9 @@ int main() {
     TextureHandle container_texture = engine.renderer.create_texture(0, "../../Assets/Textures/container.jpg", texture_desc);
     TextureHandle face_texture = engine.renderer.create_texture(1, "../../Assets/Textures/awesomeface.png", texture_desc);
 
-    MeshEntryHandle mesh_entry = engine.renderer.create_mesh_entry(engine.render_queue.pnt_layout, material, cube_vertices, cube_indices, 0, 0);
+    MeshHandle mesh_entry = engine.renderer.create_mesh(material, cube_vertices, cube_indices, 0, 0);
 
-
-    MeshHandle backpack_mesh = engine.renderer.create_mesh("backpack/backpack.obj", shader);
+    MeshHandle backpack_mesh = engine.renderer.create_mesh(shader, "../../Assets/Models/backpack/backpack.obj");
     // MeshHandle default_aabb_mesh = OpenGL::Mesh::AABB();
 
     bool pipeline_switch = true;

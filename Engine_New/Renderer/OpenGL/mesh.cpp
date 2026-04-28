@@ -92,6 +92,19 @@ INTERNAL_LINKAGE void load_assimp_texture(OpenGL::Material material, int i, cons
     }
 }
 
+OpenGL::MeshEntry OpenGL::MeshEntry::create(VertexLayout layout, Handle<OpenGL::Material> material_handle, Vector<Vertex>& vertex_data, Vector<u32> indices, u32 vertex_base, u32 index_base, GLenum draw_type) {
+    MeshEntry ret = {};
+    ret.draw_type = draw_type;
+    ret.vertex_count = (vertex_data.count * sizeof(Vertex)) / layout.stride;
+    ret.index_count = indices.count;
+    ret.vertex_base  = vertex_base;
+    ret.index_base   = index_base;
+    ret.material_handle = material_handle;
+    ret.aabb = calculate_aabb(vertex_data, vertex_base, ret.vertex_count);
+
+    return ret;
+}
+
 OpenGL::MeshEntry OpenGL::Mesh::process_mesh(Hashmap<int, Handle<Material>>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform) {
     OpenGL::MeshEntry entry = {};
     entry.vertex_base = (unsigned int)this->vertices.count;
@@ -190,20 +203,22 @@ void OpenGL::Mesh::setup() {
     for (MeshEntry& entry : entries) {
         entry.aabb = calculate_aabb(this->vertices, entry.vertex_base, entry.vertex_count);
     }
+
+    this->vao = VertexArrayObject::create();
+    this->vbo = VertexBuffer::create(this->vao, VertexLayout::PNT(), this->vertices);
+    this->ebo = IndexBuffer::create(this->vao, this->indices);
 }
 
-/*
-OpenGL::Mesh OpenGL::Mesh::create(VertexLayout& layout, Vector<Vertex>& vertex_data, Vector<u32> indices, GLenum draw_type, u32 base_vertex, u32 base_index) {
+
+OpenGL::Mesh OpenGL::Mesh::create(VertexLayout& layout, Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indices, GLenum draw_type, u32 vertex_base, u32 index_base ) {
 	Mesh ret = {};
-    ret.vertices = vertex_data;
+    ret.vertices = vertices;
     ret.indices = indices;
-	ret.vbo = VertexBuffer::create(layout, vertex_data);
-	ret.ebo = IndexBuffer::create(layout, indices);
+    ret.entries.append(MeshEntry::create(layout, material_handle, vertices, indices, vertex_base, index_base, draw_type));
     ret.setup();
 	
 	return ret;
 }
-*/
 
 OpenGL::Mesh OpenGL::Mesh::cube(Handle<Material> material_handle) {
 	Vector<Vertex> cube_vertices = {
@@ -257,12 +272,13 @@ OpenGL::Mesh OpenGL::Mesh::cube(Handle<Material> material_handle) {
 	Mesh ret;
 	ret.vertices = cube_vertices;
 	ret.indices = cube_indices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_TRIANGLES));  
+	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_TRIANGLES));
+    ret.setup();
 
 	return ret;
 }
 
-OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(AABB aabb, Handle<Material> material_handle) {
+OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_handle, AABB aabb) {
 	// Vec3 center = aabb.getCenter();
 	Vec3 extents = aabb.extents();
 	float length = extents.x * 2.0f;
@@ -339,12 +355,13 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_h
 
 	Mesh ret;
 	ret.vertices = aabb_vertices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_LINES));  
+	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_LINES));
+    ret.setup();
 
 	return ret;
 }
 
-OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL& backend, Handle<Shader> shader_handle, const char* path) {
+OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL& backend, Handle<OpenGL::Shader> shader_handle, const char* path) {
 	Mesh ret = {};
 	Assimp::Importer importer;
 	unsigned int assimp_flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;
@@ -376,6 +393,7 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL& backend, Handle<Shader> shader
 		const aiMaterial* ai_material = scene->mMaterials[i];
 		Handle<Material> material_handle = backend.materials.acquire();
 		OpenGL::Material& material = backend.materials.get(material_handle);
+        material.shader_handle = shader_handle;
 		load_assimp_texture(material, i, scene, directory, aiTextureType_DIFFUSE, Material::DIFFUSE_TEXTURE);
 
 		/*
@@ -413,6 +431,7 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL& backend, Handle<Shader> shader
 	}
 
 	ret.process_node(material_index_to_material_handle, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
+    ret.setup();
 
 	ret.vertices.clear();
 	ret.indices.clear();
