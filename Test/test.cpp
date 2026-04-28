@@ -750,6 +750,9 @@ int main() {
 	return 0;
 }
 
+// abstract the render_queue into the renderer.
+// see how hard it is to do instanced stuff
+
 // probably take a look at the ::create(...) stuff see if you can get away with not doing that?
 // Entity stuff
 // MeshHandle
