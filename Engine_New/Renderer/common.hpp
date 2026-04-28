@@ -15,12 +15,13 @@ enum class BufferStrideTypeInfo {
 };
 
 const float MAGIC_NUMBER = -123450510.0f;
-const int RESERVED_VERTEX_ATTRIBUTE_LOCATIONS = 3;
+const int RESERVED_VERTEX_ATTRIBUTE_LOCATIONS = 4;
 
 struct Vertex {
 	Vec3 aPosition    = Vec3(MAGIC_NUMBER);   // location 0
 	Vec3 aNormal      = Vec3(MAGIC_NUMBER);   // location 1
 	Vec2 aTexCoord    = Vec2(MAGIC_NUMBER);   // location 2
+	Vec3 aColor       = Vec3(MAGIC_NUMBER);   // location 3
 };
 
 struct VertexAttribute {
@@ -100,11 +101,12 @@ struct VertexLayout {
 	u32 stride_in_floats; // stride / sizeof(float)
 	Vector<VertexAttribute> attributes;
 
-	static VertexLayout& PNT() {
+	static VertexLayout& PNTC() {
 		static VertexLayout layout = VertexLayout({
 			VertexAttribute{0, OFFSET_OF(Vertex, aPosition), BufferStrideTypeInfo::VEC3, false},
 			VertexAttribute{1, OFFSET_OF(Vertex, aNormal), BufferStrideTypeInfo::VEC3, false},
 			VertexAttribute{2, OFFSET_OF(Vertex, aTexCoord), BufferStrideTypeInfo::VEC2, false},
+			VertexAttribute{3, OFFSET_OF(Vertex, aColor), BufferStrideTypeInfo::VEC3, false},
 		});
 
 		return layout;

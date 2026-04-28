@@ -198,24 +198,24 @@ void OpenGL::Mesh::process_node(Hashmap<int, Handle<Material>>& map, aiNode* nod
     }
 }
 
-void OpenGL::Mesh::setup(VertexLayout layout) {
+void OpenGL::Mesh::setup() {
     this->aabb = calculate_aabb(this->vertices, 0, this->vertices.count);
     for (MeshEntry& entry : entries) {
         entry.aabb = calculate_aabb(this->vertices, entry.vertex_base, entry.vertex_count);
     }
 
     this->vao = VertexArrayObject::create();
-    this->vbo = VertexBuffer::create(this->vao, layout, this->vertices);
+    this->vbo = VertexBuffer::create(this->vao, VertexLayout::PNTC(), this->vertices);
     this->ebo = IndexBuffer::create(this->vao, this->indices);
 }
 
 
-OpenGL::Mesh OpenGL::Mesh::create(VertexLayout layout, Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indices, GLenum draw_type, u32 vertex_base, u32 index_base ) {
+OpenGL::Mesh OpenGL::Mesh::create(Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indices, GLenum draw_type, u32 vertex_base, u32 index_base ) {
 	Mesh ret = {};
     ret.vertices = vertices;
     ret.indices = indices;
-    ret.entries.append(MeshEntry::create(layout, material_handle, vertices, indices, vertex_base, index_base, draw_type));
-    ret.setup(layout);
+    ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material_handle, vertices, indices, vertex_base, index_base, draw_type));
+    ret.setup();
 	
 	return ret;
 }
@@ -272,8 +272,8 @@ OpenGL::Mesh OpenGL::Mesh::cube(Handle<Material> material_handle) {
 	Mesh ret;
 	ret.vertices = cube_vertices;
 	ret.indices = cube_indices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, 0, 0, GL_TRIANGLES));
-    ret.setup(VertexLayout::PNT());
+	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material_handle, ret.vertices, ret.indices, 0, 0, GL_TRIANGLES));
+    ret.setup();
 
 	return ret;
 }
@@ -326,8 +326,8 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_h
 
 	Mesh ret;
 	ret.vertices = aabb_vertices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, 0, 0, GL_LINES));  
-	ret.setup(VertexLayout::PNT());
+	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material_handle, ret.vertices, ret.indices, 0, 0, GL_LINES));  
+	ret.setup();
 
 	return ret;
 }
@@ -355,8 +355,8 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_h
 
 	Mesh ret;
 	ret.vertices = aabb_vertices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, 0, 0, GL_LINES));
-    ret.setup(VertexLayout::PNT());
+	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material_handle, ret.vertices, ret.indices, 0, 0, GL_LINES));
+    ret.setup();
 
 	return ret;
 }
@@ -431,7 +431,7 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL& backend, Handle<OpenGL::Shader
 	}
 
 	ret.process_node(material_index_to_material_handle, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
-    ret.setup(VertexLayout::PNT());
+    ret.setup();
 
 	ret.vertices.clear();
 	ret.indices.clear();

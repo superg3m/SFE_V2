@@ -2,8 +2,6 @@
 
 #include "common.hpp"
 #include "OpenGL/backend.hpp"
-// #include "Vulkan/backend.hpp"
-// #include "DirectX/backend.hpp"
 
 using B = OpenGL;
 using Texture = typename B::Texture;
@@ -27,11 +25,10 @@ using ShaderHandle = Handle<Shader>;
 using Material = typename B::Material;
 using MaterialHandle = Handle<Material>;
 
-using MeshEntry = typename B::MeshEntry;
-using MeshEntryHandle = Handle<MeshEntry>;
-
 using Mesh = typename B::Mesh;
 using MeshHandle = Handle<Mesh>;
+
+using MeshEntry = typename B::MeshEntry;
 
 using VertexArrayObject = typename B::VertexArrayObject;
 using VertexArrayObjectHandle = Handle<VertexArrayObject>;
@@ -40,24 +37,16 @@ using BindingValue = typename B::BindingValue;
 
 struct RenderCommand {
 	PipelineHandle pipeline;
+    MaterialHandle material;
 	VertexArrayObject vao;
-	VertexBuffer vbo;
+	VertexBuffer main_vbo;
+	Vector<VertexBufferHandle> extra_vbos;
 	IndexBuffer ebo;
 	MeshEntry mesh_entry;
 	Mat4 model = Mat4::identity();
 	Mat4 view = Mat4::identity();
 	Mat4 projection = Mat4::identity();
-	
-	RenderCommand(PipelineHandle pipeline, VertexArrayObject vao, VertexBuffer vbo, IndexBuffer ebo, MeshEntry mesh_entry, Mat4 model, Mat4 view, Mat4 projection) {
-		this->pipeline = pipeline;
-		this->vao = vao;
-		this->vbo = vbo;
-		this->ebo = ebo;
-		this->mesh_entry = mesh_entry;
-		this->model = model;
-		this->view = view;
-		this->projection = projection;
-	}
+    u32 instance_count = 1;
 };
 
 struct Renderer {
@@ -80,7 +69,7 @@ struct Renderer {
 
 		PipelineDescriptor opaque_pipeline_descriptor = PipelineDescriptor(
 			RasterizerState{
-				.cull_enabled = true,
+				.cull_enabled = false,
 				.cull_face_back = true,
 				.ccw_winding = true,
 				.fill = true
@@ -95,7 +84,7 @@ struct Renderer {
 
 		PipelineDescriptor opaque_wireframe_pipeline_descriptor = PipelineDescriptor(
 			RasterizerState{
-				.cull_enabled = true,
+				.cull_enabled = false,
 				.cull_face_back = true,
 				.ccw_winding = true,
 				.fill = false
@@ -154,7 +143,7 @@ struct Renderer {
 		}
 	}
 
-    void draw(Allocator& allocator) {
+    void draw(Allocator& temp_allocator) {
 		// Mat4 view = Mat4::identity(); // camera.get_view_matrix();
 		// Mat4 projection = Mat4::identity(); // camera.get_view_matrix();
 
@@ -162,27 +151,33 @@ struct Renderer {
 			this->bind_pipeline(cmd, this->opaque_pipeline);
 			for (RenderCommand& command : this->opaque_commands) {
 				this->bind_vertex_array(cmd, command.vao);
-				this->bind_vertex_buffer(cmd, command.vbo);
+				this->bind_vertex_buffer(cmd, command.main_vbo);
+                for (VertexBufferHandle vbo : command.extra_vbos) {
+			        this->bind_vertex_buffer(cmd, vbo);
+                }
 				this->bind_index_buffer(cmd, command.ebo);
-				this->material_set_uniforms(command.mesh_entry.material_handle, Hashmap<const char*, BindingValue>({
+				this->material_set_uniforms(command.material, Hashmap<const char*, BindingValue>({
 					{"uModel", command.model},
 					{"uView", command.view},
 					{"uProjection", command.projection},
-				}, allocator));
-				this->draw_mesh_entry(cmd, command.vao, command.mesh_entry);
+				}, temp_allocator));
+				this->draw_mesh_entry(cmd, command.vao, command.mesh_entry, command.instance_count);
 			}
 
 			this->bind_pipeline(cmd, this->opaque_wireframe_pipeline);
 			for (RenderCommand& command : this->opaque_wireframe_commands) {
 				this->bind_vertex_array(cmd, command.vao);
-				this->bind_vertex_buffer(cmd, command.vbo);
+				this->bind_vertex_buffer(cmd, command.main_vbo);
+                for (VertexBufferHandle vbo : command.extra_vbos) {
+			        this->bind_vertex_buffer(cmd, vbo);
+                }
 				this->bind_index_buffer(cmd, command.ebo);
-				this->material_set_uniforms(command.mesh_entry.material_handle, Hashmap<const char*, BindingValue>({
+				this->material_set_uniforms(command.material, Hashmap<const char*, BindingValue>({
 					{"uModel", command.model},
 					{"uView", command.view},
 					{"uProjection", command.projection},
-				}, allocator));
-				this->draw_mesh_entry(cmd, command.vao, command.mesh_entry);
+				}, temp_allocator));
+				this->draw_mesh_entry(cmd, command.vao, command.mesh_entry, command.instance_count);
 			}
 		this->end_frame(cmd);
 
@@ -323,11 +318,18 @@ struct Renderer {
         return handle;
     }
 
+    
+    template<typename T>
+    void update_vertex_buffer(VertexArrayObject vao, VertexBufferHandle vbo_handle, Vector<T>& data, u32 offset = 0) {
+        VertexBuffer& vbo = backend.vbos.get(vbo_handle);
+        vbo.update_buffer(vao, data, offset);
+    }
+
     template<typename T>
     void update_vertex_buffer(VertexArrayObjectHandle vao_handle, VertexBufferHandle handle, Vector<T>& data, u32 offset = 0) {
         VertexArrayObject& vao = backend.vaos.get(vao_handle);
         VertexBuffer& vbo = backend.vbos.get(handle);
-        vbo->update_buffer(vao, data, offset);
+        vbo.update_buffer(vao, data, offset);
     }
 
     IndexBufferHandle create_index_buffer(VertexArrayObjectHandle vao_handle, Vector<u32>& buffer, bool dynamic = false) {
@@ -448,10 +450,10 @@ struct Renderer {
         return handle;
     }
 
-    MeshHandle create_mesh(VertexLayout layout, Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indicies = {}) {
+    MeshHandle create_mesh(Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indicies = {}) {
         MeshHandle handle = backend.meshes.acquire();
         Mesh& mesh = backend.meshes.get(handle);
-        mesh = Mesh::create(layout, material_handle, vertices, indicies);
+        mesh = Mesh::create(material_handle, vertices, indicies);
 
         return handle;
     }
@@ -508,6 +510,19 @@ struct Renderer {
         }
     }
 
+    void draw_mesh_entry(CommandBufferHandle cmd_handle, VertexArrayObjectHandle vao_handle, MeshEntry entry, u32 instance_count = 1) {
+        CommandBuffer& cmd = this->backend.command_buffers.get(cmd_handle);
+        VertexArrayObject& vao = this->backend.vaos.get(vao_handle);
+        cmd.bind_vertex_array(vao);
+        this->bind_material(entry.material_handle);
+        if (entry.index_count) {
+            this->backend.draw_indices(entry.vertex_base, entry.index_base, entry.index_count, instance_count);
+        } else {
+            this->backend.draw_vertices(entry.vertex_base, entry.vertex_count, instance_count);
+        }
+    }
+
+    /*
     void draw_mesh_entry(CommandBufferHandle cmd_handle, VertexArrayObjectHandle vao_handle, MeshEntryHandle mesh_entry_handle, u32 instance_count = 1) {
         MeshEntry& entry = this->backend.mesh_entries.get(mesh_entry_handle);
         CommandBuffer& cmd = this->backend.command_buffers.get(cmd_handle);
@@ -520,6 +535,7 @@ struct Renderer {
             this->backend.draw_vertices(entry.vertex_base, entry.vertex_count, instance_count);
         }
     }
+    */
 
     void draw_mesh(CommandBufferHandle cmd_handle, MeshHandle mesh_handle, u32 instance_count = 1) {
         Mesh& mesh = this->backend.meshes.get(mesh_handle);

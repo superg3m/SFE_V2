@@ -367,37 +367,47 @@ struct Engine {
 };
 
 int main() {
-	constexpr int CAPACITY = KB(250);
-	u8 program_memory[CAPACITY];
-	Arena arena = Arena::fixed(program_memory, CAPACITY);
-	Allocator arena_allocator = arena.to_allocator();
+	constexpr int PROGRAM_MEMORY_CAPACITY = KB(250);
+	u8 program_memory[PROGRAM_MEMORY_CAPACITY];
+	Arena program_arena = Arena::fixed(program_memory, PROGRAM_MEMORY_CAPACITY);
+	Allocator program_arena_allocator = program_arena.to_allocator();
 
-	Temp temp = Temp::begin(&arena); 
-		test_basic_put_get(arena_allocator);
-		test_overwrite(arena_allocator);
-		test_remove(arena_allocator);
-		test_collisions(arena_allocator);
-		test_rehashing(arena_allocator);
-		test_string_keys(arena_allocator);
-		test_dead_entries(arena_allocator);
+	constexpr int PERMANENT_MEMORY_CAPACITY = KB(50);
+	u8* permenant_memory = (u8*)program_arena.push(PERMANENT_MEMORY_CAPACITY, alignof(u8));
+	Arena permanent_arena = Arena::fixed(permenant_memory, PERMANENT_MEMORY_CAPACITY);
+	Allocator permanent_arena_allocator = permanent_arena.to_allocator();
+
+	constexpr int FRAME_MEMORY_CAPACITY = KB(100);
+	u8* frame_memory = (u8*)program_arena.push(FRAME_MEMORY_CAPACITY, alignof(u8));
+	Arena frame_arena = Arena::fixed(frame_memory, FRAME_MEMORY_CAPACITY);
+	Allocator frame_arena_allocator = frame_arena.to_allocator();
+
+	Temp temp = Temp::begin(&program_arena); 
+		test_basic_put_get(program_arena_allocator);
+		test_overwrite(program_arena_allocator);
+		test_remove(program_arena_allocator);
+		test_collisions(program_arena_allocator);
+		test_rehashing(program_arena_allocator);
+		test_string_keys(program_arena_allocator);
+		test_dead_entries(program_arena_allocator);
 	temp.end();
 
-	temp = Temp::begin(&arena);
-		test_stress(arena_allocator);
-		test_put_get_large_values(arena_allocator);
-		test_remove_nonexistent(arena_allocator);
-		test_has_nonexistent(arena_allocator);
-		test_string_view_keys(arena_allocator);
-		test_cstring_keys(arena_allocator);
-		test_custom_struct_keys(arena_allocator);
-		test_edge_cases(arena_allocator);
-		test_clear(arena_allocator);
+	temp = Temp::begin(&program_arena);
+		test_stress(program_arena_allocator);
+		test_put_get_large_values(program_arena_allocator);
+		test_remove_nonexistent(program_arena_allocator);
+		test_has_nonexistent(program_arena_allocator);
+		test_string_view_keys(program_arena_allocator);
+		test_cstring_keys(program_arena_allocator);
+		test_custom_struct_keys(program_arena_allocator);
+		test_edge_cases(program_arena_allocator);
+		test_clear(program_arena_allocator);
 	temp.end();
 
 	LOG_INFO("All tests passed\n");
 
 	Engine engine = {};
-	if (!engine.init(arena_allocator)) {
+	if (!engine.init(permanent_arena_allocator)) {
 		return -1;
 	}
 
@@ -454,41 +464,41 @@ int main() {
 	// maybe I will say PNT_opaque_pipeline
 
 	ShaderHandle model_shader = engine.renderer.create_shader({"../../Assets/Shaders/model.vert", "../../Assets/Shaders/model.frag"});
+	ShaderHandle cube_shader = engine.renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
+	ShaderHandle quad_shader = engine.renderer.create_shader({"../../Assets/Shaders/screen_quad.vert", "../../Assets/Shaders/screen_quad.frag"});
 
-	VertexArrayObjectHandle vao = engine.renderer.create_vertex_array_object();
-	VertexBufferHandle vbo = engine.renderer.create_vertex_buffer(vao, VertexLayout::PNT(), cube_vertices); // maybe this hsould just take a layout?
-	IndexBufferHandle ebo = engine.renderer.create_index_buffer(vao, cube_indices); // maybe this hsould just take a layout?
-	
 	TextureDescription texture_desc = {};
 	TextureHandle container_texture = engine.renderer.create_texture(0, "../../Assets/Textures/container.jpg", texture_desc);
 	TextureHandle face_texture = engine.renderer.create_texture(1, "../../Assets/Textures/awesomeface.png", texture_desc);
 
-	MeshHandle backpack_mesh_handle = engine.renderer.create_mesh(model_shader, "../../Assets/Models/backpack/backpack.obj");
-	// MeshHandle mesh_entry = engine.renderer.create_mesh(material, cube_vertices, cube_indices, 0, 0);
-	// MeshHandle default_aabb_mesh = OpenGL::Mesh::AABB();
-
-	Vector<Vec3> particle_centers = {};
-	Vector<Vec3> particle_colors = {};
-
-	ShaderHandle cube_shader = engine.renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
-	MaterialHandle material = engine.renderer.create_material(model_shader);
-	engine.renderer.material_set_uniforms(material, Hashmap<const char*, BindingValue>({
+	MaterialHandle cube_material = engine.renderer.create_material(cube_shader);
+	engine.renderer.material_set_uniforms(cube_material, {
 		{"uFace", face_texture},
 		{"uContainer", container_texture},
-	}, arena_allocator));
+	});
 
-	MeshHandle quad = engine.renderer.create_mesh_cube(material);
-	/*
-	VertexBufferHandle particle_center_buffer = engine.renderer.create_vertex_buffer(quad, particle_centers, true);
-    VertexBufferHandle particle_color_buffer = engine.renderer.create_vertex_buffer(
-        GFX::BufferUsage::DYNAMIC,
-        {GFX::AttributeDesc(0, GFX::BufferStrideTypeInfo::VEC3)},
-        particle_colors
-    );
-
-    particle.VAO.bindVBO(8, true, particle_center_buffer);
-    particle.VAO.bindVBO(9, true, particle_color_buffer);
-	*/
+	// MeshHandle backpack_mesh_handle = engine.renderer.create_mesh(model_shader, "../../Assets/Models/backpack/backpack.obj");
+	MeshHandle cube_mesh_handle = engine.renderer.create_mesh(cube_material, cube_vertices, cube_indices);
+	Vector<Mat4> translations = {};
+	int index = 0;
+	float offset = 0.1f;
+	for (int y = -10; y < 10; y += 2) {
+		for (int x = -10; x < 10; x += 2) {
+			Vec3 translation;
+			translation.x = (float)x / 2.0f + offset;
+			translation.y = (float)y / 2.0f + offset;
+			translation.z = sin(x + y) * 10;
+			translations.append(Mat4::translate(Mat4::identity(), translation).transpose());
+		}
+	}
+	VertexBufferHandle offset_vbo = engine.renderer.create_vertex_buffer(
+		cube_mesh_handle, 
+		VertexLayout({
+			{4, 0, BufferStrideTypeInfo::MAT4, true} // this is a little confusing maybe figure out a better way...
+		}),
+		translations, 
+		true
+	);
 
 	bool pipeline_switch = true;
 	Timer timer = Timer::create();
@@ -498,7 +508,7 @@ int main() {
 	float previous_time = glfwGetTime();
 	float accumulator = 0.0f;
 	while (!glfwWindowShouldClose(engine.window)) {
-		Temp frame_temp = Temp::begin(&arena);
+		Temp frame_temp = Temp::begin(&frame_arena);
 
 		float current_time = glfwGetTime();
 		dt = current_time - previous_time;
@@ -507,8 +517,8 @@ int main() {
 
 		engine.update(dt);
 
-		Mat4 model         = Mat4(1.0f);
-		Mat4 view          = camera.get_view_matrix();
+		Mat4 model         =  Mat4::translate(Mat4::identity(), -5, 1, 0);
+		Mat4 view          =  camera.get_view_matrix();
 		Mat4 projection    =  Mat4::perspective(camera.zoom, (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 		Quat rotation = Quat::from_euler(Vec3(accumulator, accumulator, 0.0f));
 		// model = Mat4::scale(model, Vec3((sin(accumulator / 10) + 2), 1, 1));
@@ -520,6 +530,27 @@ int main() {
 			timer.reset();
 		}
 
+		Mesh cube_mesh = engine.renderer.backend.meshes.get(cube_mesh_handle);
+		engine.renderer.update_vertex_buffer(cube_mesh.vao, offset_vbo, translations);
+		for (MeshEntry& entry : cube_mesh.entries) {
+			// PipelineHandle pipeline, MaterialHandle material, VertexArrayObject vao, VertexBuffer main_vbo, Vector<VertexBufferHandle> extra_vbos, IndexBufferHandle ebo, MeshEntry mesh_entry, Mat4 model, Mat4 view, Mat4 projection, u32 instance_count = 1
+			RenderCommand command = {};
+			command.pipeline = pipeline_switch ? engine.renderer.opaque_pipeline : engine.renderer.opaque_wireframe_pipeline;
+			command.material = entry.material_handle;
+			command.vao = cube_mesh.vao;
+			command.main_vbo = cube_mesh.vbo;
+			command.extra_vbos = Vector<VertexBufferHandle>({offset_vbo}, frame_arena_allocator);
+			command.ebo = cube_mesh.ebo;
+			command.mesh_entry = entry;
+			command.model = model;
+			command.view = view;
+			command.projection = projection;
+			command.instance_count = translations.count;
+
+			engine.renderer.submit(command);
+		}
+
+		/*
 		Mesh backpack_mesh = engine.renderer.backend.meshes.get(backpack_mesh_handle);
 		for (OpenGL::MeshEntry& entry : backpack_mesh.entries) {
 			// PipelineHandle pipeline, VertexArrayObjectHandle vao, VertexBufferHandle vbo, IndexBufferHandle ebo, MeshEntry mesh_entry, Mat4 model = Mat4::identity()
@@ -535,7 +566,8 @@ int main() {
 			);
 			engine.renderer.submit(command);
 		}
-		engine.renderer.draw(arena_allocator);
+		*/
+		engine.renderer.draw(frame_arena_allocator);
 
 		glfwSwapBuffers(engine.window);
 		glfwPollEvents();

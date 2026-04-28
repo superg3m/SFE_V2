@@ -52,11 +52,11 @@ OpenGL::Texture OpenGL::Texture::load_from_memory(u32 texture_unit, const u8* da
 	if (nrChannels == 1) {
 		internal_format = GL_R8;
 		pixel_format = GL_RED;
-		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
+		gl_error_check(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+		gl_error_check(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED));
+		gl_error_check(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED));
+		gl_error_check(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED));
+		gl_error_check(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED));
 	} else if (nrChannels == 3) {
 		internal_format = GL_RGB8;
 		pixel_format = GL_RGB;
