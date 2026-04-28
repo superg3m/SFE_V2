@@ -518,12 +518,12 @@ int main() {
 
 		engine.update(dt);
 
-		Mat4 model         =  Mat4::translate(Mat4::identity(), -5, 1, 0);
+		Mat4 model         =  Mat4::identity();
 		Mat4 view          =  camera.get_view_matrix();
 		Mat4 projection    =  Mat4::perspective(camera.zoom, (float)WIDTH / (float)HEIGHT, 0.1f, 1000.0f);
 		Quat rotation = Quat::from_euler(Vec3(accumulator, accumulator, 0.0f));
-		// model = Mat4::scale(model, Vec3((sin(accumulator / 10) + 2), 1, 1));
-		// model = Mat4::rotate(model, rotation);
+		model = Mat4::scale(model, Vec3((sin(accumulator / 10) + 2), 2, 2));
+		model = Mat4::rotate(model, rotation);
 
 		if (timer.tick(dt)) {
 			LOG_DEBUG("TICK\n");
@@ -553,6 +553,7 @@ int main() {
 		}
 
 		
+		model = Mat4::identity();
 		Mesh backpack_mesh = engine.renderer.backend.meshes.get(backpack_mesh_handle);
 		engine.renderer.update_vertex_buffer(backpack_mesh.vao, offset_vbo, translations);
 		for (MeshEntry& entry : backpack_mesh.entries) {
