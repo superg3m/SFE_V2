@@ -50,6 +50,12 @@ struct RenderCommand {
 };
 
 struct Renderer {
+    static int WINDOW_WIDTH;
+    static int WINDOW_HEIGHT;
+
+    static int FRAME_BUFFER_WIDTH;
+    static int FRAME_BUFFER_HEIGHT;
+
 	PipelineHandle opaque_pipeline;
 	PipelineHandle opaque_wireframe_pipeline;
 	PipelineHandle shadow_pipeline;
@@ -143,7 +149,7 @@ struct Renderer {
 		}
 	}
 
-    void draw(Allocator& temp_allocator) {
+    void draw(Allocator& frame_allocator) {
 		// Mat4 view = Mat4::identity(); // camera.get_view_matrix();
 		// Mat4 projection = Mat4::identity(); // camera.get_view_matrix();
 
@@ -160,7 +166,7 @@ struct Renderer {
 					{"uModel", command.model},
 					{"uView", command.view},
 					{"uProjection", command.projection},
-				}, temp_allocator));
+				}, frame_allocator));
 				this->draw_mesh_entry(cmd, command.vao, command.mesh_entry, command.instance_count);
 			}
 
@@ -176,7 +182,7 @@ struct Renderer {
 					{"uModel", command.model},
 					{"uView", command.view},
 					{"uProjection", command.projection},
-				}, temp_allocator));
+				}, frame_allocator));
 				this->draw_mesh_entry(cmd, command.vao, command.mesh_entry, command.instance_count);
 			}
 		this->end_frame(cmd);
