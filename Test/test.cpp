@@ -597,3 +597,5 @@ int main() {
 
 // this will turn into a dll
 // the idea is just to submit commands
+
+// 3d grid of lines

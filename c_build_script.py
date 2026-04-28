@@ -26,7 +26,7 @@ pc: ProjectConfig = ProjectConfig(
     project_name = "SFE",
     project_dependencies = [],
     project_debug_with_visual_studio = False,
-    project_executable_names = ["test.exe"]
+    project_executable_names = ["sfe_runtime.exe"]
 )
 
 # ---------------------------- COMPILER SELECTION --------------------------------------
@@ -51,14 +51,15 @@ else:
     ]
 
 # ---------------------------------------------------------------------------------------
-ABSOLUTE_ENGINE_ROOT = "./Engine_New"
-ABSOLUTE_ENGINE_VENDOR = "./Engine_New/Vendor"
+ABSOLUTE_ENGINE_ROOT = "./Engine"
+ABSOLUTE_ENGINE_VENDOR = "./Engine/Vendor"
 ABSOLUTE_GAME_ROOT = "./Game"
+ABSOLUTE_TEST_ROOT = "./Test"
 
 BUILD_APPEND = f"build_{cc.compiler_name}/{C_BUILD_BUILD_TYPE()}"
-ABSOLUTE_ENGINE_BUILD = f"./Engine_New/{BUILD_APPEND}"
-ABSOLUTE_GAME_BUILD = f"./Game/{BUILD_APPEND}"
-ABSOLUTE_TEST_BUILD = f"./Test/{BUILD_APPEND}"
+ABSOLUTE_ENGINE_BUILD = f"{ABSOLUTE_ENGINE_ROOT}/{BUILD_APPEND}"
+ABSOLUTE_GAME_BUILD = f"{ABSOLUTE_GAME_ROOT}/{BUILD_APPEND}"
+ABSOLUTE_TEST_BUILD = f"{ABSOLUTE_TEST_ROOT}/{BUILD_APPEND}"
 
 ABSOLUTE_GLFW_ROOT = f"{ABSOLUTE_ENGINE_VENDOR}/glfw"
 ABSOLUTE_ASSIMP_ROOT = f"{ABSOLUTE_ENGINE_VENDOR}/assimp"
@@ -67,7 +68,7 @@ ABSOLUTE_STB_ROOT = f"{ABSOLUTE_ENGINE_VENDOR}/stb"
 
 # ---
 
-RELATIVE_ENGINE_ROOT = "../../../Engine_New"
+RELATIVE_ENGINE_ROOT = "../../../Engine"
 RELATIVE_ENGINE_VENDOR = f"{RELATIVE_ENGINE_ROOT}/Vendor"
 RELATIVE_GLFW_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glfw"
 RELATIVE_ASSIMP_ROOT = f"{RELATIVE_ENGINE_VENDOR}/assimp"
@@ -77,8 +78,6 @@ RELATIVE_GLM_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glm"
 RELATIVE_IMGUI_ROOT = f"{RELATIVE_ENGINE_VENDOR}/imgui"
 
 RELATIVE_GAME_ROOT = "../../../Game"
-RELATIVE_GAME_ASSETS_ROOT = "../../Assets"
-
 
 inject = []
 libs = [
@@ -146,45 +145,29 @@ procedures_config = {
         compiler_inject_into_args=[]
     ),
     
-    "SFE Test": ProcedureConfig(
-        build_directory = f"{ABSOLUTE_TEST_BUILD}",
-        output_name = "test.exe",
+    "Application DLL":  ProcedureConfig(
+        build_directory = f"{ABSOLUTE_GAME_BUILD}",
+        output_name = "application.dll",
         source_files = [
-            f"../../test.cpp",
+            f"{RELATIVE_GAME_ROOT}/game.cpp",
+        ],
+        additional_libs = libs,
+        include_paths = INCLUDES,
+        compiler_inject_into_args=[],
+        on_source_change_recompile=True
+    ),
+    
+    "SFE EntryPoint": ProcedureConfig(
+        build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
+        output_name = "sfe_runtime.exe",
+        source_files = [
+            f"{RELATIVE_ENGINE_ROOT}/entrypoint.cpp"
         ],
         additional_libs = libs,
         include_paths = INCLUDES,
         compiler_inject_into_args=[]
-    ),
+    )
 }
-
-"""
-"SFE Engine": ProcedureConfig(
-    build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
-    output_name = "sfe.lib",
-    source_files = [
-        f"{RELATIVE_ENGINE_ROOT}/**/*.cpp",
-        f"{RELATIVE_GLAD_ROOT}/src/glad.c",
-        f"{RELATIVE_STB_ROOT}/stb_image.c",
-    ],
-    additional_libs = [],
-    compile_time_defines=[f"COMPTIME_ASSERT_ROOT={RELATIVE_GAME_ASSETS_ROOT}"],
-    include_paths = INCLUDES,
-    compiler_inject_into_args=[]
-),
-
-"Main": ProcedureConfig(
-    build_directory = f"{ABSOLUTE_GAME_BUILD}",
-    output_name = "main.exe",
-    source_files = [
-        f"{RELATIVE_GAME_ROOT}/*.cpp",
-    ],
-    additional_libs = libs,
-    compile_time_defines=[],
-    include_paths = INCLUDES,
-    compiler_inject_into_args=inject
-)
-"""
 
 manager: Manager = Manager(cc, pc, procedures_config)
 manager.build_project()
@@ -193,10 +176,12 @@ manager.build_project()
 
 if IS_WINDOWS():
     if cc.compiler_name == "cl":
-        COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-static-ucrt", "glfw3.dll", ABSOLUTE_TEST_BUILD)
+        COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-static-ucrt", "glfw3.dll", ABSOLUTE_ENGINE_BUILD)
     else:
-        COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-mingw-w64", "glfw3.dll", ABSOLUTE_TEST_BUILD)
+        COPY_FILE_TO_DIR(f"{ABSOLUTE_GLFW_ROOT}/bin/windows/lib-mingw-w64", "glfw3.dll", ABSOLUTE_ENGINE_BUILD)
 
-    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/windows", "assimp-vc143-mtd.dll", ABSOLUTE_TEST_BUILD)
+    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/windows", "assimp-vc143-mtd.dll", ABSOLUTE_ENGINE_BUILD)
 elif IS_DARWIN():
-    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_TEST_BUILD)
+    COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_ENGINE_BUILD)
+    
+COPY_FILE_TO_DIR(f"{ABSOLUTE_GAME_BUILD}", "application.dll", ABSOLUTE_ENGINE_BUILD)

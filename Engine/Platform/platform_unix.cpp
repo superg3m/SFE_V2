@@ -130,13 +130,12 @@ namespace Platform {
 		return nullptr;
 	}
 
-	void* get_function_address(DLL* dll, const char* proc_name, Error& error) {
+	void* get_function_address(DLL* dll, const char* proc_name) {
 		RUNTIME_ASSERT(dll);
 
 		void* proc = dlsym(dll, proc_name);
 		if (!proc) {
 			LOG_ERROR("dlsym() failed: get_function_address(%s)\n", proc_name);
-			error = Error::RESOURCE_NOT_FOUND;
 
 			return nullptr;
 		}
@@ -144,19 +143,17 @@ namespace Platform {
 		return proc;
 	}
 
-	FileTime get_file_modification_time(const char* file_path, Error& error) {
+	FileTime get_file_modification_time(const char* file_path) {
 		FileTime file_time = {}; 
 
 		if (platform_file_exists(file_path)) {
 			LOG_ERROR("file_name/path is likely wrong: get_file_modification_time(%s)\n", file_path);
-			error = Error::RESOURCE_NOT_FOUND;
 			return file_time;
 		}
 
 		struct stat attr;
 		if (stat(file_path, &attr) == -1) {
 			LOG_ERROR("Error getting file stats\n");
-			error = Error::RESOURCE_NOT_FOUND;
 			return file_time;
 		}
 

@@ -1323,3 +1323,22 @@ bool Quat::operator==(const Quat &right) {
 bool Quat::operator!=(const Quat &right) {
 	return !(*this == right);
 }
+
+Vec3 screenspace_to_worldspace_raycast(double x_screen_space_pos, double y_screen_space_pos, Mat4 view, Mat4 projection, u32 WINDOW_WIDTH, u32 WINDOW_HEIGHT) {
+    float x = ((2.0f * x_screen_space_pos) / WINDOW_WIDTH) - 1.0f; // normalizing to (-1, 1) from (0, 1)
+    float y = 1.0f - ((2.0f * y_screen_space_pos) / WINDOW_HEIGHT);  // normalizing to (-1, 1) from (0, 1) | Also flipping vertically
+    float z = 1.0f;
+    Vec3 ndc = Vec3(x, y, z);
+    Vec4 clip_space = Vec4(ndc.x, ndc.y, ndc.z, 1.0f);
+
+    bool success = false; 
+    Mat4 inverse_projection = projection.inverse(success);
+
+    Vec4 view_space = inverse_projection * clip_space;
+    view_space = Vec4(view_space.x, view_space.y, view_space.z, 0.0f);
+
+    success = false; 
+    Mat4 inverse_view = view.inverse(success);
+    Vec4 world_space = inverse_view * view_space;
+    return Vec3(world_space).normalize();
+}

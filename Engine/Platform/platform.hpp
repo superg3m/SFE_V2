@@ -28,7 +28,7 @@ namespace Platform {
 	u8* read_entire_file(Allocator a, const char* file_path, size_t& out_file_size, Error& error);
 	DLL* load_dll(const char* dll_path, Error& error);
 	DLL* free_dll(DLL* dll);
-	void* get_function_address(DLL* dll, const char* proc_name, Error& error);
+	void* get_function_address(DLL* dll, const char* proc_name);
 
 	char* get_executable_directory();
 	char* get_asset_directory();

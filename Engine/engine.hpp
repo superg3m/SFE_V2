@@ -4,13 +4,14 @@
 
 struct Engine;
 typedef void(ApplicationInitalizeFunc)(Engine* engine);
-typedef void(ApplicationUpdateFunc)(float dt);
-typedef void(ApplicationRenderFunc)(Renderer* renderer, float dt);
+typedef void(ApplicationUpdateFunc)(Engine* engine, float dt);
+typedef void(ApplicationRenderFunc)(Engine* engine, float dt);
 
 struct Engine {
 	GLFWwindow* window;
 	Input input;
 	Renderer renderer;
+	void* application_state;
 
 	Allocator permenant_allocator;
 	Allocator frame_allocator;

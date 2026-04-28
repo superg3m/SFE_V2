@@ -132,20 +132,19 @@ namespace Platform {
 		return nullptr;
 	}
 
-	void* get_function_address(DLL* dll, const char* proc_name, Error& error) {
+	void* get_function_address(DLL* dll, const char* proc_name) {
 		RUNTIME_ASSERT(dll);
 
 		void* proc = (void*)GetProcAddress((HMODULE)dll, proc_name);
 		if (!proc) {
 			LOG_ERROR("GetProcAddress() failed: platform_get_function_address(%s)\n", proc_name);
-			error = Error::RESOURCE_NOT_FOUND;
 			return nullptr;
 		}
 
 		return proc;
 	}
 
-	FileTime get_file_modification_time(const char* file_path, Error& error) {
+	FileTime get_file_modification_time(const char* file_path) {
 		HANDLE file_handle = CreateFileA(
 			file_path, 
 			GENERIC_READ, 
@@ -159,15 +158,12 @@ namespace Platform {
 		FileTime ret = {0};
 		if (file_handle == INVALID_HANDLE_VALUE) {
 			LOG_ERROR("CreateFileA() returned an INVALID_HANDLE_VALUE, the file_path/path is likely wrong: platform_get_file_modification_time(%s)\n", file_path);
-			error = Error::RESOURCE_NOT_FOUND;
-			
 			return ret;
 		}
 		
 		if(!GetFileTime(file_handle, nullptr, nullptr, &ret.time)) { 
 			CloseHandle(file_handle);
 			LOG_ERROR("Failed to get file modification time\n");
-			error = Error::RESOURCE_NOT_FOUND;
 
 			return ret;
 		}
@@ -177,7 +173,7 @@ namespace Platform {
 	}
 
 	bool compare_file_modification_time(FileTime a, FileTime b) {
-		return CompareFileTime(&a.time, &b.time);
+		return CompareFileTime(&a.time, &b.time) == 0;
 	}
 
 	INTERNAL_LINKAGE void* win32_malloc(void* ctx, size_t allocation_size, size_t alignment) {

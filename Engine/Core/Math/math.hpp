@@ -388,3 +388,5 @@ inline void Mat4::decompose(Mat4 mat, Vec3* out_position, Quat* out_orientation,
 		*out_orientation = orientation;
 	}
 }
+
+Vec3 screenspace_to_worldspace_raycast(double x_screen_space_pos, double y_screen_space_pos, Mat4 view, Mat4 projection, u32 WINDOW_WIDTH, u32 WINDOW_HEIGHT);
