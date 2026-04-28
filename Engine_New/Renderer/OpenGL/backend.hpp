@@ -207,30 +207,33 @@ struct OpenGL {
 
     struct VertexArrayObject {
         u32 id;
-        VertexLayout layout;
 
-        static VertexArrayObject create(VertexLayout layout) {
+        static VertexArrayObject create() {
             VertexArrayObject ret = {};
-            ret.layout = layout;
-
             glGenVertexArrays(1, &ret.id);
             glBindVertexArray(ret.id);
             glBindVertexArray(0);
 
             return ret;
         }
+
+        void bind() {
+            glBindVertexArray(this->id);
+        }
     };
 
 	struct VertexBuffer {
         u32 id;
         GLenum gl_usage;
+        VertexLayout layout;
 
         /*
             Because of mac opengl I actually need to create the pipeline first
         */
         template<typename T>
-        static VertexBuffer create(VertexArrayObject vao, Vector<T>& buffer, bool dynamic = true) {
+        static VertexBuffer create(VertexArrayObject vao, VertexLayout layout, Vector<T>& buffer, bool dynamic = true) {
             VertexBuffer ret = {};
+            ret.layout = layout;
             ret.gl_usage = dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 
             gl_error_check(glBindVertexArray(vao.id));
@@ -238,8 +241,8 @@ struct OpenGL {
             gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
             gl_error_check(glBufferData(GL_ARRAY_BUFFER, buffer.count * sizeof(T), buffer.data, ret.gl_usage));
 
-            for (VertexAttribute attribute : vao.layout.attributes) {
-                bind_vertex_attribute(attribute.location, vao.layout.stride, attribute);
+            for (VertexAttribute attribute : layout.attributes) {
+                bind_vertex_attribute(attribute.location, layout.stride, attribute);
             }
 
             gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -263,6 +266,10 @@ struct OpenGL {
                 gl_error_check(glBufferSubData(GL_ARRAY_BUFFER, offset, sizeof(T) * buffer.count, buffer.data));
             #endif
         }
+
+        void bind() {
+            gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, this->id));
+        }
 	};
 
 	struct IndexBuffer {
@@ -283,7 +290,12 @@ struct OpenGL {
 
             return ret;
         }
-	};
+        
+    
+        void bind() {
+            gl_error_check(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->id));
+        }
+    };
 
 	struct CommandBuffer {
 		void bind_pipeline(OpenGL::Pipeline pipeline);

@@ -204,8 +204,8 @@ void OpenGL::Mesh::setup(VertexLayout layout) {
         entry.aabb = calculate_aabb(this->vertices, entry.vertex_base, entry.vertex_count);
     }
 
-    this->vao = VertexArrayObject::create(layout);
-    this->vbo = VertexBuffer::create(this->vao, this->vertices);
+    this->vao = VertexArrayObject::create();
+    this->vbo = VertexBuffer::create(this->vao, layout, this->vertices);
     this->ebo = IndexBuffer::create(this->vao, this->indices);
 }
 
@@ -272,7 +272,7 @@ OpenGL::Mesh OpenGL::Mesh::cube(Handle<Material> material_handle) {
 	Mesh ret;
 	ret.vertices = cube_vertices;
 	ret.indices = cube_indices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_TRIANGLES));
+	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, 0, 0, GL_TRIANGLES));
     ret.setup(VertexLayout::PNT());
 
 	return ret;
@@ -326,7 +326,7 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_h
 
 	Mesh ret;
 	ret.vertices = aabb_vertices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_LINES));  
+	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, 0, 0, GL_LINES));  
 	ret.setup(VertexLayout::PNT());
 
 	return ret;
@@ -355,7 +355,7 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_h
 
 	Mesh ret;
 	ret.vertices = aabb_vertices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, GL_LINES));
+	ret.entries.append(MeshEntry::create(VertexLayout::PNT(), material_handle, ret.vertices, ret.indices, 0, 0, GL_LINES));
     ret.setup(VertexLayout::PNT());
 
 	return ret;

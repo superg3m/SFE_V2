@@ -454,11 +454,11 @@ int main() {
 	// maybe I will say PNT_opaque_pipeline
 
 	ShaderHandle model_shader = engine.renderer.create_shader({"../../Assets/Shaders/model.vert", "../../Assets/Shaders/model.frag"});
-	VertexArrayObjectHandle vao = engine.renderer.create_vertex_array_object(VertexLayout::PNT());
-	VertexBufferHandle vbo = engine.renderer.create_vertex_buffer(vao, cube_vertices); // maybe this hsould just take a layout?
-	IndexBufferHandle ebo = engine.renderer.create_index_buffer(vao, cube_indices); // maybe this hsould just take a layout?
-	// MaterialHandle material = engine.renderer.create_material(model_shader);
 
+	VertexArrayObjectHandle vao = engine.renderer.create_vertex_array_object();
+	VertexBufferHandle vbo = engine.renderer.create_vertex_buffer(vao, VertexLayout::PNT(), cube_vertices); // maybe this hsould just take a layout?
+	IndexBufferHandle ebo = engine.renderer.create_index_buffer(vao, cube_indices); // maybe this hsould just take a layout?
+	
 	TextureDescription texture_desc = {};
 	TextureHandle container_texture = engine.renderer.create_texture(0, "../../Assets/Textures/container.jpg", texture_desc);
 	TextureHandle face_texture = engine.renderer.create_texture(1, "../../Assets/Textures/awesomeface.png", texture_desc);
@@ -466,6 +466,29 @@ int main() {
 	MeshHandle backpack_mesh_handle = engine.renderer.create_mesh(model_shader, "../../Assets/Models/backpack/backpack.obj");
 	// MeshHandle mesh_entry = engine.renderer.create_mesh(material, cube_vertices, cube_indices, 0, 0);
 	// MeshHandle default_aabb_mesh = OpenGL::Mesh::AABB();
+
+	Vector<Vec3> particle_centers = {};
+	Vector<Vec3> particle_colors = {};
+
+	ShaderHandle cube_shader = engine.renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
+	MaterialHandle material = engine.renderer.create_material(model_shader);
+	engine.renderer.material_set_uniforms(material, Hashmap<const char*, BindingValue>({
+		{"uFace", face_texture},
+		{"uContainer", container_texture},
+	}, arena_allocator));
+
+	MeshHandle quad = engine.renderer.create_mesh_cube(material);
+	/*
+	VertexBufferHandle particle_center_buffer = engine.renderer.create_vertex_buffer(quad, particle_centers, true);
+    VertexBufferHandle particle_color_buffer = engine.renderer.create_vertex_buffer(
+        GFX::BufferUsage::DYNAMIC,
+        {GFX::AttributeDesc(0, GFX::BufferStrideTypeInfo::VEC3)},
+        particle_colors
+    );
+
+    particle.VAO.bindVBO(8, true, particle_center_buffer);
+    particle.VAO.bindVBO(9, true, particle_color_buffer);
+	*/
 
 	bool pipeline_switch = true;
 	Timer timer = Timer::create();

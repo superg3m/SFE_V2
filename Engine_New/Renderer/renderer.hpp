@@ -295,20 +295,30 @@ struct Renderer {
         cmd.bind_vertex_array(vao);
     }
 
-    VertexArrayObjectHandle create_vertex_array_object(VertexLayout layout) {
+    VertexArrayObjectHandle create_vertex_array_object() {
         VertexArrayObjectHandle handle = backend.vaos.acquire();
         VertexArrayObject& vao = backend.vaos.get(handle);
-        vao = VertexArrayObject::create(layout);
+        vao = VertexArrayObject::create();
 
         return handle;
     }
 
     template<typename T>
-    VertexBufferHandle create_vertex_buffer(VertexArrayObjectHandle vao_handle, Vector<T>& buffer, bool dynamic = false) {
+    VertexBufferHandle create_vertex_buffer(MeshHandle mesh_handle, VertexLayout layout, Vector<T>& buffer, bool dynamic = false) {
+        Mesh& mesh = backend.meshes.get(mesh_handle);
+        VertexBufferHandle handle = backend.vbos.acquire();
+        VertexBuffer& vbo = backend.vbos.get(handle);
+        vbo = VertexBuffer::create(mesh.vao, layout, buffer, dynamic);
+
+        return handle;
+    }
+
+    template<typename T>
+    VertexBufferHandle create_vertex_buffer(VertexArrayObjectHandle vao_handle, VertexLayout layout, Vector<T>& buffer, bool dynamic = false) {
         VertexArrayObject& vao = backend.vaos.get(vao_handle);
         VertexBufferHandle handle = backend.vbos.acquire();
         VertexBuffer& vbo = backend.vbos.get(handle);
-        vbo = VertexBuffer::create(vao, buffer, dynamic);
+        vbo = VertexBuffer::create(vao, layout, buffer, dynamic);
 
         return handle;
     }
@@ -461,6 +471,16 @@ struct Renderer {
 
         return handle;
     }
+
+    /*
+    void bind_vbo(MeshHandle mesh_handle, VertexBufferHandle vbo) {
+        Mesh& mesh = backend.meshes.get(mesh_handle);
+        mesh.vao.bind();
+
+        Shader& shader = backend.shaders.get(handle);
+        shader = Shader(shader_paths);
+    }
+    */
 
     void recompile(ShaderHandle shader_handle) {
         Shader& shader = backend.shaders.get(shader_handle);
