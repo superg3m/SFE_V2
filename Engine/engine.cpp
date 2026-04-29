@@ -71,6 +71,10 @@ void window_size_callback(GLFWwindow* window, int window_width, int window_heigh
     engine->renderer.WINDOW_HEIGHT = window_height;
 }
 
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+    engine->camera.process_mouse_scroll((float)yoffset);
+}
+
 GLFWwindow* GLFW_INIT(const int WIDTH, const int HEIGHT) {
 	RUNTIME_ASSERT_MSG(glfwInit(), "Failed to init glfw\n");
 
@@ -99,6 +103,10 @@ GLFWwindow* GLFW_INIT(const int WIDTH, const int HEIGHT) {
 	}
 
 	glfwSwapInterval(1);
+
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetWindowSizeCallback(window, window_size_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, engine->mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 	gl_error_check(glEnable(GL_MULTISAMPLE));
 	// glEnable(GL_CULL_FACE);
