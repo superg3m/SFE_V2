@@ -119,6 +119,10 @@ extern "C" __declspec(dllexport) void application_render(Engine* engine, float d
 
 /*
 
+- [] remove common and put everything in the renderer
+	the renderer is agnostic so no types in there from opengl only handles
+- [] remove all constructors except for containers
+- [] remove hte type fromm handles, add TextureHandle and all that jazz as seperate structs.
 - [] remove gl_error_check in favor of the callback
 
 static void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
