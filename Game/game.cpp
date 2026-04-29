@@ -118,6 +118,8 @@ extern "C" __declspec(dllexport) void application_render(Engine* engine, float d
 // https://www.youtube.com/watch?v=QAeRxfeFAo0
 
 /*
+
+
 static void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
                                          GLsizei length, const GLchar* message, const void* user)
 {
@@ -144,6 +146,19 @@ enum RequestType {
 
 struct TextureRequest {
 	const char* path;
+};
+
+struct DrawMeshRequest {
+	PipelineHandle pipeline;
+	MeshHandle mesh; // mesh_entries, vao, vbo, ebo
+	Mat4 Model;
+	int instance_count;
+};
+
+struct DrawMeshEntryRequest {
+	PipelineHandle pipeline;
+	MeshEntryHandle mesh_entry; // material, vao, vbo, ebo
+	Mat4 Model;
 };
 
 struct Request {
@@ -198,6 +213,8 @@ struct OpenGL {
 
 	Registry<OpenGL::Texture, 256> textures;
 };
+
+OpenGL
 
 // RenderInterface.hpp
 // all the data you need for a draw call
