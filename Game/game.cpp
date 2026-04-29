@@ -138,11 +138,69 @@ glDebugMessageCallback(&gl_debug_callback, nullptr);
 // so I think that a lot of my problems stem from having to strictly type handles so maybe we can work on that to be easier
 // by removing the need for a handle to be templated, so its now just Handle
 
+enum RequestType {
+	TextureLoad
+};
 
+struct TextureRequest {
+	const char* path;
+};
+
+struct Request {
+	RequestType type;
+	union {
+		TextureRequest texture;
+	};
+
+	Handle handle;
+};
+
+Handle shader = 
+renderer.create_mesh(shader);
+
+struct TextureHandle {
+	Handle handle;
+};
+
+template<typename B>
+Renderer {
+	B backend;
+
+	TextureHandle create_textures(const char* path) {
+		Handle handle = backend.textures.acquire();
+		Request(TEXTURE_LOAD, handle);
+	
+		return MeshHandle(handle);
+	}
+
+	// after you do this it will go into the backend on the exe code not dll so no context issues.
+	// from there you could be able to call into the backend and do whatever weird thing you have to do.
+	grant_requets();
+
+	Vector<Request> requests;
+}
+
+struct OpenGL {
+	GLuint vao;
+	GLuint shader_program;
+	// depth all that jazz
+
+	struct Texture;
+
+	void handle_requst(Request& request) {
+		switch (request.type) {
+			case TEXTURE_LOAD: {
+				Texture::create(request.texture.path)
+			} break;
+		}
+	}
+
+	Registry<OpenGL::Texture, 256> textures;
+};
 
 // RenderInterface.hpp
 // all the data you need for a draw call
-struct RenderCommand {
+struct RenderPacket {
 	Material material;
 	Mat4 Model;
 }
