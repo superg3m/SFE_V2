@@ -363,6 +363,20 @@ struct OpenGL {
         ));
     }
 
+    void process_request(RenderRequest& request) {
+        switch (request.type) {
+            case TEXTURE_LOAD: {
+                Texture& texture = this->textures.get(request.handle);
+                texture = Texture::create(request.texture.path)
+            } break;
+
+            case TEXTURE_LOAD: {
+                Texture& texture = this->textures.get(request.handle);
+                texture = Texture::create(request.texture.path)
+            } break;
+        }
+    }
+
     s32 BOUND_VAO_ID = -1;
     s32 BOUND_PROGRAM_ID = -1;
     bool DEPTH_TEST = false;
