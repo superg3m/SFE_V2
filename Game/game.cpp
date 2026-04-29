@@ -8,10 +8,12 @@ struct AppState {
 	TextureHandle container_texture = TextureHandle::invalid();
 	TextureHandle face_texture = TextureHandle::invalid();
 
-
 	Pipeline opaque_pipeline = {};
+	Pipeline opaque_wireframe_pipeline = {};
 	bool use_opaque_pipeline = true;
 	float accumulator = 0.0;
+
+	Timer timer = {};
 };
 
 extern "C" __declspec(dllexport) void application_init(Engine* engine) {
@@ -39,6 +41,21 @@ extern "C" __declspec(dllexport) void application_init(Engine* engine) {
 			.enabled = false
 		}
 	};
+
+	app->opaque_wireframe_pipeline = Pipeline{
+		.rasterizer = {
+			.fill = false
+		},
+		.depth = {
+			.depth_testing = true,
+			.depth_write = true
+		},
+		.blend = {
+			.enabled = false
+		}
+	};
+
+	app->timer.start(5.0f);
 
 	//app.backpack_mesh_handle = engine->renderer.create_mesh_cube(model_shader, "../../../Game/Assets/Models/backpack/backpack.obj");
 }
@@ -97,7 +114,14 @@ extern "C" __declspec(dllexport) void application_render(Engine* engine, float d
 		{"uContainer", app->container_texture},
 		{"uFace", app->face_texture},
 	}, engine->frame_allocator});
-	engine->renderer.draw_mesh(app->opaque_pipeline, app->cube_mesh, model, view, projection);
+
+	if(app->timer.tick(dt)) {
+		app->use_opaque_pipeline = !app->use_opaque_pipeline;
+		app->timer.reset();
+	}
+
+	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
+	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection);
 
 	/*
 	Mesh backpack_mesh = engine->renderer.backend.meshes.get(app.backpack_mesh_handle);
