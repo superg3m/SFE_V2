@@ -65,7 +65,7 @@ struct OpenGL {
         void set_vec4(const char* name, const Vec4& value);
         void set_vec4(const char* name, float x, float y, float z, float w);
         void set_mat4(const char* name, const Mat4& mat);
-        void set_material(Material* material);
+        void set_material(OpenGL* backend, Material* material);
     private:
         Vector<const char*> shader_paths;
         Hashmap<const char*, UniformDesc> uniforms;
@@ -189,7 +189,7 @@ struct OpenGL {
         MaterialHandle material = MaterialHandle::invalid();
         AABB aabb = {};
 
-        static MeshEntry create(VertexLayout layout, Material material, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES);
+        static MeshEntry create(VertexLayout layout, MaterialHandle material, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES);
     };
 
     // mesh is just geometry the actual material is something you submit with it
@@ -200,11 +200,11 @@ struct OpenGL {
         Vector<MeshEntry> entries;
         AABB aabb;
 
-        // static Mesh create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
-        // static Mesh cube(MaterialHandle material);
-        // static Mesh axis_aligned_bounding_box(MaterialHandle material, AABB aabb);
-        // static Mesh axis_aligned_bounding_box(MaterialHandle material);
-        static Mesh load_from_file(OpenGL& backend, ShaderHandle shader_handle, const char* path);
+        static Mesh create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
+        static Mesh cube(MaterialHandle material);
+        static Mesh axis_aligned_bounding_box(MaterialHandle material, AABB aabb);
+        static Mesh axis_aligned_bounding_box(MaterialHandle material);
+        static Mesh load_from_file(OpenGL* backend, ShaderHandle shader_handle, const char* path);
 
     private:
         Vector<Vertex> vertices;
@@ -255,7 +255,7 @@ struct OpenGL {
                         Material& material = this->materials.get(mesh_entry.material.handle);
                         Shader& shader = this->shaders.get(material.shader.handle);
                         shader.use();
-                        shader.set_material(&material);
+                        shader.set_material(this, &material);
      
                         if (mesh_entry.index_count) {
                             this->draw_indices(mesh_entry.vertex_base, mesh_entry.index_base, mesh_entry.index_count, draw_call.instance_count);

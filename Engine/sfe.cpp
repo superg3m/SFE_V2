@@ -2,5 +2,6 @@
 #include "Platform/platform.cpp"
 #include "Input/input.cpp"
 #include "Renderer/renderer.cpp"
+#include "Renderer/OpenGL/backend.cpp"
 #include "Camera/camera.cpp"
 #include "engine.cpp"

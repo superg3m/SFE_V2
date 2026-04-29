@@ -157,7 +157,7 @@ namespace Platform {
 
 		FileTime ret = {0};
 		if (file_handle == INVALID_HANDLE_VALUE) {
-			LOG_ERROR("CreateFileA() returned an INVALID_HANDLE_VALUE, the file_path/path is likely wrong: platform_get_file_modification_time(%s)\n", file_path);
+			// LOG_ERROR("CreateFileA() returned an INVALID_HANDLE_VALUE, the file_path/path is likely wrong: platform_get_file_modification_time(%s)\n", file_path);
 			return ret;
 		}
 		

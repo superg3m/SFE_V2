@@ -1,6 +1,6 @@
 #include "backend.hpp"
 
-void OpenGL::CommandBuffer::bind_pipeline(OpenGL::Pipeline pipeline) {
+void OpenGL::CommandBuffer::bind_pipeline(Pipeline pipeline) {
 	if (pipeline.rasterizer.cull_enabled) {
 		gl_error_check(glEnable(GL_CULL_FACE));
 		gl_error_check(glCullFace(pipeline.rasterizer.cull_face_back ? GL_BACK : GL_FRONT));
@@ -26,10 +26,6 @@ void OpenGL::CommandBuffer::bind_pipeline(OpenGL::Pipeline pipeline) {
 	} else {
 		gl_error_check(glDisable(GL_BLEND));
 	}
-}
-
-void OpenGL::CommandBuffer::bind_vertex_array(OpenGL::VertexArrayObject vao) {
-	gl_error_check(glBindVertexArray(vao.id));
 }
 
 void OpenGL::CommandBuffer::bind_vertex_buffer(OpenGL::VertexBuffer vbo) {

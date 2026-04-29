@@ -60,7 +60,7 @@ INTERNAL_LINKAGE AABB calculate_aabb(Vector<Vertex>& vertices, int base_vertex, 
 	return AABB::from_center_extents(center, extents);
 }
 
-INTERNAL_LINKAGE void load_assimp_texture(OpenGL::Material& material, int i, const aiScene* scene, String directory, aiTextureType ai_texture_type, const char* name) {
+INTERNAL_LINKAGE void load_assimp_texture(OpenGL* backend, Material* material, int i, const aiScene* scene, String directory, aiTextureType ai_texture_type, const char* name) {
 	const aiMaterial* ai_material = scene->mMaterials[i];
 	if (ai_material->GetTextureCount(ai_texture_type) <= 0) {
 		return;
@@ -76,42 +76,44 @@ INTERNAL_LINKAGE void load_assimp_texture(OpenGL::Material& material, int i, con
 		String::append(filename, length, 512,  texture_path, String::cstr_length(texture_path));
 
 		const aiTexture* ai_texture = scene->GetEmbeddedTexture(str.C_Str());
+		Handle texture_handle = backend->textures.acquire();
+		OpenGL::Texture& texture = backend->textures.get(texture_handle);
 		if (ai_texture) {
 			int width, height, nrChannel = 0;
 			u8* image_data = stbi_load_from_memory((u8*)ai_texture->pcData, ai_texture->mWidth, &width, &height, &nrChannel, 0);
-			OpenGL::Texture texture = OpenGL::Texture::load_from_memory(ai_texture_type, image_data, width, height, nrChannel, {});
-
+			texture = OpenGL::Texture::load_from_memory(ai_texture_type, image_data, width, height, nrChannel, {});
 			LOG_DEBUG("Material: %d | has embedded Texture of type: %s\n", i, name);
-			material.set_uniform(name, texture);
 		} else {
 			LOG_DEBUG("Material: %d | has external texture of type: %s\n", i, name);
-			material.set_uniform(name, OpenGL::Texture::load_from_file(ai_texture_type, filename, {}));
+			texture = OpenGL::Texture::load_from_file(ai_texture_type, filename, {});
 		}
+
+		material->set_uniform(name, TextureHandle(texture_handle));
 	} else {
 		LOG_ERROR("Failed to get texture path for material: %d | type: %s\n", i, name);
 	}
 }
 
-OpenGL::MeshEntry OpenGL::MeshEntry::create(VertexLayout layout, Handle<OpenGL::Material> material_handle, Vector<Vertex>& vertex_data, Vector<u32> indices, u32 vertex_base, u32 index_base, GLenum draw_type) {
+OpenGL::MeshEntry OpenGL::MeshEntry::create(VertexLayout layout, MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices, u32 vertex_base, u32 index_base, GLenum draw_type) {
     MeshEntry ret = {};
     ret.draw_type = draw_type;
-    ret.vertex_count = (vertex_data.count * sizeof(Vertex)) / layout.stride;
+    ret.vertex_count = (vertices.count * sizeof(Vertex)) / layout.stride;
     ret.index_count = indices.count;
     ret.vertex_base  = vertex_base;
     ret.index_base   = index_base;
-    ret.material_handle = material_handle;
-    ret.aabb = calculate_aabb(vertex_data, vertex_base, ret.vertex_count);
+    ret.material = material;
+    ret.aabb = calculate_aabb(vertices, vertex_base, ret.vertex_count);
 
     return ret;
 }
 
-OpenGL::MeshEntry OpenGL::Mesh::process_mesh(Hashmap<int, Handle<Material>>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform) {
+OpenGL::MeshEntry OpenGL::Mesh::process_mesh(Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform) {
     OpenGL::MeshEntry entry = {};
     entry.vertex_base = (unsigned int)this->vertices.count;
     entry.index_base = (unsigned int)this->indices.count;
     entry.index_count = ai_mesh->mNumFaces * 3;
     entry.vertex_count = ai_mesh->mNumVertices;
-    entry.material_handle = map.get(ai_mesh->mMaterialIndex);
+    entry.material = map.get(ai_mesh->mMaterialIndex);
     unsigned int meshPrimitiveType;
     if (ai_mesh->mPrimitiveTypes & aiPrimitiveType_POINT) {
         meshPrimitiveType = 1;
@@ -175,7 +177,7 @@ OpenGL::MeshEntry OpenGL::Mesh::process_mesh(Hashmap<int, Handle<Material>>& map
     return entry;
 }
 
-void OpenGL::Mesh::process_node(Hashmap<int, Handle<Material>>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform) {
+void OpenGL::Mesh::process_node(Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform) {
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         RUNTIME_ASSERT_MSG(mesh->mPrimitiveTypes != 0, "Primitive type not set by ASSIMP in mesh.\n");
@@ -210,17 +212,17 @@ void OpenGL::Mesh::setup() {
 }
 
 
-OpenGL::Mesh OpenGL::Mesh::create(Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indices, GLenum draw_type, u32 vertex_base, u32 index_base ) {
-	Mesh ret = {};
+OpenGL::Mesh OpenGL::Mesh::create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices, GLenum draw_type, u32 vertex_base, u32 index_base ) {
+	OpenGL::Mesh ret = {};
     ret.vertices = vertices;
     ret.indices = indices;
-    ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material_handle, vertices, indices, vertex_base, index_base, draw_type));
+    ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material, vertices, indices, vertex_base, index_base, draw_type));
     ret.setup();
 	
 	return ret;
 }
 
-OpenGL::Mesh OpenGL::Mesh::cube(Handle<Material> material_handle) {
+OpenGL::Mesh OpenGL::Mesh::cube(MaterialHandle material) {
 	Vector<Vertex> cube_vertices = {
 		// Front face
 		Vertex{Vec3(-1.0f, -1.0f, -1.0f), Vec3(0, 0, -1), Vec2(0, 0)},
@@ -272,13 +274,13 @@ OpenGL::Mesh OpenGL::Mesh::cube(Handle<Material> material_handle) {
 	Mesh ret;
 	ret.vertices = cube_vertices;
 	ret.indices = cube_indices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material_handle, ret.vertices, ret.indices, 0, 0, GL_TRIANGLES));
+	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material, ret.vertices, ret.indices, 0, 0, GL_TRIANGLES));
     ret.setup();
 
 	return ret;
 }
 
-OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_handle, AABB aabb) {
+OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material, AABB aabb) {
 	// Vec3 center = aabb.getCenter();
 	Vec3 extents = aabb.extents();
 	float length = extents.x * 2.0f;
@@ -326,13 +328,13 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_h
 
 	Mesh ret;
 	ret.vertices = aabb_vertices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material_handle, ret.vertices, ret.indices, 0, 0, GL_LINES));  
+	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material, ret.vertices, ret.indices, 0, 0, GL_LINES));  
 	ret.setup();
 
 	return ret;
 }
 
-OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_handle) {
+OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material) {
 	Vector<Vertex> aabb_vertices = {
 		// Bottom face
 		Vertex{Vec3(-0.5f, -0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3( 0.5f, -0.5f, -0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
@@ -355,13 +357,13 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(Handle<Material> material_h
 
 	Mesh ret;
 	ret.vertices = aabb_vertices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material_handle, ret.vertices, ret.indices, 0, 0, GL_LINES));
+	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material, ret.vertices, ret.indices, 0, 0, GL_LINES));
     ret.setup();
 
 	return ret;
 }
 
-OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL& backend, Handle<OpenGL::Shader> shader_handle, const char* path) {
+OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, ShaderHandle shader, const char* path) {
 	Mesh ret = {};
 	Assimp::Importer importer;
 	unsigned int assimp_flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;
@@ -388,13 +390,13 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL& backend, Handle<OpenGL::Shader
 	}
 
 	String directory = String(path, index);
-    Hashmap<int, Handle<Material>> material_index_to_material_handle = {};
+    Hashmap<int, MaterialHandle> material_index_to_material_handle = {};
 	for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
 		const aiMaterial* ai_material = scene->mMaterials[i];
-		Handle<Material> material_handle = backend.materials.acquire();
-		OpenGL::Material& material = backend.materials.get(material_handle);
-        material.shader_handle = shader_handle;
-		load_assimp_texture(material, i, scene, directory, aiTextureType_DIFFUSE, Material::DIFFUSE_TEXTURE);
+		Handle material_handle = backend->materials.acquire();
+		Material& material = backend->materials.get(material_handle);
+        material.shader = shader;
+		load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_DIFFUSE, Material::DIFFUSE_TEXTURE);
 
 		/*
 		aiColor4D ambient_color(0.0f, 0.0f, 0.0f, 0.0f);
@@ -427,7 +429,7 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL& backend, Handle<OpenGL::Shader
 		}
 		*/
 
-        material_index_to_material_handle.put(i, material_handle);
+        material_index_to_material_handle.put(i, MaterialHandle(material_handle));
 	}
 
 	ret.process_node(material_index_to_material_handle, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));

@@ -197,10 +197,10 @@ void OpenGL::Shader::set_mat4(const char* name, const Mat4& mat) {
     gl_error_check(glUniformMatrix4fv(this->get_uniform_location(name, GL_FLOAT_MAT4), 1, GL_TRUE, &mat.v[0].x));
 }
 
-void OpenGL::Shader::set_material(Material* material) {
+void OpenGL::Shader::set_material(OpenGL* backend, Material* material) {
     for (const auto entry : material->bindings) {
         const char* k = entry.key; 
-        OpenGL::BindingValue v = entry.value;
+        BindingValue v = entry.value;
 
         switch (v.type) {
             case BindingValueType::BOOL: {
@@ -216,11 +216,13 @@ void OpenGL::Shader::set_material(Material* material) {
             } break;
 
             case BindingValueType::SAMPLER_2D: {
-                this->set_texture(k, v.texture_binding);
+                Texture& texture = backend->textures.get(v.texture_binding.handle);
+                this->set_texture(k, texture);
             } break;
 
             case BindingValueType::CUBEMAP: {
-                this->set_texture_cube(k, v.texture_binding);
+                Texture& texture = backend->textures.get(v.texture_binding.handle);
+                this->set_texture_cube(k, texture);
             } break;
 
             case BindingValueType::VECTOR2: {

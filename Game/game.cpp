@@ -27,6 +27,10 @@ extern "C" __declspec(dllexport) void application_update(Engine* engine, float d
 		glfwSetInputMode(engine->window, GLFW_CURSOR, engine->mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 	}
 
+	if (engine->input.get_key_pressed(KEY_V)) {
+		LOG_WARN("Ws\n");
+	}
+
 	if (engine->input.get_key(KEY_SPACE, PRESSED|DOWN)) {
 		engine->camera.process_keyboard(CameraDirection::UP, dt);
 	}
