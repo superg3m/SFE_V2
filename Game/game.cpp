@@ -190,6 +190,7 @@ struct OpenGL {
 	void handle_requst(Request& request) {
 		switch (request.type) {
 			case TEXTURE_LOAD: {
+				Texture& texture = backend.textures.get(request.handle);
 				Texture::create(request.texture.path)
 			} break;
 		}
