@@ -1,5 +1,7 @@
 #include "engine.hpp"
 
+extern Engine* engine;
+
 int main() {
 	constexpr int PROGRAM_MEMORY_CAPACITY = KB(250);
 	u8 program_memory[PROGRAM_MEMORY_CAPACITY];
@@ -16,25 +18,26 @@ int main() {
 	Arena frame_arena = Arena::fixed(frame_memory, FRAME_MEMORY_CAPACITY);
 	Allocator frame_arena_allocator = frame_arena.to_allocator();
 
-	Engine engine = {};
-	if (!engine.init(permanent_arena_allocator, frame_arena_allocator)) {
+	engine = (Engine*)permanent_arena_allocator.malloc(sizeof(Engine), alignof(Engine));
+	*engine = {}; 
+	if (!engine->init(permanent_arena_allocator, frame_arena_allocator)) {
 		return -1;
 	}
 
 	float dt = 0.0f;
 	float previous_time = glfwGetTime();
 	float accumulator = 0.0f;
-	while (!glfwWindowShouldClose(engine.window)) {
+	while (!glfwWindowShouldClose(engine->window)) {
 		Temp frame_temp = Temp::begin(&frame_arena);
 			float current_time = glfwGetTime();
 			dt = current_time - previous_time;
 			previous_time = current_time;
 			accumulator += dt * 10;
 
-			engine.update(dt);
-			engine.render(dt);
+			engine->update(dt);
+			engine->render(dt);
 
-			glfwSwapBuffers(engine.window);
+			glfwSwapBuffers(engine->window);
 			glfwPollEvents();
 		frame_temp.end();
 	}

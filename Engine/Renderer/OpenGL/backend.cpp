@@ -4,7 +4,6 @@
 #include "texture.cpp"
 #include "command_buffer.cpp"
 #include "shader.cpp"
-#include "material.cpp"
 #include "mesh.cpp"
 
 #include <float.h>

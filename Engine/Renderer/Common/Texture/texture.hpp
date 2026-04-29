@@ -1,3 +1,5 @@
+#pragma once
+
 enum class TextureSamplerType {
 	SAMPLER_2D,
 	CUBEMAP_3D

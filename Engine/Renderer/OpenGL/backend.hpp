@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../common.hpp"
+#include "../Common/common.hpp"
 #include <glad/glad.h>
 #include <concepts>
 
@@ -20,11 +20,11 @@ void bind_vertex_attribute(int location, u32 stride, VertexAttribute attribute);
 
 struct OpenGL {
     struct Texture {
-        u32 texture_unit = 505;
+        u32 texture_unit = INT_MAX;
         u32 id = 0;
         u32 width = 0;
         u32 height = 0;
-        u8* data = nullptr; // if you use should_free = false then you must free this yourself with free_data()
+        u8* data = nullptr;
         TextureSamplerType type = TextureSamplerType::SAMPLER_2D;
 
         static void flip_vertically_in_place(u8* data, int width, int height);
@@ -33,13 +33,11 @@ struct OpenGL {
         static Texture load_cube_map(u32 texture_unit, Vector<const char*> cube_map_texture_paths);
     };
 
-    struct RenderState;
     struct UniformDesc {
         GLenum type;
         int location;
     };
 
-    struct Material;
     struct Shader {
         unsigned int program_id = 0;
         Shader() = default;
@@ -67,7 +65,7 @@ struct OpenGL {
         void set_vec4(const char* name, const Vec4& value);
         void set_vec4(const char* name, float x, float y, float z, float w);
         void set_mat4(const char* name, const Mat4& mat);
-        void set_material(OpenGL::Material* material);
+        void set_material(Material* material);
     private:
         Vector<const char*> shader_paths;
         Hashmap<const char*, UniformDesc> uniforms;
@@ -78,132 +76,6 @@ struct OpenGL {
         unsigned int shader_source_compile(const char* path);
         unsigned int get_uniform_location(const char* name, GLenum type);
     };
-
-    struct BindingValue {
-        BindingValueType type;
-        union {
-            bool boolean_binding;
-            int integer_binding;
-            float float_binding;
-            Texture texture_binding; // can be sampler to cubemap
-            Handle<Texture> texture_handle;
-            Vec2 vector2_binding;
-            Vec3 vector3_binding;
-            Vec4 vector4_binding;
-            Mat4 mat4_binding;
-        };
-
-        template<typename T>
-        BindingValue(T value) {
-            if constexpr (std::is_same_v<T, bool>) {
-                this->type = BindingValueType::BOOL;
-                this->boolean_binding = value;
-            } else if constexpr (std::is_same_v<T, int>) {
-                this->type = BindingValueType::INTEGER;
-                this->integer_binding = value;
-            } else if constexpr (std::is_same_v<T, float>) {
-                this->type = BindingValueType::FLOAT;
-                this->float_binding = value;
-            } else if constexpr (std::is_same_v<T, Handle<Texture>>) {
-                this->type = BindingValueType::TEXTURE_HANDLE;
-                this->texture_handle = value;
-            } else if constexpr (std::is_same_v<T, Texture>) {
-                if (value.type == TextureSamplerType::SAMPLER_2D) {
-                    this->type = BindingValueType::SAMPLER_2D;
-                    this->texture_binding = value;
-                } else if (value.type == TextureSamplerType::CUBEMAP_3D) {
-                    this->type = BindingValueType::CUBEMAP;
-                    this->texture_binding = value;
-                }
-            } else if constexpr (std::is_same_v<T, Vec2>) {
-                this->type = BindingValueType::VECTOR2;
-                this->vector2_binding = value;
-            } else if constexpr (std::is_same_v<T, Vec3>) {
-                this->type = BindingValueType::VECTOR3;
-                this->vector3_binding = value;
-            } else if constexpr (std::is_same_v<T, Vec4>) {
-                this->type = BindingValueType::VECTOR4;
-                this->vector4_binding = value;
-            } else if constexpr (std::is_same_v<T, Mat4>) {
-                this->type = BindingValueType::MAT4;
-                this->mat4_binding = value;
-            } else {
-                STATIC_ASSERT(false, "Unsupported BindingValue type");
-            }
-        }
-    };
-
-    struct Material {
-        static constexpr const char* DIFFUSE_TEXTURE = "uDiffuseTexture"; // texture unit = aiTextureType_DIFFUSE
-
-        Handle<OpenGL::Shader> shader_handle = Handle<OpenGL::Shader>::invalid();
-        Hashmap<const char*, BindingValue> bindings;
-
-        Material() = default;
-        Material(Handle<OpenGL::Shader> shader_handle) {
-            this->shader_handle = shader_handle;
-        }
-
-        void set_uniform(const char* name, BindingValue value) {
-            switch (value.type) {
-                case BindingValueType::BOOL: {
-                    this->set_bool(name, value.boolean_binding);
-                } break;
-
-                case BindingValueType::INTEGER: {
-                    this->set_int(name, value.integer_binding);
-                } break;
-
-                case BindingValueType::FLOAT: {
-                    this->set_float(name, value.float_binding);
-                } break;
-
-                case BindingValueType::TEXTURE_HANDLE: {
-                    RUNTIME_ASSERT(false);
-                } break;
-
-                case BindingValueType::SAMPLER_2D:
-                case BindingValueType::CUBEMAP: {
-                    this->set_texture(name, value.texture_binding);
-                } break;
-
-                case BindingValueType::VECTOR2: {
-                    this->set_vec2(name, value.vector2_binding);
-                } break;
-
-                case BindingValueType::VECTOR3: {
-                    this->set_vec3(name, value.vector3_binding);
-                } break;
-
-                case BindingValueType::VECTOR4: {
-                    this->set_vec4(name, value.vector4_binding);
-                } break;
-
-                case BindingValueType::MAT4: {
-                    this->set_mat4(name, value.mat4_binding);
-                } break;
-            }
-        }
-        void set_bool(const char* name, bool value);
-        void set_int(const char* name, int value);
-        void set_float(const char* name, float value);
-        void set_texture(const char* name, Texture texture);
-        void set_vec2(const char* name, const Vec2& value);
-        void set_vec2(const char* name, float x, float y);
-        void set_vec3(const char* name, const Vec3& value);
-        void set_vec3(const char* name, float x, float y, float z);
-        void set_vec4(const char* name, const Vec4& value);
-        void set_vec4(const char* name, float x, float y, float z, float w);
-        void set_mat4(const char* name, const Mat4& mat);
-    };
-
-    struct Pipeline {
-		RasterizerState rasterizer;
-		DepthState depth;
-		BlendState blend;
-		
-		static Pipeline create(PipelineDescriptor desc);
-	};
 
     struct VertexArrayObject {
         u32 id;
@@ -298,8 +170,7 @@ struct OpenGL {
     };
 
 	struct CommandBuffer {
-		void bind_pipeline(OpenGL::Pipeline pipeline);
-        void bind_vertex_array(OpenGL::VertexArrayObject vao);
+		void bind_pipeline(Pipeline pipeline);
 		void bind_vertex_buffer(VertexBuffer vbo);
 		void bind_index_buffer(IndexBuffer ebo);
 		void draw_vertices(u32 vertex_base, u32 vertex_count);
@@ -311,15 +182,14 @@ struct OpenGL {
 
     struct MeshEntry {
         GLenum draw_type = GL_TRIANGLES;
-        // Handle<VertexArrayObject> vao_handle = Handle<VertexArrayObject>::invalid();
         u32 vertex_count = 0;
         u32 index_count  = 0;
         u32 vertex_base  = 0; // starting offset to next vertex in the vertex buffer
         u32 index_base   = 0; // offset to next index in the index buffer
-        Handle<OpenGL::Material> material_handle = Handle<OpenGL::Material>::invalid();
+        MaterialHandle material = MaterialHandle::invalid();
         AABB aabb = {};
 
-        static MeshEntry create(VertexLayout layout, Handle<OpenGL::Material> material_handle, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES);
+        static MeshEntry create(VertexLayout layout, Material material, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES);
     };
 
     // mesh is just geometry the actual material is something you submit with it
@@ -330,19 +200,73 @@ struct OpenGL {
         Vector<MeshEntry> entries;
         AABB aabb;
 
-        static Mesh create(Handle<Material> material_handle, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
-        static Mesh cube(Handle<Material> material_handle);
-        static Mesh axis_aligned_bounding_box(Handle<Material> material_handle, AABB aabb);
-        static Mesh axis_aligned_bounding_box(Handle<Material> material_handle);
-        static Mesh load_from_file(OpenGL& backend, Handle<Shader> shader_handle, const char* path);
+        // static Mesh create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
+        // static Mesh cube(MaterialHandle material);
+        // static Mesh axis_aligned_bounding_box(MaterialHandle material, AABB aabb);
+        // static Mesh axis_aligned_bounding_box(MaterialHandle material);
+        static Mesh load_from_file(OpenGL& backend, ShaderHandle shader_handle, const char* path);
 
     private:
         Vector<Vertex> vertices;
         Vector<u32> indices;
-        void process_node(Hashmap<int, Handle<Material>>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform);
-        MeshEntry process_mesh(Hashmap<int, Handle<Material>>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
+        void process_node(Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform);
+        MeshEntry process_mesh(Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
         void setup();
     };
+
+    void resolve_requests(Vector<Request>& requests, Allocator frame_allocator) {
+        Hashmap<Pipeline, Vector<DrawCallRequest>> draw_calls_map = Hashmap<Pipeline, Vector<DrawCallRequest>>(frame_allocator);
+        for (Request& request : requests) {
+            switch (request.type) {
+                case RequestType::TEXTURE2D_LOAD: {
+                    Texture& texture = this->textures.get(request.handle);
+                    texture = Texture::load_from_file(request.texture.texture_unit, request.texture.path, request.texture.description);
+                } break;
+
+                case RequestType::TEXTURE3D_LOAD: {
+                    Texture& texture = this->textures.get(request.handle);
+                    texture = Texture::load_cube_map(request.texture.texture_unit, request.texture.cubemap_paths);
+                } break;
+
+                case RequestType::DRAW_CALL: {
+                    if (draw_calls_map.has(request.draw_call.pipeline)) {
+                        draw_calls_map[request.draw_call.pipeline].append(request.draw_call);
+                    } else {
+                        Vector<DrawCallRequest> vector = Vector<DrawCallRequest>({request.draw_call}, frame_allocator);
+                        draw_calls_map.put(request.draw_call.pipeline, vector);
+                    }
+                } break;
+            }
+        }
+
+        // eventually do every frame_buffer as well...
+        // NOTE(Jovanni): this isn't techinally right because I want to be able to order the pipelines
+        // for example opaques should draw before transparent ones. ANd also transparent ones hould be sorted...
+        CommandBuffer cmd = {};
+        cmd.begin_frame();
+            for (auto& entry : draw_calls_map) {
+                Pipeline& pipeline = entry.key;
+                Vector<DrawCallRequest>& draw_calls = entry.value;
+                cmd.bind_pipeline(pipeline);
+                for (DrawCallRequest& draw_call : draw_calls) {
+                    Mesh& mesh = this->meshes.get(draw_call.mesh.handle);
+                    mesh.vao.bind();
+                    for (MeshEntry& mesh_entry : mesh.entries) {
+                        Material& material = this->materials.get(mesh_entry.material.handle);
+                        Shader& shader = this->shaders.get(material.shader.handle);
+                        shader.use();
+                        shader.set_material(&material);
+     
+                        if (mesh_entry.index_count) {
+                            this->draw_indices(mesh_entry.vertex_base, mesh_entry.index_base, mesh_entry.index_count, draw_call.instance_count);
+                        } else {
+                            this->draw_vertices(mesh_entry.vertex_base, mesh_entry.vertex_count, draw_call.instance_count);
+                        }
+                    }
+                }
+            }
+        cmd.end_frame();
+    }
 
     // TODO(Jovanni): For now just allow triangles, but later parameterize this? TRY INSTANCE STUF AGQAIN WIHT THE COUNT
     void draw_vertices(u32 vertex_base, u32 vertex_count, u32 instance_count = 1) {
@@ -363,20 +287,6 @@ struct OpenGL {
         ));
     }
 
-    void process_request(RenderRequest& request) {
-        switch (request.type) {
-            case TEXTURE_LOAD: {
-                Texture& texture = this->textures.get(request.handle);
-                texture = Texture::create(request.texture.path)
-            } break;
-
-            case TEXTURE_LOAD: {
-                Texture& texture = this->textures.get(request.handle);
-                texture = Texture::create(request.texture.path)
-            } break;
-        }
-    }
-
     s32 BOUND_VAO_ID = -1;
     s32 BOUND_PROGRAM_ID = -1;
     bool DEPTH_TEST = false;
@@ -386,13 +296,12 @@ struct OpenGL {
     int DRAW_CALL_COUNT = 0;
 
     Registry<OpenGL::Texture, 256> textures;
-	Registry<OpenGL::Pipeline, 256> pipelines;
+    Registry<Material, 256> materials;
 	Registry<OpenGL::Shader, 256> shaders;
 	Registry<OpenGL::VertexArrayObject, 256> vaos;
 	Registry<OpenGL::VertexBuffer, 256> vbos;
 	Registry<OpenGL::IndexBuffer, 256> ebos;
 	Registry<OpenGL::CommandBuffer, 256> command_buffers;
-	Registry<OpenGL::Material, 256> materials;
 	Registry<OpenGL::MeshEntry, 256> mesh_entries;
 	Registry<OpenGL::Mesh, 256> meshes;
 };

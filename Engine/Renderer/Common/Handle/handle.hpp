@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../../../Core/core.hpp"
 
 struct CommandBufferHandle {
@@ -14,13 +16,6 @@ struct TextureHandle {
 	}
 };
 
-struct ShaderHandle {
-    Handle handle = Handle::invalid();
-	static ShaderHandle invalid() {
-		return {};
-	}
-};
-
 struct MaterialHandle {
     Handle handle = Handle::invalid();
 	static MaterialHandle invalid() {
@@ -28,16 +23,16 @@ struct MaterialHandle {
 	}
 };
 
-struct MeshHandle {
+struct ShaderHandle {
     Handle handle = Handle::invalid();
-	static MeshHandle invalid() {
+	static ShaderHandle invalid() {
 		return {};
 	}
 };
 
-struct MeshEntryHandle {
+struct MeshHandle {
     Handle handle = Handle::invalid();
-	static MeshEntryHandle invalid() {
+	static MeshHandle invalid() {
 		return {};
 	}
 };
@@ -52,13 +47,6 @@ struct VertexBufferHandle {
 struct IndexBufferHandle {
     Handle handle = Handle::invalid();
 	static IndexBufferHandle invalid() {
-		return {};
-	}
-};
-
-struct PipelineHandle {
-    Handle handle = Handle::invalid();
-	static PipelineHandle invalid() {
 		return {};
 	}
 };

@@ -5,6 +5,31 @@ INTERNAL_LINKAGE const char* dll_name = "game.dll";
 INTERNAL_LINKAGE const char* temp_dll_name = "application_temp.dll";
 INTERNAL_LINKAGE Platform::FileTime last_write_time = {};
 
+Engine* engine = nullptr;
+
+void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
+	static bool first = true;
+	static float last_mouse_x;
+	static float last_mouse_y;
+
+	if (first) {
+		last_mouse_x = mouse_x;
+		last_mouse_y = mouse_y;
+		first = false;
+		return;
+	}
+
+	float xoffset = mouse_x - last_mouse_x;
+	float yoffset = last_mouse_y - mouse_y;
+
+	last_mouse_x = mouse_x;
+	last_mouse_y = mouse_y;
+
+	if (engine->mouse_captured) {
+		engine->camera.process_mouse_movement(xoffset, yoffset);
+	}
+}
+
 void load_application_function_pointers(ApplicationInitalizeFunc** application_init, ApplicationUpdateFunc** application_update, ApplicationRenderFunc** application_render) {
     if (dll) {
         Platform::free_dll(dll);
@@ -31,8 +56,8 @@ void load_application_function_pointers(ApplicationInitalizeFunc** application_i
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int frame_buffer_width, int frame_buffer_height) {
-    Renderer::FRAME_BUFFER_WIDTH  = frame_buffer_width;
-    Renderer::FRAME_BUFFER_HEIGHT = frame_buffer_height;
+    engine->renderer.FRAME_BUFFER_WIDTH  = frame_buffer_width;
+    engine->renderer.FRAME_BUFFER_HEIGHT = frame_buffer_height;
     glViewport(0, 0, frame_buffer_width, frame_buffer_height);
 
 	// seems like this will be a constant battle might just be worth making renderer and engine a singleton...
@@ -40,8 +65,54 @@ void framebuffer_size_callback(GLFWwindow* window, int frame_buffer_width, int f
 }
 
 void window_size_callback(GLFWwindow* window, int window_width, int window_height) {
-    Renderer::WINDOW_WIDTH = window_width;
-    Renderer::WINDOW_HEIGHT = window_height;
+    engine->renderer.WINDOW_WIDTH = window_width;
+    engine->renderer.WINDOW_HEIGHT = window_height;
+}
+
+void APIENTRY glDebugOutput(GLenum source, GLenum type, unsigned int id, GLenum severity, GLsizei length, const char *message, const void *userParam) {
+    // ignore non-significant error/warning codes
+    if(id == 131169 || id == 131185 || id == 131218 || id == 131204) return; 
+
+	LOG_DEBUG("------- Debug Message(%d): %s --------\n", id, message);
+    switch (source)
+    {
+        case GL_DEBUG_SOURCE_API:             std::cout << "Source: API"; break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   std::cout << "Source: Window System"; break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER: std::cout << "Source: Shader Compiler"; break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:     std::cout << "Source: Third Party"; break;
+        case GL_DEBUG_SOURCE_APPLICATION:     std::cout << "Source: Application"; break;
+        case GL_DEBUG_SOURCE_OTHER:           std::cout << "Source: Other"; break;
+    } std::cout << std::endl;
+
+    switch (type)
+    {
+        case GL_DEBUG_TYPE_ERROR:               std::cout << "Type: Error"; break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: std::cout << "Type: Deprecated Behaviour"; break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  std::cout << "Type: Undefined Behaviour"; break; 
+        case GL_DEBUG_TYPE_PORTABILITY:         std::cout << "Type: Portability"; break;
+        case GL_DEBUG_TYPE_PERFORMANCE:         std::cout << "Type: Performance"; break;
+        case GL_DEBUG_TYPE_MARKER:              std::cout << "Type: Marker"; break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:          std::cout << "Type: Push Group"; break;
+        case GL_DEBUG_TYPE_POP_GROUP:           std::cout << "Type: Pop Group"; break;
+        case GL_DEBUG_TYPE_OTHER:               std::cout << "Type: Other"; break;
+    } std::cout << std::endl;
+    
+    switch (severity)
+    {
+        case GL_DEBUG_SEVERITY_HIGH:         std::cout << "Severity: high"; break;
+        case GL_DEBUG_SEVERITY_MEDIUM:       std::cout << "Severity: medium"; break;
+        case GL_DEBUG_SEVERITY_LOW:          std::cout << "Severity: low"; break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION: std::cout << "Severity: notification"; break;
+    } std::cout << std::endl;
+    std::cout << std::endl;
+}
+
+INTERNAL_LINKAGE void gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* user) {
+	if(severity == GL_DEBUG_SEVERITY_LOW ||  severity == GL_DEBUG_SEVERITY_MEDIUM || severity == GL_DEBUG_SEVERITY_HIGH) {
+		RUNTIME_ASSERT(false, "OpenGL Error: %s", message);
+	} else {
+		LOG_DEBUG(message);
+	}
 }
 
 GLFWwindow* GLFW_INIT(const int WIDTH, const int HEIGHT) {
@@ -74,6 +145,9 @@ GLFWwindow* GLFW_INIT(const int WIDTH, const int HEIGHT) {
 	glfwSwapInterval(1);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
+
+	glDebugMessageCallback(&gl_debug_callback, nullptr);
+
 	gl_error_check(glEnable(GL_MULTISAMPLE));
 	// glEnable(GL_CULL_FACE);
 	// glCullFace(GL_FRONT); 
@@ -86,9 +160,14 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 	this->permenant_allocator = permenant_allocator;
 	this->frame_allocator = frame_allocator;
 
-	this->renderer = Renderer::create(this->permenant_allocator, this->frame_allocator);
-	this->window = GLFW_INIT(Renderer::WINDOW_WIDTH, Renderer::WINDOW_HEIGHT);
+	this->renderer = Renderer<OpenGL>::create(this->permenant_allocator, this->frame_allocator);
+	this->window = GLFW_INIT(this->renderer.WINDOW_WIDTH, this->renderer.WINDOW_HEIGHT);
 	if (!this->window) {
+		return false;
+	}
+
+	this->input.init(engine->permenant_allocator);
+	if (!INPUT_GLFW_SETUP(&this->input, this->window, nullptr, nullptr, mouse)) {
 		return false;
 	}
 
@@ -114,5 +193,5 @@ void Engine::render(float dt) {
 	if (this->application_render) application_render(this, dt);
 	this->reloaded_dll = false;
 	
-	this->renderer.draw(this->frame_allocator);
+	this->renderer.backend.resolve_requests(this->renderer.requests, this->frame_allocator);
 }

@@ -1,24 +1,52 @@
+#pragma once
+
 #include "../Handle/handle.hpp"
 #include "../Texture/texture.hpp"
+#include "../Vertex/vertex.hpp"
 
 enum class RequestType {
 	MESH_LOAD,
 	MESH_CUBE,
 	MESH_AABB,
 
-	TEXTURE_LOAD,
+	TEXTURE2D_LOAD,
+	TEXTURE3D_LOAD,
+	VBO_CREATE,
+	VBO_UPDATE,
+	EBO_UPDATE,
 
 	DRAW_CALL
 };
 
 struct TextureRequest {
-	const char* path;
-	TextureDescription description;
+    u32 texture_unit = INT_MAX;
+    const char* path = nullptr;
+	TextureDescription description = {};
+    Vector<const char*> cubemap_paths = {};
+};
+
+//  buffer.count * sizeof(T), buffer.data,
+struct VertexBufferRequest {
+    MeshHandle mesh_handle = MeshHandle::invalid();
+    VertexLayout layout = {};
+    void* data = nullptr; // make copy and free? would be easiest
+    size_t count = 0;
+    size_t element_size = 0; // sizeof(T)
+    bool dynamic = false;
+    size_t offset = 0;
+};
+
+//  buffer.count * sizeof(T), buffer.data,
+struct IndexBufferRequest {
+    MeshHandle mesh_handle = MeshHandle::invalid();
+    u32* data = nullptr;
+    size_t count = 0;
+    bool dynamic = false;
 };
 
 struct DrawCallRequest {
-	PipelineHandle pipeline;
-	MeshHandle mesh; // mesh_entries, vao, vbo, ebo
+	Pipeline pipeline;
+	MeshHandle mesh; // mesh_entries, vao, vbo, ebo, material
 	Mat4 Model;
 	int instance_count;
 };
@@ -27,21 +55,9 @@ struct Request {
 	RequestType type;
 	union {
 		TextureRequest texture;
-		DrawCallRequest  draw_call;
+        VertexBufferRequest vbo;
+		DrawCallRequest draw_call;
 	};
-
-	template<typename T>
-    Request(T value) {
-        if constexpr (std::is_same_v<T, TextureRequest>) {
-            this->type = RequestType::TEXTURE_LOAD;
-			this->texture = texture;
-        } else if constexpr (std::is_same_v<T, DrawCallRequest>) {
-            this->type = RequestType::TEXTURE_LOAD;
-			this->texture = texture;
-        } else {
-            STATIC_ASSERT(false, "Unsupported BindingValue type");
-        }
-    }
 
 	Handle handle;
 };

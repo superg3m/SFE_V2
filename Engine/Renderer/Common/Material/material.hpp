@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../../../Core/core.hpp"
 #include "../Handle/handle.hpp"
 
@@ -13,7 +15,6 @@ enum class BindingValueType {
 	VECTOR4,
 	MAT4,
 };
-
 
 struct BindingValue {
     BindingValueType type;
@@ -39,9 +40,9 @@ struct BindingValue {
         } else if constexpr (std::is_same_v<T, float>) {
             this->type = BindingValueType::FLOAT;
             this->float_binding = value;
-        } else if constexpr (std::is_same_v<T, Handle<Texture>>) {
+        } else if constexpr (std::is_same_v<T, TextureHandle>) {
             this->type = BindingValueType::TEXTURE_HANDLE;
-            this->texture_handle = value;
+            this->texture_binding = value;
         } else if constexpr (std::is_same_v<T, Vec2>) {
             this->type = BindingValueType::VECTOR2;
             this->vector2_binding = value;

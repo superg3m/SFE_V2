@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sfe.hpp"
+#include "Renderer/OpenGL/backend.hpp"
 
 struct Engine;
 typedef void(ApplicationInitalizeFunc)(Engine* engine);
@@ -9,9 +10,11 @@ typedef void(ApplicationRenderFunc)(Engine* engine, float dt);
 
 struct Engine {
 	GLFWwindow* window;
+	Renderer<OpenGL> renderer;
 	Input input;
-	Renderer renderer;
 
+	Camera camera = Camera(0, 1, 10);
+	bool mouse_captured = false;
 	bool reloaded_dll;
 	void* application_state;
 

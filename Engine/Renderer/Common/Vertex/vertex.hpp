@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../../Core/core.hpp"
 
 // NOTE(Jovanni): this is size in float

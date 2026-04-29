@@ -1,3 +1,5 @@
+#pragma once
+
 struct DepthState {
 	bool depth_testing = true;
 	bool depth_write = true;
@@ -17,14 +19,21 @@ struct RasterizerState {
 	bool fill = true;
 };
 
-struct PipelineDescriptor {
+struct Pipeline {
 	RasterizerState rasterizer;
 	DepthState depth;
 	BlendState blend;
+	
+	static Pipeline create(RasterizerState rasterizer, DepthState depth, BlendState blend) {
+		Pipeline ret = {};
+		ret.rasterizer = rasterizer;
+		ret.depth = depth;
+		ret.blend = blend;
 
-	PipelineDescriptor(RasterizerState rasterizer, DepthState depth, BlendState blend) {
-		this->rasterizer = rasterizer;
-		this->depth = depth;
-		this->blend = blend;
+		return ret;
+	}
+
+	bool operator==(Pipeline& other) const {
+		return Memory::equal(this, sizeof(Pipeline), &other, sizeof(Pipeline));
 	}
 };

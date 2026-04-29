@@ -226,6 +226,16 @@ struct Hashmap {
         entry->dead = false;
     }
 
+    V& operator[](const K& key) {
+        RUNTIME_ASSERT_MSG(has(key), "Key doesn't exist\n");
+
+        u64 hash = hashmap_safe_hash(hash_func, key);
+        s64 index = resolve_collision(key, hash % capacity);
+        RUNTIME_ASSERT(index != -1);
+
+        return entries[index].value;
+    }
+
     V get(const K& key) {
         RUNTIME_ASSERT_MSG(has(key), "Key doesn't exist\n");
 

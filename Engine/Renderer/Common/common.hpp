@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Handle/handle.hpp"
 #include "Material/material.hpp"
 #include "Pipeline/pipeline.hpp"
