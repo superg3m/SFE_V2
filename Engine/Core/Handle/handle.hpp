@@ -3,31 +3,30 @@
 
 const s32 INVALID_HANDLE_INDEX = -1;
 
-template<typename T>
 struct Handle {
 	s32 index = INVALID_HANDLE_INDEX;
 	u32 generation = 0;
 	
-	static Handle<T> create(u32 index, u32 generation) {
-		Handle<T> ret = {};
+	static Handle create(u32 index, u32 generation) {
+		Handle ret = {};
 		ret.index = index;
 		ret.generation = generation;
 
 		return ret;
 	}
 
-	static Handle<T> invalid() {
-		Handle<T> ret = {};
+	static Handle invalid() {
+		Handle ret = {};
 		ret.index = INVALID_HANDLE_INDEX;
 		
 		return ret;
 	}
 
-	bool operator==(Handle<T> other) const {
+	bool operator==(Handle other) const {
 		return this->index == other.index && this->generation == other.generation;
 	}
 
-	bool operator!=(Handle<T> other) const {
+	bool operator!=(Handle other) const {
 		return !(*this == other);
 	}
 };
@@ -52,18 +51,18 @@ struct Registry {
 		return ret;
 	}
 
-	Handle<T> acquire() {
-		Handle<T> handle = Handle<T>::invalid();
+	Handle acquire() {
+		Handle handle = Handle::invalid();
 		for (int i = 0; i < N; i++) {
 			Slot<T>& slot = this->slots[i];
 			if (slot.allocated == false) {
-				handle = Handle<T>::create(i, slot.generation);
+				handle = Handle::create(i, slot.generation);
 				slot.allocated = true;
 				break;
 			}
 		}
 
-		RUNTIME_ASSERT(handle != Handle<T>::invalid());
+		RUNTIME_ASSERT(handle != Handle::invalid());
 
 		/*
 		if (handle == handle_invalid<T>()) {
@@ -77,18 +76,18 @@ struct Registry {
 		return handle;
 	}
 
-	void release(Handle<T> handle) {
+	void release(Handle handle) {
 		RUNTIME_ASSERT(this->is_handle_valid(handle));
 
 		this->slots[handle.index].allocated = false;
 		this->slots[handle.index].generation++;
 	}
 
-	bool is_handle_valid(Handle<T> handle) {
+	bool is_handle_valid(Handle handle) {
 		return handle.index != INVALID_HANDLE_INDEX && this->slots[handle.index].generation == handle.generation;
 	}
 
-	T& get(Handle<T> handle) {
+	T& get(Handle handle) {
 		RUNTIME_ASSERT(this->is_handle_valid(handle));
 
 		return this->slots[handle.index].data;

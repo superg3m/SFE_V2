@@ -1,40 +1,12 @@
 #pragma once
 
 #include "common.hpp"
-#include "OpenGL/backend.hpp"
-
 using B = OpenGL;
-using Texture = typename B::Texture;
-using TextureHandle = Handle<Texture>;
 
-using VertexBuffer = typename B::VertexBuffer;
-using VertexBufferHandle = Handle<VertexBuffer>;
+// using VertexArrayObject = typename B::VertexArrayObject;
+// using VertexArrayObjectHandle = Handle<VertexArrayObject>;
 
-using IndexBuffer = typename B::IndexBuffer;
-using IndexBufferHandle = Handle<IndexBuffer>;
-
-using CommandBuffer = typename B::CommandBuffer;
-using CommandBufferHandle = Handle<CommandBuffer>;
-
-using Pipeline = typename B::Pipeline;
-using PipelineHandle = Handle<Pipeline>;
-
-using Shader = typename B::Shader;
-using ShaderHandle = Handle<Shader>;
-
-using Material = typename B::Material;
-using MaterialHandle = Handle<Material>;
-
-using Mesh = typename B::Mesh;
-using MeshHandle = Handle<Mesh>;
-
-using MeshEntry = typename B::MeshEntry;
-
-using VertexArrayObject = typename B::VertexArrayObject;
-using VertexArrayObjectHandle = Handle<VertexArrayObject>;
-
-using BindingValue = typename B::BindingValue;
-
+/*
 struct RenderCommand {
 	PipelineHandle pipeline;
     MaterialHandle material;
@@ -48,6 +20,7 @@ struct RenderCommand {
 	Mat4 projection = Mat4::identity();
     u32 instance_count = 1;
 };
+*/
 
 struct Renderer {
     static int WINDOW_WIDTH;
@@ -132,17 +105,17 @@ struct Renderer {
 	}
 
 	void submit(RenderCommand command) {
-		if (command.pipeline == this->opaque_pipeline) {
+		if (command.pipeline.handle == this->opaque_pipeline.handle) {
 			this->opaque_commands.append(command);
-		} else if (command.pipeline == this->opaque_wireframe_pipeline) {
+		} else if (command.pipeline.handle == this->opaque_wireframe_pipeline.handle) {
 			this->opaque_wireframe_commands.append(command);
-		} else if (command.pipeline == this->shadow_pipeline) {
+		} else if (command.pipeline.handle == this->shadow_pipeline.handle) {
 			this->shadow_commands.append(command);
-		} else if (command.pipeline == this->post_effects_pipeline) {
+		} else if (command.pipeline.handle == this->post_effects_pipeline.handle) {
 			this->post_effects_commands.append(command);
-		} else if (command.pipeline == this->skybox_pipeline) {
+		} else if (command.pipeline.handle == this->skybox_pipeline.handle) {
 			this->skybox_commands.append(command);
-		} else if (command.pipeline == this->transparent_pipeline) {
+		} else if (command.pipeline.handle == this->transparent_pipeline.handle) {
 			this->transparent_commands.append(command);
 		} else {
 			RUNTIME_ASSERT(false);
@@ -271,6 +244,9 @@ struct Renderer {
 
     TextureHandle create_texture(u32 texture_unit, const char* path, TextureDescription& desc) {
         TextureHandle handle = backend.textures.acquire();
+        Render
+
+        this->render_requests.append()
         Texture& texture = backend.textures.get(handle);
         texture = Texture::load_from_file(texture_unit, path, desc);
 
