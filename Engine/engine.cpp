@@ -1,7 +1,7 @@
 #include "engine.hpp"
 
 INTERNAL_LINKAGE Platform::DLL* dll = nullptr;
-INTERNAL_LINKAGE const char* dll_name = "application.dll";
+INTERNAL_LINKAGE const char* dll_name = "game.dll";
 INTERNAL_LINKAGE const char* temp_dll_name = "application_temp.dll";
 INTERNAL_LINKAGE Platform::FileTime last_write_time = {};
 
@@ -15,7 +15,7 @@ void load_application_function_pointers(ApplicationInitalizeFunc** application_i
 
 	Platform::copy_file(dll_name, temp_dll_name, true);
 	
-	last_write_time = Platform::get_file_modification_time(dll_name);
+	last_write_time = Platform::get_file_modification_time(temp_dll_name);
 
 	Error err = Error::SUCCESS;
     dll = Platform::load_dll(temp_dll_name, err);
@@ -92,14 +92,7 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 		return false;
 	}
 
-	Error err = Error::SUCCESS;
-	Platform::DLL* dll = Platform::load_dll(dll_name, err);
-	if (err != Error::SUCCESS) {
-		LOG_ERROR("Failed to find %s | Error: %s\n", dll_name, error_get_string(err));
-	} else {
-		load_application_function_pointers(&this->application_init, &this->application_update, &this->application_render);
-	}
-
+	load_application_function_pointers(&this->application_init, &this->application_update, &this->application_render);
 	if (application_init) application_init(this);
 
 	return true;
@@ -107,11 +100,9 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 
 void Engine::update(float dt) {
 	Platform::FileTime new_time = Platform::get_file_modification_time(dll_name);
-	bool dirty = Platform::compare_file_modification_time(new_time, last_write_time) == false;
-	LOG_DEBUG("Dirty: %s\n", dirty ? "True" : "False");
-	if (dirty) {
+	if (Platform::compare_file_modification_time(new_time, last_write_time) == false) {
 		load_application_function_pointers(nullptr, &this->application_update, &this->application_render);
-		LOG_DEBUG("reloaded app dll\n");
+		this->reloaded_dll = true;
 	}
 
 	if (this->application_update) application_update(this, dt);
@@ -121,6 +112,7 @@ void Engine::update(float dt) {
 
 void Engine::render(float dt) {
 	if (this->application_render) application_render(this, dt);
-
+	this->reloaded_dll = false;
+	
 	this->renderer.draw(this->frame_allocator);
 }

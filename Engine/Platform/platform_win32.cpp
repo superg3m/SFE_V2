@@ -172,8 +172,9 @@ namespace Platform {
 		return ret;
 	}
 
+	// NOTE(Jovanni): For the purposes of hot reloading i'm just gonna say that if either are invalid then they are equal...
 	bool compare_file_modification_time(FileTime a, FileTime b) {
-		return CompareFileTime(&a.time, &b.time) == 0;
+		return CompareFileTime(&a.time, &b.time) != 1;
 	}
 
 	INTERNAL_LINKAGE void* win32_malloc(void* ctx, size_t allocation_size, size_t alignment) {

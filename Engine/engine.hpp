@@ -11,6 +11,8 @@ struct Engine {
 	GLFWwindow* window;
 	Input input;
 	Renderer renderer;
+
+	bool reloaded_dll;
 	void* application_state;
 
 	Allocator permenant_allocator;

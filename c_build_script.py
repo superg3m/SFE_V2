@@ -145,9 +145,9 @@ procedures_config = {
         compiler_inject_into_args=[]
     ),
     
-    "Application DLL":  ProcedureConfig(
-        build_directory = f"{ABSOLUTE_GAME_BUILD}",
-        output_name = "application.dll",
+    "Game DLL":  ProcedureConfig(
+        build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
+        output_name = "game.dll",
         source_files = [
             f"{RELATIVE_GAME_ROOT}/game.cpp",
         ],
@@ -184,4 +184,4 @@ if IS_WINDOWS():
 elif IS_DARWIN():
     COPY_FILE_TO_DIR(f"{ABSOLUTE_ASSIMP_ROOT}/bin/macos", "libassimp.6.dylib", ABSOLUTE_ENGINE_BUILD)
     
-COPY_FILE_TO_DIR(f"{ABSOLUTE_GAME_BUILD}", "application.dll", ABSOLUTE_ENGINE_BUILD)
+COPY_FILE_TO_DIR(f"{ABSOLUTE_GAME_BUILD}", "game.dll", ABSOLUTE_ENGINE_BUILD)

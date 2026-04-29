@@ -53,6 +53,10 @@ extern "C" __declspec(dllexport) void application_init(Engine* engine) {
 }
 
 extern "C" __declspec(dllexport) void application_update(Engine* engine, float dt) {
+	if (engine->reloaded_dll) {
+		Memory::copy(&app, sizeof(AppState), engine->application_state, sizeof(AppState));
+	}
+
 	// active_scene.update(dt);
 	if (engine->input.get_key_pressed(KEY_ESCAPE)) {
 		glfwSetWindowShouldClose(engine->window, true);
@@ -86,8 +90,6 @@ extern "C" __declspec(dllexport) void application_update(Engine* engine, float d
 	if (engine->input.get_key(KEY_D, PRESSED|DOWN)) {
 		app.camera.process_keyboard(CameraDirection::RIGHT, dt); 
 	}
-
-	Memory::copy(engine->application_state, sizeof(AppState), &app, sizeof(AppState));
 }
 
 extern "C" __declspec(dllexport) void application_render(Engine* engine, float dt) {
@@ -108,4 +110,6 @@ extern "C" __declspec(dllexport) void application_render(Engine* engine, float d
 
 		// engine->renderer.submit(command);
 	}
+
+	Memory::copy(engine->application_state, sizeof(AppState), &app, sizeof(AppState));
 }
