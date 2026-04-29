@@ -38,15 +38,7 @@ struct Renderer {
 
     TextureHandle create_texture(u32 texture_unit, const char* path, TextureDescription& desc) {
         TextureHandle texture = this->backend.textures.acquire();
-        Request request = Request{
-            .type =  RequestType::TEXTURE2D_LOAD,
-            .texture = TextureRequest{
-                .texture_unit = texture_unit,
-                .path = path,
-                .description = desc
-            },
-            .handle = texture.handle
-        };
+        Request request = Request::create_texture(texture, texture_unit, path, desc);
         this->requests.append(request);
 
         return texture;
@@ -54,14 +46,7 @@ struct Renderer {
 
     TextureHandle create_texture(u32 texture_unit, Vector<const char*> cube_map_texture_paths) {
         TextureHandle texture = this->backend.textures.acquire();
-        Request request = Request{
-            .type =  RequestType::TEXTURE3D_LOAD,
-            .texture = TextureRequest{
-                .texture_unit = texture_unit,
-                .cubemap_paths = cube_map_texture_paths,
-            },
-            .handle = texture.handle
-        };
+        Request request = Request::create_texture(texture, texture_unit,cube_map_texture_paths);
         this->requests.append(request);
 
         return texture;
@@ -70,18 +55,7 @@ struct Renderer {
     template<typename T>
     VertexBufferHandle create_vertex_buffer(MeshHandle mesh, VertexLayout layout, Vector<T>& buffer, bool dynamic = false) {
         VertexBufferHandle vbo = this->backend.vbos.acquire();
-        Request request = Request{
-            .type =  RequestType::VBO_CREATE,
-            .vbo = VertexBufferRequest{
-                .mesh = mesh,
-                .layout = layout,
-                .data = buffer.data,
-                .count = buffer.count,
-                .element_size = sizeof(T),
-                .dynamic = dynamic
-            },
-            .handle = vbo.handle
-        };
+        Request request = Request::create_vertex_buffer(vbo, mesh, layout, buffer, dynamic);
         this->requests.append(request);
 
         return vbo;
@@ -129,26 +103,14 @@ struct Renderer {
 
     MeshHandle create_mesh_cube(MaterialHandle material) {
         MeshHandle mesh = this->backend.meshes.acquire();
-        Request request = Request{
-            .type = RequestType::MESH_CUBE_CREATE,
-            .mesh = MeshRequest{
-                .material = material,
-            },
-            .handle = mesh.handle
-        };
+        Request request = Request::create_mesh_cube(mesh, material);
         this->requests.append(request);
         return mesh;
     }
 
     ShaderHandle create_shader(Vector<const char*> shader_paths) {
         ShaderHandle shader = this->backend.shaders.acquire();
-        Request request = Request{
-            .type = RequestType::SHADER_CREATE,
-            .shader = ShaderRequest{
-                .shader_paths = shader_paths,
-            },
-            .handle = shader.handle
-        };
+        Request request = Request::create_shader(shader, shader_paths);
         this->requests.append(request);
         return shader;
     }
@@ -186,10 +148,7 @@ struct Renderer {
     }
 
     void shader_recompile(ShaderHandle shader) {
-        Request request = {};
-        request.type = RequestType::SHADER_RECOMPILE;
-        request.shader = {};
-        request.handle = shader.handle;
+        Request request = Request::shader_recompile(shader);
         this->requests.append(request);
     }
     

@@ -99,11 +99,7 @@ struct OpenGL {
         GLenum gl_usage;
         VertexLayout layout;
 
-        /*
-            Because of mac opengl I actually need to create the pipeline first
-        */
-        template<typename T>
-        static VertexBuffer create(VertexArrayObject vao, VertexLayout layout, Vector<T>& buffer, bool dynamic = true) {
+        static VertexBuffer create(VertexArrayObject vao, VertexLayout layout, void* data, int count, size_t element_size, bool dynamic = true) {
             VertexBuffer ret = {};
             ret.layout = layout;
             ret.gl_usage = dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
@@ -111,7 +107,7 @@ struct OpenGL {
             gl_error_check(glBindVertexArray(vao.id));
             gl_error_check(glGenBuffers(1, &ret.id));
             gl_error_check(glBindBuffer(GL_ARRAY_BUFFER, ret.id));
-            gl_error_check(glBufferData(GL_ARRAY_BUFFER, buffer.count * sizeof(T), buffer.data, ret.gl_usage));
+            gl_error_check(glBufferData(GL_ARRAY_BUFFER, count * element_size, data, ret.gl_usage));
 
             for (VertexAttribute attribute : layout.attributes) {
                 bind_vertex_attribute(attribute.location, layout.stride, attribute);
@@ -219,27 +215,44 @@ struct OpenGL {
         for (Request& request : requests) {
             switch (request.type) {
                 case RequestType::TEXTURE2D_LOAD: {
-                    Texture& texture = this->textures.get(request.handle);
+                    Texture& texture = this->textures.get(request.texture.user.handle);
                     texture = Texture::load_from_file(request.texture.texture_unit, request.texture.path, request.texture.description);
                 } break;
 
                 case RequestType::TEXTURE3D_LOAD: {
-                    Texture& texture = this->textures.get(request.handle);
+                    Texture& texture = this->textures.get(request.texture.user.handle);
                     texture = Texture::load_cube_map(request.texture.texture_unit, request.texture.cubemap_paths);
                 } break;
 
+                case RequestType::VBO_CREATE: {
+                    VertexBuffer& vbo_slot = this->vbos.get(request.vbo.user.handle);
+                    Mesh& mesh_slot = this->meshes.get(request.vbo.mesh.handle);
+                    vbo_slot = VertexBuffer::create(mesh_slot.vao, request.vbo.layout, request.vbo.data, request.vbo.count, request.vbo.element_size);
+                } break;
+
+                case RequestType::VBO_UPDATE: {
+                    Shader& shader = this->shaders.get(request.vbo.user.handle);
+                    shader = Shader(request.shader.shader_paths);
+                } break;
+
+                case RequestType::EBO_UPDATE: {
+                    RUNTIME_ASSERT(false);
+                    // Shader& shader = this->shaders.get(request.ebo.handle);
+                    // shader = Shader(request.shader.shader_paths);
+                } break;
+
                 case RequestType::SHADER_CREATE: {
-                    Shader& shader = this->shaders.get(request.handle);
+                    Shader& shader = this->shaders.get(request.shader.user.handle);
                     shader = Shader(request.shader.shader_paths);
                 } break;
 
                 case RequestType::SHADER_RECOMPILE: {
-                    Shader& shader = this->shaders.get(request.handle);
+                    Shader& shader = this->shaders.get(request.shader.user.handle);
                     shader.compile();
                 } break;
 
                 case RequestType::MESH_CUBE_CREATE: {
-                    Mesh& mesh = this->meshes.get(request.handle);
+                    Mesh& mesh = this->meshes.get(request.mesh.user.handle);
                     mesh = Mesh::cube(request.mesh.material);
                 } break;
 
@@ -250,6 +263,10 @@ struct OpenGL {
                         Vector<DrawCallRequest> vector = Vector<DrawCallRequest>({request.draw_call}, frame_allocator);
                         draw_calls_map.put(request.draw_call.pipeline, vector);
                     }
+                } break;
+
+                default: {
+                    RUNTIME_ASSERT(false);
                 } break;
             }
         }

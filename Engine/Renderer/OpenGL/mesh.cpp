@@ -207,7 +207,7 @@ void OpenGL::Mesh::setup() {
     }
 
     this->vao = VertexArrayObject::create();
-    this->vbo = VertexBuffer::create(this->vao, VertexLayout::PNTC(), this->vertices);
+    this->vbo = VertexBuffer::create(this->vao, VertexLayout::PNTC(), this->vertices.data, this->vertices.count, sizeof(Vertex));
     this->ebo = IndexBuffer::create(this->vao, this->indices);
 }
 
