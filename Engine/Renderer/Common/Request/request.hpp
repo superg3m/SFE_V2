@@ -12,6 +12,7 @@ enum class RequestType {
 	TEXTURE2D_LOAD,
 	TEXTURE3D_LOAD,
 	VBO_CREATE,
+	VBO_BIND,
 	VBO_UPDATE,
 	EBO_UPDATE,
 
@@ -97,6 +98,11 @@ struct VertexBufferRequest {
         this->element_size = element_size;
         this->offset = offset;
     }
+
+    VertexBufferRequest(VertexBufferHandle user, MeshHandle mesh) {
+        this->user = user;
+        this->mesh = mesh;
+    }
 };
 
 //  buffer.count * sizeof(T), buffer.data,
@@ -172,11 +178,20 @@ struct Request {
     template<typename T>
     static Request create_vertex_buffer(VertexBufferHandle user, MeshHandle mesh, VertexLayout layout, Vector<T>& buffer, bool dynamic = false) {
         Request ret = {};
-        ret.type = RequestType::TEXTURE3D_LOAD;
-        ret.texture = VertexBufferRequest(user, layout, mesh, buffer, dynamic);
+        ret.type = RequestType::VBO_CREATE;
+        ret.vbo = VertexBufferRequest(user, mesh, layout, buffer, dynamic);
 
         return ret;
     }
+
+    static Request bind_vertex_buffer(VertexBufferHandle user, MeshHandle mesh) {
+        Request ret = {};
+        ret.type = RequestType::VBO_BIND;
+        ret.vbo = VertexBufferRequest(user, mesh);
+
+        return ret;
+    }
+
 
     static Request create_mesh(MeshHandle user, ShaderHandle shader, const char* path) {
         Request ret = {};

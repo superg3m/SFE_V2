@@ -224,6 +224,12 @@ struct OpenGL {
                     texture = Texture::load_cube_map(request.texture.texture_unit, request.texture.cubemap_paths);
                 } break;
 
+                case RequestType::VBO_BIND: {
+                    VertexBuffer& vbo_slot = this->vbos.get(request.vbo.user.handle);
+                    Mesh& mesh_slot = this->meshes.get(request.vbo.mesh.handle);
+                    vbo_slot = VertexBuffer::create(mesh_slot.vao, request.vbo.layout, request.vbo.data, request.vbo.count, request.vbo.element_size);
+                } break;
+
                 case RequestType::VBO_CREATE: {
                     VertexBuffer& vbo_slot = this->vbos.get(request.vbo.user.handle);
                     Mesh& mesh_slot = this->meshes.get(request.vbo.mesh.handle);

@@ -3,6 +3,7 @@
 struct AppState {
 	ShaderHandle cube_shader = ShaderHandle::invalid();
 	MaterialHandle material = MaterialHandle::invalid();
+	VertexBufferHandle instance_cube_vbo = VertexBufferHandle::invalid();
 	MeshHandle cube_mesh = MeshHandle::invalid();
 
 	ShaderHandle backpack_shader = ShaderHandle::invalid();
@@ -15,6 +16,8 @@ struct AppState {
 	Pipeline opaque_wireframe_pipeline = {};
 	bool use_opaque_pipeline = true;
 	float accumulator = 0.0;
+
+	Vector<Mat4> cube_translations;
 
 	Timer timer = {};
 };
@@ -60,6 +63,25 @@ extern "C" __declspec(dllexport) void application_init(Engine* engine) {
 
 	app->backpack_shader = engine->renderer.create_shader({"../../../Game/Assets/Shaders/model.vert", "../../../Game/Assets/Shaders/model.frag"});
 	app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, "../../../Game/Assets/Models/Backpack/backpack.obj");
+
+	app->cube_translations = Vector<Mat4>(engine->permenant_allocator);
+	int index = 0;
+	float offset = 0.1f;
+	for (int y = -10; y < 10; y += 2) {
+		for (int x = -10; x < 10; x += 2) {
+			Vec3 translation;
+			translation.x = (float)x * 2.0f + offset;
+			translation.y = (float)y * 2.0f + offset;
+			translation.z = sin(x + y) * 10;
+			app->cube_translations.append(Mat4::translate(Mat4::identity(), translation).transpose());
+		}
+	}
+
+	VertexLayout layout = VertexLayout({
+		VertexAttribute{4, 0, BufferStrideTypeInfo::MAT4, true},
+	});
+
+	app->instance_cube_vbo = engine->renderer.create_vertex_buffer(app->cube_mesh, layout, app->cube_translations, true);
 
 	app->timer.start(5.0f);
 }
@@ -125,7 +147,8 @@ extern "C" __declspec(dllexport) void application_render(Engine* engine, float d
 	}, engine->frame_allocator});
 
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection);
+	// engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
+	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
 
 	model = Mat4::translate(model, -5, 0, 0);
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;

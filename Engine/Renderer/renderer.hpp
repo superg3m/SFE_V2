@@ -101,6 +101,11 @@ struct Renderer {
         return ebo;
     }
 
+    void bind_vertex_buffer(MeshHandle mesh, VertexBufferHandle vbo) {
+        Request request = Request::bind_vertex_buffer(vbo, mesh);
+        this->requests.append(request);
+    }
+
     MeshHandle create_mesh(ShaderHandle shader, const char *path) {
         MeshHandle mesh = this->backend.meshes.acquire();
         Request request = Request::create_mesh(mesh, shader, path);
