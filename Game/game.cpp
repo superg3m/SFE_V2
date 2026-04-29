@@ -116,3 +116,53 @@ extern "C" __declspec(dllexport) void application_render(Engine* engine, float d
 
 // https://www.youtube.com/watch?v=9R2rRLbBkHU
 // https://www.youtube.com/watch?v=QAeRxfeFAo0
+
+/*
+static void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                                         GLsizei length, const GLchar* message, const void* user)
+{
+  if(severity == GL_DEBUG_SEVERITY_LOW || 
+     severity == GL_DEBUG_SEVERITY_MEDIUM ||
+     severity == GL_DEBUG_SEVERITY_HIGH)
+  {
+    SM_ASSERT(false, "OpenGL Error: %s", message);
+  }
+  else
+  {
+    SM_TRACE((char*)message);
+  }
+}
+
+glDebugMessageCallback(&gl_debug_callback, nullptr);
+
+// so I think that a lot of my problems stem from having to strictly type handles so maybe we can work on that to be easier
+// by removing the need for a handle to be templated, so its now just Handle
+
+
+
+// RenderInterface.hpp
+// all the data you need for a draw call
+struct RenderCommand {
+	Material material;
+	Mat4 Model;
+}
+
+struct RenderData {
+	Camera camera;
+
+	int fontHeight;
+	Glyph glyphs[127];
+
+	Registry<Material, 256> materials;
+	Registry<Transform, 1000> transforms;
+	Registry<Transform, 1000> uiTransforms;
+};
+
+RenderData* render_data;
+
+
+struct MaterialHandle {
+	Handle handle; // hande to a mterial
+};
+
+*/
