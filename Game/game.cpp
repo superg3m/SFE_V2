@@ -113,3 +113,6 @@ extern "C" __declspec(dllexport) void application_render(Engine* engine, float d
 
 	Memory::copy(engine->application_state, sizeof(AppState), &app, sizeof(AppState));
 }
+
+// https://www.youtube.com/watch?v=9R2rRLbBkHU
+// https://www.youtube.com/watch?v=QAeRxfeFAo0
