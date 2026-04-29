@@ -215,14 +215,13 @@ void OpenGL::Shader::set_material(OpenGL* backend, Material* material) {
                 this->set_float(k, v.float_binding);
             } break;
 
-            case BindingValueType::SAMPLER_2D: {
+            case BindingValueType::TEXTURE_HANDLE: {
                 Texture& texture = backend->textures.get(v.texture_binding.handle);
-                this->set_texture(k, texture);
-            } break;
-
-            case BindingValueType::CUBEMAP: {
-                Texture& texture = backend->textures.get(v.texture_binding.handle);
-                this->set_texture_cube(k, texture);
+                if (texture.type == TextureSamplerType::SAMPLER_2D) {
+                    this->set_texture(k, texture);
+                } else {
+                    this->set_texture_cube(k, texture);
+                }
             } break;
 
             case BindingValueType::VECTOR2: {

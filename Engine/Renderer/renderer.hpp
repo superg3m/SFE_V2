@@ -129,7 +129,6 @@ struct Renderer {
 
     MeshHandle create_mesh_cube(MaterialHandle material) {
         MeshHandle mesh = this->backend.meshes.acquire();
-
         Request request = Request{
             .type = RequestType::MESH_CUBE_CREATE,
             .mesh = MeshRequest{
@@ -156,13 +155,44 @@ struct Renderer {
 
     MaterialHandle create_material(ShaderHandle shader) {
         MaterialHandle material = this->backend.materials.acquire();
+        Material& material_slot = this->backend.materials.get(material.handle);
+        material_slot = Material(shader);
+
         return material;
     }
 
-    // MeshHandle create_mesh_cube(Handle<Material> material_handle);
-    // MeshHandle create_mesh_aabb(Handle<Material> material_handle);
-    // MeshHandle create_mesh_aabb(Handle<Material> material_handle, AABB aabb);
+    void draw_mesh(Pipeline pipeline, MeshHandle mesh, Mat4 model, Mat4 view, Mat4 projection, u32 instance_count = 1) {
+        DrawCallRequest draw_request = {};
+        draw_request.pipeline = pipeline;
+        draw_request.mesh = mesh;
+        draw_request.model = model;
+        draw_request.view = view;
+        draw_request.projection = projection;
+        draw_request.instance_count = instance_count;
 
+        Request request = {};
+        request.type = RequestType::DRAW_CALL;
+        request.draw_call = draw_request;
+        this->requests.append(request);
+    }
+
+    void material_set_uniforms(MaterialHandle material, Hashmap<const char*, BindingValue> uniforms) {
+        Material& material_slot = this->backend.materials.get(material.handle);
+        for (auto& entry : uniforms) {
+            const char* k = entry.key;
+            BindingValue v = entry.value;
+            material_slot.set_uniform(k, v);
+        }
+    }
+
+    void shader_recompile(ShaderHandle shader) {
+        Request request = {};
+        request.type = RequestType::SHADER_RECOMPILE;
+        request.shader = {};
+        request.handle = shader.handle;
+        this->requests.append(request);
+    }
+    
     // TODO(Jovanni): Account for framebuffer
     // CommandBufferHandle begin_frame(u32 framebuffer = 0);
     // void end_frame(CommandBufferHandle handle);

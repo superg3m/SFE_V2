@@ -14,7 +14,7 @@ int main() {
 	Arena permanent_arena = Arena::fixed(permenant_memory, PERMANENT_MEMORY_CAPACITY);
 	Allocator permanent_arena_allocator = permanent_arena.to_allocator();
 
-	constexpr int FRAME_MEMORY_CAPACITY = KB(5);
+	constexpr int FRAME_MEMORY_CAPACITY = MB(5);
 	void* frame_memory = program_arena.push(FRAME_MEMORY_CAPACITY, alignof(u8));
 	Arena frame_arena = Arena::fixed(frame_memory, FRAME_MEMORY_CAPACITY);
 	Allocator frame_arena_allocator = frame_arena.to_allocator();

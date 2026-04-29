@@ -20,19 +20,10 @@ struct RasterizerState {
 };
 
 struct Pipeline {
-	RasterizerState rasterizer;
-	DepthState depth;
-	BlendState blend;
+	RasterizerState rasterizer = {};
+	DepthState depth = {};
+	BlendState blend = {};
 	
-	static Pipeline create(RasterizerState rasterizer, DepthState depth, BlendState blend) {
-		Pipeline ret = {};
-		ret.rasterizer = rasterizer;
-		ret.depth = depth;
-		ret.blend = blend;
-
-		return ret;
-	}
-
 	bool operator==(Pipeline& other) const {
 		return Memory::equal(this, sizeof(Pipeline), &other, sizeof(Pipeline));
 	}

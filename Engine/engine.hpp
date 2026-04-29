@@ -14,12 +14,15 @@ struct Engine {
 	Input input;
 
 	Camera camera = Camera(0, 1, 10);
-	bool mouse_captured = false;
+	bool mouse_captured = true;
 	bool reloaded_dll;
 	void* application_state;
 
 	Allocator permenant_allocator;
 	Allocator frame_allocator;
+
+	Mat4 get_view_matrix();
+	Mat4 get_projection_matrix();
 
 	ApplicationInitalizeFunc* application_init = nullptr;
 	ApplicationUpdateFunc*    application_update = nullptr;

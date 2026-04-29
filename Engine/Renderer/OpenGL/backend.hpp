@@ -233,6 +233,11 @@ struct OpenGL {
                     shader = Shader(request.shader.shader_paths);
                 } break;
 
+                case RequestType::SHADER_RECOMPILE: {
+                    Shader& shader = this->shaders.get(request.handle);
+                    shader.compile();
+                } break;
+
                 case RequestType::MESH_CUBE_CREATE: {
                     Mesh& mesh = this->meshes.get(request.handle);
                     mesh = Mesh::cube(request.mesh.material);
@@ -261,12 +266,17 @@ struct OpenGL {
                 for (DrawCallRequest& draw_call : draw_calls) {
                     Mesh& mesh = this->meshes.get(draw_call.mesh.handle);
                     mesh.vao.bind();
+                    mesh.vbo.bind();
+                    mesh.ebo.bind();
                     for (MeshEntry& mesh_entry : mesh.entries) {
                         Material& material = this->materials.get(mesh_entry.material.handle);
                         Shader& shader = this->shaders.get(material.shader.handle);
                         shader.use();
                         shader.set_material(this, &material);
-     
+                        shader.set_model(draw_call.model);
+                        shader.set_view(draw_call.view);
+                        shader.set_projection(draw_call.projection);
+
                         if (mesh_entry.index_count) {
                             this->draw_indices(mesh_entry.vertex_base, mesh_entry.index_base, mesh_entry.index_count, draw_call.instance_count);
                         } else {

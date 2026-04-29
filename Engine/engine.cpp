@@ -53,12 +53,14 @@ void load_application_function_pointers(ApplicationInitalizeFunc** application_i
 
 	*application_update = (ApplicationUpdateFunc*)Platform::get_function_address(dll, "application_update");
 	*application_render = (ApplicationRenderFunc*)Platform::get_function_address(dll, "application_render");
+
+	RUNTIME_ASSERT(*application_update && *application_render);
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int frame_buffer_width, int frame_buffer_height) {
     engine->renderer.FRAME_BUFFER_WIDTH  = frame_buffer_width;
     engine->renderer.FRAME_BUFFER_HEIGHT = frame_buffer_height;
-    glViewport(0, 0, frame_buffer_width, frame_buffer_height);
+    gl_error_check(glViewport(0, 0, frame_buffer_width, frame_buffer_height));
 
 	// seems like this will be a constant battle might just be worth making renderer and engine a singleton...
     // Renderer::CreatePickingFrameBuffer(Renderer::FRAME_BUFFER_WIDTH, Renderer::FRAME_BUFFER_HEIGHT);
@@ -97,13 +99,22 @@ GLFWwindow* GLFW_INIT(const int WIDTH, const int HEIGHT) {
 	}
 
 	glfwSwapInterval(1);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetInputMode(window, GLFW_CURSOR, engine->mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 	gl_error_check(glEnable(GL_MULTISAMPLE));
 	// glEnable(GL_CULL_FACE);
 	// glCullFace(GL_FRONT); 
 	// glEnable(GL_FRAMEBUFFER_SRGB);
 
 	return window;
+}
+
+Mat4 Engine::get_view_matrix() {
+	return this->camera.get_view_matrix();
+}
+
+Mat4 Engine::get_projection_matrix() {
+	float aspect = (float)this->renderer.WINDOW_WIDTH / (float)this->renderer.WINDOW_HEIGHT;
+	return Mat4::perspective(this->camera.zoom, aspect, 0.1f, 1000.0f);
 }
 
 bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {

@@ -5,22 +5,48 @@ struct AppState {
 	MaterialHandle material = MaterialHandle::invalid();
 	MeshHandle cube_mesh = MeshHandle::invalid();
 
-	bool mouse_captured = true;
+	TextureHandle container_texture = TextureHandle::invalid();
+	TextureHandle face_texture = TextureHandle::invalid();
+
+
+	Pipeline opaque_pipeline = {};
 	bool use_opaque_pipeline = true;
+	float accumulator = 0.0;
 };
 
 extern "C" __declspec(dllexport) void application_init(Engine* engine) {
 	engine->application_state = engine->permenant_allocator.malloc(sizeof(AppState), alignof(AppState));
 	AppState* app = (AppState*)engine->application_state;
+	*app = {};
 
 	app->cube_shader = engine->renderer.create_shader({"../../../Game/Assets/Shaders/cube.vert", "../../../Game/Assets/Shaders/cube.frag"});
 	app->material = engine->renderer.create_material(app->cube_shader);
+
+	TextureDescription desc = {};
+	app->container_texture = engine->renderer.create_texture(0, "../../../Game/Assets/Textures/container.jpg", desc);
+	app->face_texture = engine->renderer.create_texture(1, "../../../Game/Assets/Textures/awesomeface.png", desc);
+
 	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
+	app->opaque_pipeline = Pipeline{
+		.rasterizer = {
+			.fill = true
+		},
+		.depth = {
+			.depth_testing = true,
+			.depth_write = true
+		},
+		.blend = {
+			.enabled = false
+		}
+	};
+
 	//app.backpack_mesh_handle = engine->renderer.create_mesh_cube(model_shader, "../../../Game/Assets/Models/backpack/backpack.obj");
 }
 
 extern "C" __declspec(dllexport) void application_update(Engine* engine, float dt) {
 	AppState* app = (AppState*)engine->application_state;
+
+	app->accumulator += dt * 100;
 
 	// active_scene.update(dt);
 	if (engine->input.get_key_pressed(KEY_ESCAPE)) {
@@ -32,8 +58,8 @@ extern "C" __declspec(dllexport) void application_update(Engine* engine, float d
 		glfwSetInputMode(engine->window, GLFW_CURSOR, engine->mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 	}
 
-	if (engine->input.get_key_pressed(KEY_V)) {
-		LOG_WARN("Ws\n");
+	if (engine->input.get_key_pressed(KEY_R)) {
+		engine->renderer.shader_recompile(app->cube_shader);
 	}
 
 	if (engine->input.get_key(KEY_SPACE, PRESSED|DOWN)) {
@@ -63,6 +89,15 @@ extern "C" __declspec(dllexport) void application_update(Engine* engine, float d
 
 extern "C" __declspec(dllexport) void application_render(Engine* engine, float dt) {
 	AppState* app = (AppState*)engine->application_state;
+
+	Mat4 model = Mat4::rotate(Mat4::identity(), Quat::from_euler(app->accumulator, app->accumulator, 0));
+	Mat4 view = engine->get_view_matrix();
+	Mat4 projection = engine->get_projection_matrix();
+	engine->renderer.material_set_uniforms(app->material, {{
+		{"uContainer", app->container_texture},
+		{"uFace", app->face_texture},
+	}, engine->frame_allocator});
+	engine->renderer.draw_mesh(app->opaque_pipeline, app->cube_mesh, model, view, projection);
 
 	/*
 	Mesh backpack_mesh = engine->renderer.backend.meshes.get(app.backpack_mesh_handle);

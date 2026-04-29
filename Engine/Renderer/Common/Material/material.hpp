@@ -8,8 +8,6 @@ enum class BindingValueType {
 	INTEGER,
 	FLOAT,
 	TEXTURE_HANDLE,
-	SAMPLER_2D,
-	CUBEMAP,
 	VECTOR2,
 	VECTOR3,
 	VECTOR4,
@@ -67,8 +65,8 @@ struct Material {
 	ShaderHandle shader = ShaderHandle::invalid();
 	Hashmap<const char*, BindingValue> bindings;
 
-	// Material() = default;
-	Material create(ShaderHandle shader) {
+	Material() = default;
+	Material(ShaderHandle shader) {
 		this->shader = shader;
 	}
 
@@ -87,11 +85,6 @@ struct Material {
 			} break;
 
 			case BindingValueType::TEXTURE_HANDLE: {
-				RUNTIME_ASSERT(false);
-			} break;
-
-			case BindingValueType::SAMPLER_2D:
-			case BindingValueType::CUBEMAP: {
 				this->set_texture(name, value.texture_binding);
 			} break;
 

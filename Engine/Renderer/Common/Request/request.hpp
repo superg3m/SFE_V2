@@ -16,6 +16,7 @@ enum class RequestType {
 	EBO_UPDATE,
 
     SHADER_CREATE,
+    SHADER_RECOMPILE,
 
 	DRAW_CALL
 };
@@ -47,10 +48,12 @@ struct IndexBufferRequest {
 };
 
 struct DrawCallRequest {
-	Pipeline pipeline;
-	MeshHandle mesh; // mesh_entries, vao, vbo, ebo, material
-	Mat4 Model;
-	int instance_count;
+	Pipeline pipeline = {};
+	MeshHandle mesh = MeshHandle::invalid(); // mesh_entries, vao, vbo, ebo, material
+	Mat4 model = Mat4::identity();
+	Mat4 view = Mat4::identity();
+	Mat4 projection = Mat4::identity();
+	int instance_count = 1;
 };
 
 struct MeshRequest {
