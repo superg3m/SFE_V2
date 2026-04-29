@@ -6,14 +6,16 @@
 
 enum class RequestType {
 	MESH_LOAD,
-	MESH_CUBE,
-	MESH_AABB,
+	MESH_CUBE_CREATE,
+	MESH_AABB_CREATE,
 
 	TEXTURE2D_LOAD,
 	TEXTURE3D_LOAD,
 	VBO_CREATE,
 	VBO_UPDATE,
 	EBO_UPDATE,
+
+    SHADER_CREATE,
 
 	DRAW_CALL
 };
@@ -51,11 +53,22 @@ struct DrawCallRequest {
 	int instance_count;
 };
 
+struct MeshRequest {
+    MaterialHandle material = MaterialHandle::invalid();
+    const char* path = nullptr;
+};
+
+struct ShaderRequest {
+    Vector<const char*> shader_paths = {};
+};
+
 struct Request {
 	RequestType type;
 	union {
 		TextureRequest texture;
         VertexBufferRequest vbo;
+        MeshRequest mesh;
+        ShaderRequest shader;
 		DrawCallRequest draw_call;
 	};
 

@@ -4,7 +4,8 @@ extern Engine* engine;
 
 int main() {
 	constexpr int PROGRAM_MEMORY_CAPACITY = MB(20);
-	void* program_memory = malloc(PROGRAM_MEMORY_CAPACITY);
+	Allocator platform_allocator = Platform::get_allocator();
+	void* program_memory = platform_allocator.malloc(PROGRAM_MEMORY_CAPACITY, alignof(u8));
 	Arena program_arena = Arena::fixed(program_memory, PROGRAM_MEMORY_CAPACITY);
 	Allocator program_arena_allocator = program_arena.to_allocator();
 
@@ -42,7 +43,7 @@ int main() {
 		frame_temp.end();
 	}
 
-	free(program_memory);
+	platform_allocator.free(program_memory);
 
 	return 0;
 }

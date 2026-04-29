@@ -1,7 +1,9 @@
 #include <sfe.hpp>
 
 struct AppState {
-	MeshHandle backpack_mesh_handle = MeshHandle::invalid();
+	ShaderHandle cube_shader = ShaderHandle::invalid();
+	MaterialHandle material = MaterialHandle::invalid();
+	MeshHandle cube_mesh = MeshHandle::invalid();
 
 	bool mouse_captured = true;
 	bool use_opaque_pipeline = true;
@@ -9,9 +11,12 @@ struct AppState {
 
 extern "C" __declspec(dllexport) void application_init(Engine* engine) {
 	engine->application_state = engine->permenant_allocator.malloc(sizeof(AppState), alignof(AppState));
+	AppState* app = (AppState*)engine->application_state;
 
-	// ShaderHandle model_shader = engine->renderer.create_shader({"../../../Game/Assets/Shaders/model.vert", "../../../Game/Assets/Shaders/model.frag"});
-	// app.backpack_mesh_handle = engine->renderer.create_mesh(model_shader, "../../../Game/Assets/Models/backpack/backpack.obj");
+	app->cube_shader = engine->renderer.create_shader({"../../../Game/Assets/Shaders/cube.vert", "../../../Game/Assets/Shaders/cube.frag"});
+	app->material = engine->renderer.create_material(app->cube_shader);
+	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
+	//app.backpack_mesh_handle = engine->renderer.create_mesh_cube(model_shader, "../../../Game/Assets/Models/backpack/backpack.obj");
 }
 
 extern "C" __declspec(dllexport) void application_update(Engine* engine, float dt) {
@@ -57,6 +62,8 @@ extern "C" __declspec(dllexport) void application_update(Engine* engine, float d
 }
 
 extern "C" __declspec(dllexport) void application_render(Engine* engine, float dt) {
+	AppState* app = (AppState*)engine->application_state;
+
 	/*
 	Mesh backpack_mesh = engine->renderer.backend.meshes.get(app.backpack_mesh_handle);
 	for (MeshEntry& entry : backpack_mesh.entries) {

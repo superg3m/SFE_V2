@@ -228,8 +228,18 @@ struct OpenGL {
                     texture = Texture::load_cube_map(request.texture.texture_unit, request.texture.cubemap_paths);
                 } break;
 
+                case RequestType::SHADER_CREATE: {
+                    Shader& shader = this->shaders.get(request.handle);
+                    shader = Shader(request.shader.shader_paths);
+                } break;
+
+                case RequestType::MESH_CUBE_CREATE: {
+                    Mesh& mesh = this->meshes.get(request.handle);
+                    mesh = Mesh::cube(request.mesh.material);
+                } break;
+
                 case RequestType::DRAW_CALL: {
-                    if (draw_calls_map.has(request.draw_call.pipeline)) {
+                    if (draw_calls_map.has(request.draw_call.pipeline)) { 
                         draw_calls_map[request.draw_call.pipeline].append(request.draw_call);
                     } else {
                         Vector<DrawCallRequest> vector = Vector<DrawCallRequest>({request.draw_call}, frame_allocator);
