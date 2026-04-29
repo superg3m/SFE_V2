@@ -119,6 +119,7 @@ extern "C" __declspec(dllexport) void application_render(Engine* engine, float d
 
 /*
 
+- [] remove gl_error_check in favor of the callback
 
 static void APIENTRY gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
                                          GLsizei length, const GLchar* message, const void* user)
