@@ -5,6 +5,9 @@ struct AppState {
 	MaterialHandle material = MaterialHandle::invalid();
 	MeshHandle cube_mesh = MeshHandle::invalid();
 
+	ShaderHandle backpack_shader = ShaderHandle::invalid();
+	MeshHandle backpack_mesh = MeshHandle::invalid();
+
 	TextureHandle container_texture = TextureHandle::invalid();
 	TextureHandle face_texture = TextureHandle::invalid();
 
@@ -21,14 +24,6 @@ extern "C" __declspec(dllexport) void application_init(Engine* engine) {
 	AppState* app = (AppState*)engine->application_state;
 	*app = {};
 
-	app->cube_shader = engine->renderer.create_shader({"../../../Game/Assets/Shaders/cube.vert", "../../../Game/Assets/Shaders/cube.frag"});
-	app->material = engine->renderer.create_material(app->cube_shader);
-
-	TextureDescription desc = {};
-	app->container_texture = engine->renderer.create_texture(0, "../../../Game/Assets/Textures/container.jpg", desc);
-	app->face_texture = engine->renderer.create_texture(1, "../../../Game/Assets/Textures/awesomeface.png", desc);
-
-	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
 	app->opaque_pipeline = Pipeline{
 		.rasterizer = {
 			.fill = true
@@ -55,9 +50,18 @@ extern "C" __declspec(dllexport) void application_init(Engine* engine) {
 		}
 	};
 
-	app->timer.start(5.0f);
+	TextureDescription desc = {};
+	app->container_texture = engine->renderer.create_texture(0, "../../../Game/Assets/Textures/container.jpg", desc);
+	app->face_texture = engine->renderer.create_texture(1, "../../../Game/Assets/Textures/awesomeface.png", desc);
 
-	//app.backpack_mesh_handle = engine->renderer.create_mesh_cube(model_shader, "../../../Game/Assets/Models/backpack/backpack.obj");
+	app->cube_shader = engine->renderer.create_shader({"../../../Game/Assets/Shaders/cube.vert", "../../../Game/Assets/Shaders/cube.frag"});
+	app->material = engine->renderer.create_material(app->cube_shader);
+	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
+
+	app->backpack_shader = engine->renderer.create_shader({"../../../Game/Assets/Shaders/model.vert", "../../../Game/Assets/Shaders/model.frag"});
+	app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, "../../../Game/Assets/Models/Backpack/backpack.obj");
+
+	app->timer.start(5.0f);
 }
 
 extern "C" __declspec(dllexport) void application_update(Engine* engine, float dt) {
@@ -107,6 +111,11 @@ extern "C" __declspec(dllexport) void application_update(Engine* engine, float d
 extern "C" __declspec(dllexport) void application_render(Engine* engine, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
+	if(app->timer.tick(dt)) {
+		app->use_opaque_pipeline = !app->use_opaque_pipeline;
+		app->timer.reset();
+	}
+
 	Mat4 model = Mat4::rotate(Mat4::identity(), Quat::from_euler(app->accumulator, app->accumulator, 0));
 	Mat4 view = engine->get_view_matrix();
 	Mat4 projection = engine->get_projection_matrix();
@@ -115,13 +124,12 @@ extern "C" __declspec(dllexport) void application_render(Engine* engine, float d
 		{"uFace", app->face_texture},
 	}, engine->frame_allocator});
 
-	if(app->timer.tick(dt)) {
-		app->use_opaque_pipeline = !app->use_opaque_pipeline;
-		app->timer.reset();
-	}
-
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection);
+
+	model = Mat4::translate(model, -5, 0, 0);
+	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
+	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
 
 	/*
 	Mesh backpack_mesh = engine->renderer.backend.meshes.get(app.backpack_mesh_handle);

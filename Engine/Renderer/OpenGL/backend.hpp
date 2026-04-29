@@ -251,6 +251,11 @@ struct OpenGL {
                     shader.compile();
                 } break;
 
+                case RequestType::MESH_LOAD: {
+                    Mesh& mesh = this->meshes.get(request.mesh.user.handle);
+                    mesh = Mesh::load_from_file(this, request.mesh.shader, request.mesh.path);
+                } break;
+
                 case RequestType::MESH_CUBE_CREATE: {
                     Mesh& mesh = this->meshes.get(request.mesh.user.handle);
                     mesh = Mesh::cube(request.mesh.material);

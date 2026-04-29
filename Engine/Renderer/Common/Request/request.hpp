@@ -119,7 +119,19 @@ struct DrawCallRequest {
 struct MeshRequest {
     MeshHandle user = MeshHandle::invalid();
     MaterialHandle material = MaterialHandle::invalid();
+    ShaderHandle shader = ShaderHandle::invalid();
     const char* path = nullptr;
+
+    MeshRequest(MeshHandle user, MaterialHandle material) {
+        this->user = user;
+        this->material = material;
+    }
+
+    MeshRequest(MeshHandle user, ShaderHandle shader, const char* path) {
+        this->user = user;
+        this->shader = shader;
+        this->path = path;
+    }
 };
 
 struct ShaderRequest {
@@ -166,11 +178,18 @@ struct Request {
         return ret;
     }
 
+    static Request create_mesh(MeshHandle user, ShaderHandle shader, const char* path) {
+        Request ret = {};
+        ret.type = RequestType::MESH_LOAD;
+        ret.mesh = MeshRequest(user, shader, path);
+
+        return ret;
+    }
+
     static Request create_mesh_cube(MeshHandle user, MaterialHandle material) {
         Request ret = {};
         ret.type = RequestType::MESH_CUBE_CREATE;
-        ret.mesh.user = user;
-        ret.mesh.material = material;
+        ret.mesh = ret.mesh = MeshRequest(user, material);
 
         return ret;
     }

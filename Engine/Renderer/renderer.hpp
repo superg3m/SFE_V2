@@ -101,6 +101,13 @@ struct Renderer {
         return ebo;
     }
 
+    MeshHandle create_mesh(ShaderHandle shader, const char *path) {
+        MeshHandle mesh = this->backend.meshes.acquire();
+        Request request = Request::create_mesh(mesh, shader, path);
+        this->requests.append(request);
+        return mesh;
+    }
+
     MeshHandle create_mesh_cube(MaterialHandle material) {
         MeshHandle mesh = this->backend.meshes.acquire();
         Request request = Request::create_mesh_cube(mesh, material);
