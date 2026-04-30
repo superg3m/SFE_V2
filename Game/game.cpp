@@ -22,7 +22,7 @@ struct AppState {
 	Timer timer = {};
 };
 
-extern "C" __declspec(dllexport) void application_init(Engine* engine) {
+extern "C" /*__declspec(dllexport)*/ void application_init(Engine* engine) {
 	engine->application_state = engine->permenant_allocator.malloc(sizeof(AppState), alignof(AppState));
 	AppState* app = (AppState*)engine->application_state;
 	*app = {};
@@ -86,7 +86,7 @@ extern "C" __declspec(dllexport) void application_init(Engine* engine) {
 	app->timer.start(5.0f);
 }
 
-extern "C" __declspec(dllexport) void application_update(Engine* engine, float dt) {
+extern "C" /*__declspec(dllexport)*/ void application_update(Engine* engine, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
 	app->accumulator += dt * 100;
@@ -130,7 +130,7 @@ extern "C" __declspec(dllexport) void application_update(Engine* engine, float d
 	}
 }
 
-extern "C" __declspec(dllexport) void application_render(Engine* engine, float dt) {
+extern "C" /*__declspec(dllexport)*/ void application_render(Engine* engine, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
 	if(app->timer.tick(dt)) {
@@ -148,11 +148,11 @@ extern "C" __declspec(dllexport) void application_render(Engine* engine, float d
 
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	// engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
-	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
+	// engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
 
 	model = Mat4::translate(model, -5, 0, 0);
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
+	// engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
 
 	/*
 	Mesh backpack_mesh = engine->renderer.backend.meshes.get(app.backpack_mesh_handle);

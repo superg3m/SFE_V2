@@ -3,9 +3,18 @@
 #include "../Assert/assert.hpp"
 #include "../Logger/logger.hpp"
 #include "../Hashing/hashing.hpp"
+#include "../String/string.hpp"
 
 using HashFunction = u64(const void*, size_t);
 using EqualFunction = bool(const void*, size_t, const void*, size_t);
+
+template<typename T>
+struct CompileTime {
+	static constexpr bool TYPE_IS_CSTRING = std::is_same_v<T, char*> || std::is_same_v<T, const char*>;
+	static constexpr bool TYPE_IS_STRING = std::is_same_v<T, String>;
+	static constexpr bool TYPE_IS_TRIVIAL = std::is_trivially_copyable_v<T>;
+	static constexpr bool TYPE_IS_POINTER = std::is_pointer_v<T>;
+};
 
 template <typename K>
 constexpr HashFunction* compile_time_get_hash_function() {
@@ -111,13 +120,13 @@ struct Hashmap {
         return static_cast<float>(dead_count + count) / static_cast<float>(capacity);
     }
 
-    Hashmap(Allocator allocator = Allocator::invalid(), u64 capacity = DEFAULT_CAPACITY,  HashFunction* hash_func = compile_time_get_hash_function<K>()) {
+    Hashmap(Allocator allocator = Allocator::invalid(), u64 capacity = DEFAULT_CAPACITY, HashFunction* hash_func = compile_time_get_hash_function<K>()) {
 		this->allocator = allocator;
 		this->capacity = capacity;
 		this->hash_func = hash_func;
 	}
 
-    Hashmap(std::initializer_list<KeyValuePair<K, V>> list, Allocator allocator = Allocator::invalid(), HashFunction* hf = compile_time_get_hash_function<K>()) {
+    Hashmap(std::initializer_list<KeyValuePair<K, V>> list, Allocator allocator = Allocator::invalid(), HashFunction* hash_func = compile_time_get_hash_function<K>()) {
 		this->allocator = allocator;
 		this->capacity = DEFAULT_CAPACITY;
 		this->hash_func = hash_func;

@@ -47,15 +47,6 @@ struct Timer {
 	void stop();
 };
 
-struct String;
-template<typename T>
-struct CompileTime {
-	static constexpr bool TYPE_IS_CSTRING = std::is_same_v<T, char*> || std::is_same_v<T, const char*>;
-	static constexpr bool TYPE_IS_STRING = std::is_same_v<T, String>;
-	static constexpr bool TYPE_IS_TRIVIAL = std::is_trivially_copyable_v<T>;
-	static constexpr bool TYPE_IS_POINTER = std::is_pointer_v<T>;
-};
-
 template <typename K, typename V>
 struct KeyValuePair {
 	K key;

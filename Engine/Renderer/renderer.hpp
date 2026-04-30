@@ -72,13 +72,13 @@ struct Renderer {
         Request request = Request{
             .type = RequestType::VBO_UPDATE,
             .vbo = VertexBufferRequest{
+                .user = vbo,
                 .mesh = mesh,
                 .data = frame_temp_data,
                 .count = buffer.count,
                 .element_size = sizeof(T),
                 .offset = offset
             },
-            .handle = vbo.handle
         };
         this->requests.append(request);
     }
@@ -90,12 +90,12 @@ struct Renderer {
         Request request = Request{
             .type = RequestType::VBO_UPDATE,
             .ebo = IndexBufferRequest{
+                .user = ebo,
                 .mesh = mesh,
                 .data = buffer.data,
                 .count = buffer.count,
                 .dynamic = dynamic
             },
-            .handle = ebo.handle
         };
         this->requests.append(request);
         return ebo;
