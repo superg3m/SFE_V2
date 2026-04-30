@@ -20,12 +20,23 @@ void Editor::init(Engine* engine) {
 
 void Editor::render(Engine* engine) {
 	AppState* app = (AppState*)engine->application_state;
-	bool show_demo_window = true;
 
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
-		ImGui::ShowDemoWindow(&show_demo_window);
+        ImGuizmo::BeginFrame();
+            ImGui::Begin("Inspector");
+                ImGui::Checkbox("Demo Window", &app->show_demo_window);
+            ImGui::End();
+
+            ImGuiWindowFlags flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | 
+                         ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | 
+                         ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBackground;
+
+            if (app->show_demo_window) {
+                ImGui::ShowDemoWindow(&app->show_demo_window);
+            }
+	ImGui::EndFrame();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

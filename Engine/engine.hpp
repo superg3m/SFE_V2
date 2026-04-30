@@ -13,7 +13,7 @@ struct Engine {
 	Renderer<OpenGL> renderer;
 	Input input;
 
-	Camera camera = Camera(0, 1, 10);
+	Camera camera = Camera::create(0, 1, 10);
 	bool mouse_captured = false;
 	bool reloaded_dll;
 	void* application_state;

@@ -20,4 +20,7 @@ struct AppState {
 	Vector<Mat4> cube_translations;
 
 	Timer timer = {};
+
+	// editor
+	bool show_demo_window = true;
 };

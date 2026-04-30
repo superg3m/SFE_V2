@@ -46,11 +46,13 @@ struct OpenGL {
 		Vector<String> shader_paths;
 		Hashmap<String, UniformDesc> uniforms;
 	
-		Shader() = default;
-		Shader(Vector<String> shader_paths) {
-			this->uniforms = Hashmap<String, UniformDesc>(shader_paths.allocator);
-			this->shader_paths = shader_paths;
-			this->compile();
+		static Shader create(Vector<String> shader_paths) {
+			Shader ret = {};
+			ret.uniforms = Hashmap<String, UniformDesc>(shader_paths.allocator);
+			ret.shader_paths = shader_paths;
+			ret.compile();
+
+			return ret;
 		}
 
 		void compile();
@@ -241,8 +243,9 @@ struct OpenGL {
 				} break;
 
 				case RequestType::VBO_UPDATE: {
-					Shader& shader = this->shaders.get(request.vbo.user.handle);
-					shader = Shader(request.shader.shader_paths);
+					RUNTIME_ASSERT(false);
+					// Shader& shader = this->shaders.get(request.vbo.user.handle);
+					// shader = Shader::create(request.shader.shader_paths);
 				} break;
 
 				case RequestType::EBO_UPDATE: {
@@ -253,7 +256,7 @@ struct OpenGL {
 
 				case RequestType::SHADER_CREATE: {
 					Shader& shader = this->shaders.get(request.shader.user.handle);
-					shader = Shader(request.shader.shader_paths);
+					shader = Shader::create(request.shader.shader_paths);
 				} break;
 
 				case RequestType::SHADER_RECOMPILE: {

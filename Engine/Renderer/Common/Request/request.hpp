@@ -30,7 +30,6 @@ struct TextureRequest {
 	Vector<String> cubemap_paths = {};
 
 	TextureRequest() = default;
-
 	TextureRequest(TextureHandle user, u32 texture_unit, String path, TextureDescription description) {
 		this->user = user;
 		this->texture_unit = texture_unit;
@@ -58,6 +57,15 @@ struct VertexBufferRequest {
 	size_t offset = 0;
 
 	VertexBufferRequest() = default;
+	VertexBufferRequest(VertexBufferHandle user, MeshHandle mesh, VertexLayout layout, void* data, int count, size_t element_size, bool dynamic) {
+		this->user = user;
+		this->mesh = mesh;
+		this->layout = layout;
+		this->data = data;
+		this->count = count;
+		this->element_size = element_size;
+		this->dynamic = dynamic;
+	}
 
 	template<typename T>
 	VertexBufferRequest(VertexBufferHandle user, MeshHandle mesh, VertexLayout layout, Vector<T> buffer, bool dynamic) {
@@ -67,16 +75,6 @@ struct VertexBufferRequest {
 		this->data = buffer.data;
 		this->count = buffer.count;
 		this->element_size = sizeof(T);
-		this->dynamic = dynamic;
-	}
-
-	VertexBufferRequest(VertexBufferHandle user, MeshHandle mesh, VertexLayout layout, void* data, int count, size_t element_size, bool dynamic) {
-		this->user = user;
-		this->mesh = mesh;
-		this->layout = layout;
-		this->data = data;
-		this->count = count;
-		this->element_size = element_size;
 		this->dynamic = dynamic;
 	}
 

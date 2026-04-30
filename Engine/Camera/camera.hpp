@@ -18,19 +18,20 @@ const float DEFAULTED_SENSITIVITY =  0.1f;
 const float DEFAULTED_ZOOM        =  65.0f;
 
 struct Camera {
-	Vec3 position;
+	Vec3 position = Vec3(0.0f);
 	Vec3 front;
-	Vec3 up;
+	Vec3 up = Vec3(0, 1, 0);
 	Vec3 right;
-	Vec3 world_up;
-
+	Vec3 world_up = Vec3(0, 1, 0);
+	
+	float yaw = DEFAULTED_YAW;
+	float pitch = DEFAULTED_PITCH;
 	float movement_speed = DEFAULTED_SPEED;
 	float mouse_sensitivity = DEFAULTED_SENSITIVITY;
 	float zoom = DEFAULTED_ZOOM;
 
-	Camera() = default;
-	Camera(Vec3 position);
-	Camera(float x, float y, float z);
+	static Camera create(Vec3 position);
+	static Camera create(float x, float y, float z);
 	Mat4 get_view_matrix();
 	void lookat(Vec3 target_position);
 	void lookat(float x, float y, float z);
@@ -39,8 +40,5 @@ struct Camera {
 	void process_mouse_scroll(float yoffset);
 
 private:
-	float yaw = DEFAULTED_YAW;
-	float pitch = DEFAULTED_PITCH;
-
 	void update();
 };

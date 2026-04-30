@@ -7,36 +7,21 @@ void Camera::update() {
 	this->up    = Vec3::cross(this->right, this->front).normalize();
 }
 
-Camera::Camera(Vec3 position) {
-	this->position = position;
+Camera Camera::create(Vec3 position) {
+	Camera ret = {}; 
+	ret.position = position;
+	ret.update();
 
-	this->world_up = Vec3(0, 1, 0);
-	this->up = Vec3(0, 1, 0);
-
-	this->mouse_sensitivity = DEFAULTED_SENSITIVITY;
-	this->movement_speed = DEFAULTED_SPEED;
-	this->zoom = DEFAULTED_ZOOM;
-	this->yaw = DEFAULTED_YAW;
-	this->pitch = DEFAULTED_PITCH;
-
-	this->update();
+	return ret;
 }
 
-Camera::Camera(float x, float y, float z) {
-	this->position = Vec3(x, y, z);
+Camera Camera::create(float x, float y, float z) {
+	Camera ret = {}; 
+	ret.position = Vec3(x, y, z);
+	ret.update();
 
-	this->world_up = Vec3(0, 1, 0);
-	this->up = Vec3(0, 1, 0);
-
-	this->mouse_sensitivity = DEFAULTED_SENSITIVITY;
-	this->movement_speed = DEFAULTED_SPEED;
-	this->zoom = DEFAULTED_ZOOM;
-	this->yaw = DEFAULTED_YAW;
-	this->pitch = DEFAULTED_PITCH;
-
-	this->update();
+	return ret;
 }
-
 
 void Camera::lookat(Vec3 target_position) {
 	Vec3 target_direction = (target_position - this->position).normalize(); 

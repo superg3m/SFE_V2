@@ -119,6 +119,7 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	Mat4 model = Mat4::rotate(Mat4::identity(), Quat::from_euler(app->accumulator, app->accumulator, 0));
 	Mat4 view = engine->get_view_matrix();
 	Mat4 projection = engine->get_projection_matrix();
+
 	engine->renderer.material_set_uniforms(app->material, {
 		{STR_INTERN("uFace"), app->face_texture},
 		{STR_INTERN("uContainer"), app->container_texture},
@@ -126,7 +127,7 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
- 	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
+	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
 
 	model = Mat4::translate(model, 0, 5, 0);
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;

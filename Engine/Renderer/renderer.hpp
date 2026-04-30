@@ -154,7 +154,6 @@ struct Renderer {
 
 	void material_set_uniforms(MaterialHandle material, std::initializer_list<KeyValuePair<String, BindingValue>> uniforms) {
 		Material& material_slot = this->backend.materials.get(material.handle);
-
 		for (auto& entry : uniforms) {
 			String k = entry.key;
 			BindingValue v = entry.value;
