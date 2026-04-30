@@ -144,483 +144,483 @@ bool Vec2::operator!=(const Vec2 &right) {
 // --
 
 Vec3::Vec3() {
-    this->x = 0.0f;
-    this->y = 0.0f;
-    this->z = 0.0f;
+	this->x = 0.0f;
+	this->y = 0.0f;
+	this->z = 0.0f;
 }
 
 Vec3::Vec3(float fill) {
-    this->x = fill;
-    this->y = fill;
-    this->z = fill;
+	this->x = fill;
+	this->y = fill;
+	this->z = fill;
 }
 
 Vec3::Vec3(float x, float y, float z) {
-    this->x = x;
-    this->y = y;
-    this->z = z;
+	this->x = x;
+	this->y = y;
+	this->z = z;
 }
 
 Vec3::Vec3(Vec2 v, float z) {
-    this->x = v.x;
-    this->y = v.y;
-    this->z = z;
+	this->x = v.x;
+	this->y = v.y;
+	this->z = z;
 }
 
 Vec3::Vec3(Vec4 v) {
-    this->x = v.x;
-    this->y = v.y;
-    this->z = v.z;
+	this->x = v.x;
+	this->y = v.y;
+	this->z = v.z;
 }
 
 float Vec3::magnitude() {
-    return sqrtf(SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z));
+	return sqrtf(SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z));
 }
 
 float Vec3::magnitude_squared() {
-    return SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z);
+	return SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z);
 }
 
 Vec3 Vec3::normalize() {
-    Vec3 ret(0, 0, 0);
-    float m = magnitude();
-    if (m == 0) return Vec3(0,0,0);
+	Vec3 ret(0, 0, 0);
+	float m = magnitude();
+	if (m == 0) return Vec3(0,0,0);
 
-    ret.x = this->x / m;
-    ret.y = this->y / m;
-    ret.z = this->z / m;
-    return ret;
+	ret.x = this->x / m;
+	ret.y = this->y / m;
+	ret.z = this->z / m;
+	return ret;
 }
 
 Vec3 Vec3::scale(float s) const {
-    return Vec3(this->x * s, this->y * s, this->z * s);
+	return Vec3(this->x * s, this->y * s, this->z * s);
 }
 
 Vec3 Vec3::scale(Vec3 s) const {
-    return Vec3(this->x * s.x, this->y * s.y, this->z * s.z);
+	return Vec3(this->x * s.x, this->y * s.y, this->z * s.z);
 }
 
 Vec3 Vec3::scale(float sx, float sy, float sz) const {
-    return Vec3(this->x * sx, this->y * sy, this->z * sz);
+	return Vec3(this->x * sx, this->y * sy, this->z * sz);
 }
 
 float Vec3::distance(Vec3 a, Vec3 b) {
-    return sqrtf(SQUARED(b.x - a.x) + SQUARED(b.y - a.y) + SQUARED(b.z - a.z));
+	return sqrtf(SQUARED(b.x - a.x) + SQUARED(b.y - a.y) + SQUARED(b.z - a.z));
 }
 
 float Vec3::distance_squared(Vec3 a, Vec3 b) {
-    return SQUARED(b.x - a.x) + SQUARED(b.y - a.y) + SQUARED(b.z - a.z);
+	return SQUARED(b.x - a.x) + SQUARED(b.y - a.y) + SQUARED(b.z - a.z);
 }
 
 Vec3 Vec3::closest(Vec3 a, Vec3 b, Vec3 target) {
-    float ad = distance_squared(a, target);
-    float bd = distance_squared(b, target);
-    return (ad <= bd) ? a : b;
+	float ad = distance_squared(a, target);
+	float bd = distance_squared(b, target);
+	return (ad <= bd) ? a : b;
 }
 
 float Vec3::dot(Vec3 a, Vec3 b) {
-    return a.x*b.x + a.y*b.y + a.z*b.z;
+	return a.x*b.x + a.y*b.y + a.z*b.z;
 }
 
 Vec3 Vec3::lerp(Vec3 a, Vec3 b, float t) {
-    Vec3 ab = (b - a);
-    return a + ab.scale(t);
+	Vec3 ab = (b - a);
+	return a + ab.scale(t);
 }
 
 Vec3 Vec3::move_toward(Vec3 a, Vec3 b, float dt) {
-    Vec3 r(0);
-    r.x = Math::move_toward(a.x, b.x, dt);
-    r.y = Math::move_toward(a.y, b.y, dt);
-    r.z = Math::move_toward(a.z, b.z, dt);
-    return r;
+	Vec3 r(0);
+	r.x = Math::move_toward(a.x, b.x, dt);
+	r.y = Math::move_toward(a.y, b.y, dt);
+	r.z = Math::move_toward(a.z, b.z, dt);
+	return r;
 }
 
 Vec3 Vec3::cross(Vec3 A, Vec3 B) {
-    return Vec3(
-        A.y * B.z - A.z * B.y,
-        A.z * B.x - A.x * B.z,
-        A.x * B.y - A.y * B.x
-    );
+	return Vec3(
+		A.y * B.z - A.z * B.y,
+		A.z * B.x - A.x * B.z,
+		A.x * B.y - A.y * B.x
+	);
 }
 
 Vec3 Vec3::euler(float yaw, float pitch) {
-    Vec3 r(0,0,0);
-    r.x = cosf(DEGREES_TO_RAD(yaw)) * cosf(DEGREES_TO_RAD(pitch));
-    r.y = sinf(DEGREES_TO_RAD(pitch));
-    r.z = sinf(DEGREES_TO_RAD(yaw)) * cosf(DEGREES_TO_RAD(pitch));
-    return r;
+	Vec3 r(0,0,0);
+	r.x = cosf(DEGREES_TO_RAD(yaw)) * cosf(DEGREES_TO_RAD(pitch));
+	r.y = sinf(DEGREES_TO_RAD(pitch));
+	r.z = sinf(DEGREES_TO_RAD(yaw)) * cosf(DEGREES_TO_RAD(pitch));
+	return r;
 }
 
 Vec3 Vec3::operator+(const Vec3 &r) const {
-    return Vec3(this->x + r.x, this->y + r.y, this->z + r.z);
+	return Vec3(this->x + r.x, this->y + r.y, this->z + r.z);
 }
 
 Vec3& Vec3::operator+=(const Vec3 &r) {
-    this->x += r.x; 
+	this->x += r.x; 
 	this->y += r.y; 
 	this->z += r.z;
 
-    return *this;
+	return *this;
 }
 
 Vec3 Vec3::operator-(const Vec3 &r) const {
-    return Vec3(this->x - r.x, this->y - r.y, this->z - r.z);
+	return Vec3(this->x - r.x, this->y - r.y, this->z - r.z);
 }
 
 Vec3& Vec3::operator-=(const Vec3 &r) {
-    this->x -= r.x; 
+	this->x -= r.x; 
 	this->y -= r.y;
 	this->z -= r.z;
 
-    return *this;
+	return *this;
 }
 
 Vec3 Vec3::operator*(const Vec3 &r) const {
-    return Vec3(this->x * r.x, this->y * r.y, this->z * r.z);
+	return Vec3(this->x * r.x, this->y * r.y, this->z * r.z);
 }
 
 Vec3& Vec3::operator*=(const Vec3 &r) {
-    x *= r.x; 
+	x *= r.x; 
 	y *= r.y; 
 	z *= r.z;
 
-    return *this;
+	return *this;
 }
 
 Vec3 Vec3::operator/(const Vec3 &r) const {
-    return Vec3(x/r.x, y/r.y, z/r.z);
+	return Vec3(x/r.x, y/r.y, z/r.z);
 }
 
 Vec3& Vec3::operator/=(const Vec3 &r) {
-    this->x /= r.x;
+	this->x /= r.x;
 	this->y /= r.y; 
 	this->z /= r.z;
-    return *this;
+	return *this;
 }
 
 bool Vec3::operator==(const Vec3 &r) const {
-    return NEAR_ZERO(this->x - r.x) && NEAR_ZERO(this->y - r.y) && NEAR_ZERO(this->z - r.z);
+	return NEAR_ZERO(this->x - r.x) && NEAR_ZERO(this->y - r.y) && NEAR_ZERO(this->z - r.z);
 }
 
 bool Vec3::operator!=(const Vec3 &r) const {
-    return !(*this == r);
+	return !(*this == r);
 }
 
 // --
 
 Vec4::Vec4() {
-    this->x = 0.0f;
+	this->x = 0.0f;
 	this->y = 0.0f;
 	this->z = 0.0f;
 	this->w = 0.0f;
 }
 
 Vec4::Vec4(float fill) {
-    this->x = fill;
+	this->x = fill;
 	this->y = fill;
 	this->z = fill;
 	this->w = fill;
 }
 
 Vec4::Vec4(float x, float y, float z, float w) {
-    this->x = x;
-    this->y = y;
-    this->z = z;
-    this->w = w;
+	this->x = x;
+	this->y = y;
+	this->z = z;
+	this->w = w;
 }
 
 Vec4::Vec4(Vec3 v, float w) {
-    this->x = v.x;
-    this->y = v.y;
-    this->z = v.z;
-    this->w = w;
+	this->x = v.x;
+	this->y = v.y;
+	this->z = v.z;
+	this->w = w;
 }
 
 float Vec4::magnitude() {
-    return sqrtf(SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z) + SQUARED(this->w));
+	return sqrtf(SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z) + SQUARED(this->w));
 }
 
 float Vec4::magnitude_squared() {
-    return SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z) + SQUARED(this->w);
+	return SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z) + SQUARED(this->w);
 }
 
 Vec4 Vec4::normalize() {
-    float m = magnitude();
-    if (m == 0) return Vec4(0);
+	float m = magnitude();
+	if (m == 0) return Vec4(0);
 
-    return Vec4(this->x / m, this->y / m, this->z / m, this->w / m);
+	return Vec4(this->x / m, this->y / m, this->z / m, this->w / m);
 }
 
 Vec4 Vec4::scale(float s) const {
-    return Vec4(this->x * s, this->y * s, this->z * s, this->w * s);
+	return Vec4(this->x * s, this->y * s, this->z * s, this->w * s);
 }
 
 Vec4 Vec4::scale(Vec4 s) const {
-    return Vec4(this->x * s.x, this->y * s.y, this->z * s.z, this->w * s.w);
+	return Vec4(this->x * s.x, this->y * s.y, this->z * s.z, this->w * s.w);
 }
 
 Vec4 Vec4::scale(float sx, float sy, float sz, float sw) const {
-    return Vec4(this->x * sx, this->y * sy, this->z * sz, this->w * sw);
+	return Vec4(this->x * sx, this->y * sy, this->z * sz, this->w * sw);
 }
 
 float Vec4::distance(Vec4 a, Vec4 b) {
-    return sqrtf(
-        SQUARED(b.x - a.x) +
-        SQUARED(b.y - a.y) +
-        SQUARED(b.z - a.z) +
-        SQUARED(b.w - a.w)
-    );
+	return sqrtf(
+		SQUARED(b.x - a.x) +
+		SQUARED(b.y - a.y) +
+		SQUARED(b.z - a.z) +
+		SQUARED(b.w - a.w)
+	);
 }
 
 float Vec4::distance_squared(Vec4 a, Vec4 b) {
-    return
-        SQUARED(b.x - a.x) +
-        SQUARED(b.y - a.y) +
-        SQUARED(b.z - a.z) +
-        SQUARED(b.w - a.w);
+	return
+		SQUARED(b.x - a.x) +
+		SQUARED(b.y - a.y) +
+		SQUARED(b.z - a.z) +
+		SQUARED(b.w - a.w);
 }
 
 Vec4 Vec4::closest(Vec4 a, Vec4 b, Vec4 target) {
-    float ad = distance_squared(a, target);
-    float bd = distance_squared(b, target);
-    return (ad <= bd) ? a : b;
+	float ad = distance_squared(a, target);
+	float bd = distance_squared(b, target);
+	return (ad <= bd) ? a : b;
 }
 
 float Vec4::dot(Vec4 a, Vec4 b) {
-    return (a.x * b.x) + (a.y * b.y) + (a.z * b.z) + (a.w * b.w);
+	return (a.x * b.x) + (a.y * b.y) + (a.z * b.z) + (a.w * b.w);
 }
 
 Vec4 Vec4::lerp(Vec4 a, Vec4 b, float t) {
-    Vec4 ab = (b - a);
-    return a + ab.scale(t);
+	Vec4 ab = (b - a);
+	return a + ab.scale(t);
 }
 
 Vec4 Vec4::move_toward(Vec4 a, Vec4 b, float dt) {
-    Vec4 r = Vec4(0);
-    r.x = Math::move_toward(a.x, b.x, dt);
-    r.y = Math::move_toward(a.y, b.y, dt);
-    r.z = Math::move_toward(a.z, b.z, dt);
-    r.w = Math::move_toward(a.w, b.w, dt);
+	Vec4 r = Vec4(0);
+	r.x = Math::move_toward(a.x, b.x, dt);
+	r.y = Math::move_toward(a.y, b.y, dt);
+	r.z = Math::move_toward(a.z, b.z, dt);
+	r.w = Math::move_toward(a.w, b.w, dt);
 
-    return r;
+	return r;
 }
 
 Vec4 Vec4::operator+(const Vec4 &r) const {
-    return Vec4(this->x + r.x, this->y + r.y, this->z + r.z, this->w + r.w);
+	return Vec4(this->x + r.x, this->y + r.y, this->z + r.z, this->w + r.w);
 }
 
 Vec4& Vec4::operator+=(const Vec4 &r) {
-    this->x += r.x; 
+	this->x += r.x; 
 	this->y += r.y; 
 	this->z += r.z;
 	this->w += r.w;
 
-    return *this;
+	return *this;
 }
 
 Vec4 Vec4::operator-(const Vec4 &r) const {
-    return Vec4(this->x - r.x, this->y - r.y, this->z - r.z, this->w - r.w);
+	return Vec4(this->x - r.x, this->y - r.y, this->z - r.z, this->w - r.w);
 }
 
 Vec4& Vec4::operator-=(const Vec4 &r) {
-    this->x -= r.x; 
+	this->x -= r.x; 
 	this->y -= r.y; 
 	this->z -= r.z; 
 	this->w -= r.w;
 
-    return *this;
+	return *this;
 }
 
 Vec4 Vec4::operator*(const Vec4 &r) const {
-    return Vec4(this->x * r.x, this->y * r.y, this->z * r.z, this->w * r.w);
+	return Vec4(this->x * r.x, this->y * r.y, this->z * r.z, this->w * r.w);
 }
 
 Vec4& Vec4::operator*=(const Vec4 &r) {
-    this->x *= r.x; 
+	this->x *= r.x; 
 	this->y *= r.y; 
 	this->z *= r.z; 
 	this->w *= r.w;
 
-    return *this;
+	return *this;
 }
 
 Vec4 Vec4::operator/(const Vec4 &r) const {
-    return Vec4(this->x / r.x, this->y / r.y, this->z / r.z, this->w / r.w);
+	return Vec4(this->x / r.x, this->y / r.y, this->z / r.z, this->w / r.w);
 }
 
 Vec4& Vec4::operator/=(const Vec4 &r) {
-    this->x /= r.x; 
+	this->x /= r.x; 
 	this->y /= r.y;
 	this->z /= r.z;
 	this->w /= r.w;
 
-    return *this;
+	return *this;
 }
 
 bool Vec4::operator==(const Vec4 &r) const {
-    return NEAR_ZERO(x-r.x) &&
-           NEAR_ZERO(y-r.y) &&
-           NEAR_ZERO(z-r.z) &&
-           NEAR_ZERO(w-r.w);
+	return NEAR_ZERO(x-r.x) &&
+		   NEAR_ZERO(y-r.y) &&
+		   NEAR_ZERO(z-r.z) &&
+		   NEAR_ZERO(w-r.w);
 }
 
 bool Vec4::operator!=(const Vec4 &r) const {
-    return !(*this == r);
+	return !(*this == r);
 }
 
 // -- 
 
 IVec4::IVec4() {
-    this->x = 0.0f;
+	this->x = 0.0f;
 	this->y = 0.0f;
 	this->z = 0.0f;
 	this->w = 0.0f;
 }
 
 IVec4::IVec4(int fill) {
-    this->x = fill;
+	this->x = fill;
 	this->y = fill;
 	this->z = fill;
 	this->w = fill;
 }
 
 IVec4::IVec4(int x, int y, int z, int w) {
-    this->x = x;
-    this->y = y;
-    this->z = z;
-    this->w = w;
+	this->x = x;
+	this->y = y;
+	this->z = z;
+	this->w = w;
 }
 
 float IVec4::magnitude() {
-    return sqrtf(SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z) + SQUARED(this->w));
+	return sqrtf(SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z) + SQUARED(this->w));
 }
 
 float IVec4::magnitude_squared() {
-    return SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z) + SQUARED(this->w);
+	return SQUARED(this->x) + SQUARED(this->y) + SQUARED(this->z) + SQUARED(this->w);
 }
 
 IVec4 IVec4::normalize() {
-    float m = magnitude();
-    if (m == 0) return IVec4(0);
+	float m = magnitude();
+	if (m == 0) return IVec4(0);
 
-    return IVec4(this->x / m, this->y / m, this->z / m, this->w / m);
+	return IVec4(this->x / m, this->y / m, this->z / m, this->w / m);
 }
 
 IVec4 IVec4::scale(int s) const {
-    return IVec4(this->x * s, this->y * s, this->z * s, this->w * s);
+	return IVec4(this->x * s, this->y * s, this->z * s, this->w * s);
 }
 
 IVec4 IVec4::scale(IVec4 s) const {
-    return IVec4(this->x * s.x, this->y * s.y, this->z * s.z, this->w * s.w);
+	return IVec4(this->x * s.x, this->y * s.y, this->z * s.z, this->w * s.w);
 }
 
 IVec4 IVec4::scale(int sx, int sy, int sz, int sw) const {
-    return IVec4(this->x * sx, this->y * sy, this->z * sz, this->w * sw);
+	return IVec4(this->x * sx, this->y * sy, this->z * sz, this->w * sw);
 }
 
 float IVec4::distance(IVec4 a, IVec4 b) {
-    return sqrtf(
-        SQUARED(b.x - a.x) +
-        SQUARED(b.y - a.y) +
-        SQUARED(b.z - a.z) +
-        SQUARED(b.w - a.w)
-    );
+	return sqrtf(
+		SQUARED(b.x - a.x) +
+		SQUARED(b.y - a.y) +
+		SQUARED(b.z - a.z) +
+		SQUARED(b.w - a.w)
+	);
 }
 
 float IVec4::distance_squared(IVec4 a, IVec4 b) {
-    return
-        SQUARED(b.x - a.x) +
-        SQUARED(b.y - a.y) +
-        SQUARED(b.z - a.z) +
-        SQUARED(b.w - a.w);
+	return
+		SQUARED(b.x - a.x) +
+		SQUARED(b.y - a.y) +
+		SQUARED(b.z - a.z) +
+		SQUARED(b.w - a.w);
 }
 
 IVec4 IVec4::closest(IVec4 a, IVec4 b, IVec4 target) {
-    float ad = distance_squared(a, target);
-    float bd = distance_squared(b, target);
-    return (ad <= bd) ? a : b;
+	float ad = distance_squared(a, target);
+	float bd = distance_squared(b, target);
+	return (ad <= bd) ? a : b;
 }
 
 float IVec4::dot(IVec4 a, IVec4 b) {
-    return (a.x * b.x) + (a.y * b.y) + (a.z * b.z) + (a.w * b.w);
+	return (a.x * b.x) + (a.y * b.y) + (a.z * b.z) + (a.w * b.w);
 }
 
 IVec4 IVec4::lerp(IVec4 a, IVec4 b, float t) {
-    IVec4 ab = (b - a);
-    return a + ab.scale(t);
+	IVec4 ab = (b - a);
+	return a + ab.scale(t);
 }
 
 IVec4 IVec4::move_toward(IVec4 a, IVec4 b, float dt) {
-    IVec4 r = IVec4(0);
-    r.x = Math::move_toward(a.x, b.x, dt);
-    r.y = Math::move_toward(a.y, b.y, dt);
-    r.z = Math::move_toward(a.z, b.z, dt);
-    r.w = Math::move_toward(a.w, b.w, dt);
+	IVec4 r = IVec4(0);
+	r.x = Math::move_toward(a.x, b.x, dt);
+	r.y = Math::move_toward(a.y, b.y, dt);
+	r.z = Math::move_toward(a.z, b.z, dt);
+	r.w = Math::move_toward(a.w, b.w, dt);
 
-    return r;
+	return r;
 }
 
 IVec4 IVec4::operator+(const IVec4 &r) {
-    return IVec4(this->x + r.x, this->y + r.y, this->z + r.z, this->w + r.w);
+	return IVec4(this->x + r.x, this->y + r.y, this->z + r.z, this->w + r.w);
 }
 
 IVec4& IVec4::operator+=(const IVec4 &r) {
-    this->x += r.x; 
+	this->x += r.x; 
 	this->y += r.y; 
 	this->z += r.z;
 	this->w += r.w;
 
-    return *this;
+	return *this;
 }
 
 IVec4 IVec4::operator-(const IVec4 &r) {
-    return IVec4(this->x - r.x, this->y - r.y, this->z - r.z, this->w - r.w);
+	return IVec4(this->x - r.x, this->y - r.y, this->z - r.z, this->w - r.w);
 }
 
 IVec4& IVec4::operator-=(const IVec4 &r) {
-    this->x -= r.x; 
+	this->x -= r.x; 
 	this->y -= r.y; 
 	this->z -= r.z; 
 	this->w -= r.w;
 
-    return *this;
+	return *this;
 }
 
 IVec4 IVec4::operator*(const IVec4 &r) {
-    return IVec4(this->x * r.x, this->y * r.y, this->z * r.z, this->w * r.w);
+	return IVec4(this->x * r.x, this->y * r.y, this->z * r.z, this->w * r.w);
 }
 
 IVec4& IVec4::operator*=(const IVec4 &r) {
-    this->x *= r.x; 
+	this->x *= r.x; 
 	this->y *= r.y; 
 	this->z *= r.z; 
 	this->w *= r.w;
 
-    return *this;
+	return *this;
 }
 
 IVec4 IVec4::operator/(const IVec4 &r) {
-    return IVec4(this->x / r.x, this->y / r.y, this->z / r.z, this->w / r.w);
+	return IVec4(this->x / r.x, this->y / r.y, this->z / r.z, this->w / r.w);
 }
 
 IVec4& IVec4::operator/=(const IVec4 &r) {
-    this->x /= r.x; 
+	this->x /= r.x; 
 	this->y /= r.y;
 	this->z /= r.z;
 	this->w /= r.w;
 
-    return *this;
+	return *this;
 }
 
 bool IVec4::operator==(const IVec4 &r) {
-    return NEAR_ZERO(x-r.x) &&
-           NEAR_ZERO(y-r.y) &&
-           NEAR_ZERO(z-r.z) &&
-           NEAR_ZERO(w-r.w);
+	return NEAR_ZERO(x-r.x) &&
+		   NEAR_ZERO(y-r.y) &&
+		   NEAR_ZERO(z-r.z) &&
+		   NEAR_ZERO(w-r.w);
 }
 
 bool IVec4::operator!=(const IVec4 &r) {
-    return !(*this == r);
+	return !(*this == r);
 }
 
 // -- 
@@ -630,93 +630,93 @@ AABB::AABB() : min(0.0f, 0.0f, 0.0f), max(0.0f, 0.0f, 0.0f) {}
 AABB::AABB(Vec3 min, Vec3 max) : min(min), max(max) {}
 
 AABB::AABB(float min_x, float min_y, float min_z, float max_x, float max_y, float max_z) {
-    min.x = min_x;
-    min.y = min_y;
-    min.z = min_z;
+	min.x = min_x;
+	min.y = min_y;
+	min.z = min_z;
 
-    max.x = max_x;
-    max.y = max_y;
-    max.z = max_z;
+	max.x = max_x;
+	max.y = max_y;
+	max.z = max_z;
 }
 
 AABB AABB::from_center_extents(Vec3 center, Vec3 extents) {
-    return AABB(center - extents, center + extents);
+	return AABB(center - extents, center + extents);
 }
 
 bool AABB::line_intersection(AABB aabb, Vec3 p0, Vec3 p1) {
-    float tmin = -10000.0f;
-    float tmax =  10000.0f;
+	float tmin = -10000.0f;
+	float tmax =  10000.0f;
 
-    if (fabsf(p1.x) > EPSILON) {
-        float t1 = (aabb.min.x - p0.x) / p1.x;
-        float t2 = (aabb.max.x - p0.x) / p1.x;
+	if (fabsf(p1.x) > EPSILON) {
+		float t1 = (aabb.min.x - p0.x) / p1.x;
+		float t2 = (aabb.max.x - p0.x) / p1.x;
 
-        tmin = MAX(tmin, MIN(t1, t2));
-        tmax = MIN(tmax, MAX(t1, t2));
-    }
+		tmin = MAX(tmin, MIN(t1, t2));
+		tmax = MIN(tmax, MAX(t1, t2));
+	}
 
-    if (fabsf(p1.y) > EPSILON) {
-        float t1 = (aabb.min.y - p0.y) / p1.y;
-        float t2 = (aabb.max.y - p0.y) / p1.y;
+	if (fabsf(p1.y) > EPSILON) {
+		float t1 = (aabb.min.y - p0.y) / p1.y;
+		float t2 = (aabb.max.y - p0.y) / p1.y;
 
-        tmin = MAX(tmin, MIN(t1, t2));
-        tmax = MIN(tmax, MAX(t1, t2));
-    }
+		tmin = MAX(tmin, MIN(t1, t2));
+		tmax = MIN(tmax, MAX(t1, t2));
+	}
 
-    if (fabsf(p1.z) > EPSILON) {
-        float t1 = (aabb.min.z - p0.z) / p1.z;
-        float t2 = (aabb.max.z - p0.z) / p1.z;
+	if (fabsf(p1.z) > EPSILON) {
+		float t1 = (aabb.min.z - p0.z) / p1.z;
+		float t2 = (aabb.max.z - p0.z) / p1.z;
 
-        tmin = MAX(tmin, MIN(t1, t2));
-        tmax = MIN(tmax, MAX(t1, t2));
-    }
+		tmin = MAX(tmin, MIN(t1, t2));
+		tmax = MIN(tmax, MAX(t1, t2));
+	}
 
-    return (tmax > tmin && tmax > 0.0f);
+	return (tmax > tmin && tmax > 0.0f);
 }
 
 Vec3 AABB::center() const {
-    Vec3 e = extents();
-    return Vec3(min.x + e.x, min.y + e.y, min.z + e.z);
+	Vec3 e = extents();
+	return Vec3(min.x + e.x, min.y + e.y, min.z + e.z);
 }
 
 Vec3 AABB::extents() const {
-    return (max - min).scale(0.5f);
+	return (max - min).scale(0.5f);
 }
 
 // -- 
 
 Mat4::Mat4() {
-    v = {
-        Vec4(1,0,0,0),
-        Vec4(0,1,0,0),
-        Vec4(0,0,1,0),
-        Vec4(0,0,0,1)
-    };
+	v = {
+		Vec4(1,0,0,0),
+		Vec4(0,1,0,0),
+		Vec4(0,0,1,0),
+		Vec4(0,0,0,1)
+	};
 }
 
 Mat4::Mat4(float f) {
-    v = {
-        Vec4(f,0,0,0),
-        Vec4(0,f,0,0),
-        Vec4(0,0,f,0),
-        Vec4(0,0,0,f)
-    };
+	v = {
+		Vec4(f,0,0,0),
+		Vec4(0,f,0,0),
+		Vec4(0,0,f,0),
+		Vec4(0,0,0,f)
+	};
 }
 
 Mat4::Mat4(Vec4 r0, Vec4 r1, Vec4 r2, Vec4 r3) {
-    v = {r0, r1, r2, r3};
+	v = {r0, r1, r2, r3};
 }
 
 Mat4::Mat4(
-    float m00,float m01,float m02,float m03,
-    float m10,float m11,float m12,float m13,
-    float m20,float m21,float m22,float m23,
-    float m30,float m31,float m32,float m33
+	float m00,float m01,float m02,float m03,
+	float m10,float m11,float m12,float m13,
+	float m20,float m21,float m22,float m23,
+	float m30,float m31,float m32,float m33
 ) {
-    v[0] = Vec4(m00, m01, m02, m03);
-    v[1] = Vec4(m10, m11, m12, m13);
-    v[2] = Vec4(m20, m21, m22, m23);
-    v[3] = Vec4(m30, m31, m32, m33);
+	v[0] = Vec4(m00, m01, m02, m03);
+	v[1] = Vec4(m10, m11, m12, m13);
+	v[2] = Vec4(m20, m21, m22, m23);
+	v[3] = Vec4(m30, m31, m32, m33);
 }
 
 // --- Basic ---
@@ -750,32 +750,32 @@ Mat4 Mat4::transpose() const {
 Mat4 Mat4::identity() { return Mat4(); }
 
 Mat4 Mat4::from_column_major(const float m[16]) {
-    return Mat4(
-        m[0],m[4],m[8], m[12],
-        m[1],m[5],m[9], m[13],
-        m[2],m[6],m[10],m[14],
-        m[3],m[7],m[11],m[15]
-    );
+	return Mat4(
+		m[0],m[4],m[8], m[12],
+		m[1],m[5],m[9], m[13],
+		m[2],m[6],m[10],m[14],
+		m[3],m[7],m[11],m[15]
+	);
 }
 
 // --- Transform helpers ---
 
 Mat4 Mat4::scale(Mat4 mat, float s) {
-    return scale(mat, Vec3(s));
+	return scale(mat, Vec3(s));
 }
 
 Mat4 Mat4::scale(Mat4 mat, Vec3 s) {
-    Mat4 Scale(
-        s.x,0,0,0,
-        0,s.y,0,0,
-        0,0,s.z,0,
-        0,0,0,1
-    );
-    return Scale * mat;
+	Mat4 Scale(
+		s.x,0,0,0,
+		0,s.y,0,0,
+		0,0,s.z,0,
+		0,0,0,1
+	);
+	return Scale * mat;
 }
 
 Mat4 Mat4::scale(Mat4 mat, float sx,float sy,float sz){
-    return scale(mat, Vec3(sx,sy,sz));
+	return scale(mat, Vec3(sx,sy,sz));
 }
 
 Mat4 Mat4::rotate(Mat4 mat, float theta, Vec3 axis) {
@@ -808,76 +808,76 @@ Mat4 Mat4::rotate(Mat4 mat, Quat quat) {
 }
 
 Mat4 Mat4::rotate(Mat4 mat, float theta, float x,float y,float z){
-    return rotate(mat, theta, Vec3(x,y,z));
+	return rotate(mat, theta, Vec3(x,y,z));
 }
 
 Mat4 Mat4::translate(Mat4 mat, Vec3 t){
-    Mat4 T(
-        1,0,0,t.x,
-        0,1,0,t.y,
-        0,0,1,t.z,
-        0,0,0,1
-    );
-    return T * mat;
+	Mat4 T(
+		1,0,0,t.x,
+		0,1,0,t.y,
+		0,0,1,t.z,
+		0,0,0,1
+	);
+	return T * mat;
 }
 
 Mat4 Mat4::translate(Mat4 mat,float x,float y,float z){
-    return translate(mat, Vec3(x,y,z));
+	return translate(mat, Vec3(x,y,z));
 }
 
 Mat4 Mat4::transform(Vec3 s,float theta,Vec3 axis,Vec3 t){
-    return translate(identity(),t) *
-           rotate(identity(),theta,axis) *
-           scale(identity(),s);
+	return translate(identity(),t) *
+		   rotate(identity(),theta,axis) *
+		   scale(identity(),s);
 }
 
 Mat4 Mat4::inverse_transform(Vec3 s,float theta,Vec3 axis,Vec3 t){
-    return scale(identity(), Vec3(1/s.x,1/s.y,1/s.z)) *
-           rotate(identity(),theta,axis).transpose() *
-           translate(identity(), t.scale(-1));
+	return scale(identity(), Vec3(1/s.x,1/s.y,1/s.z)) *
+		   rotate(identity(),theta,axis).transpose() *
+		   translate(identity(), t.scale(-1));
 }
 
 // --- Projection ---
 
 Mat4 Mat4::perspective(float fov,float aspect,float n,float f){
-    float r = DEGREES_TO_RAD(fov);
-    float t = tanf(r/2)*n;
+	float r = DEGREES_TO_RAD(fov);
+	float t = tanf(r/2)*n;
 
-    float A = n/(t*aspect);
-    float B = n/t;
-    float C = -(f+n)/(f-n);
-    float D = -(2*f*n)/(f-n);
+	float A = n/(t*aspect);
+	float B = n/t;
+	float C = -(f+n)/(f-n);
+	float D = -(2*f*n)/(f-n);
 
-    return Mat4(
-        A,0,0,0,
-        0,B,0,0,
-        0,0,C,D,
-        0,0,-1,0
-    );
+	return Mat4(
+		A,0,0,0,
+		0,B,0,0,
+		0,0,C,D,
+		0,0,-1,0
+	);
 }
 
 Mat4 Mat4::orthographic(float l,float r,float b,float t,float n,float f){
-    return Mat4(
-        2/(r-l),0,0,-(r+l)/(r-l),
-        0,2/(t-b),0,-(t+b)/(t-b),
-        0,0,-2/(f-n),-(f+n)/(f-n),
-        0,0,0,1
-    );
+	return Mat4(
+		2/(r-l),0,0,-(r+l)/(r-l),
+		0,2/(t-b),0,-(t+b)/(t-b),
+		0,0,-2/(f-n),-(f+n)/(f-n),
+		0,0,0,1
+	);
 }
 
 Mat4 Mat4::lookat(Vec3 pos,Vec3 target,Vec3 up){
-    Vec3 f = (pos-target).normalize();
-    Vec3 r = Vec3::cross(up,f).normalize();
-    Vec3 u = Vec3::cross(f,r);
+	Vec3 f = (pos-target).normalize();
+	Vec3 r = Vec3::cross(up,f).normalize();
+	Vec3 u = Vec3::cross(f,r);
 
-    Mat4 R(
-        r.x,r.y,r.z,0,
-        u.x,u.y,u.z,0,
-        f.x,f.y,f.z,0,
-        0,0,0,1
-    );
+	Mat4 R(
+		r.x,r.y,r.z,0,
+		u.x,u.y,u.z,0,
+		f.x,f.y,f.z,0,
+		0,0,0,1
+	);
 
-    return R * translate(identity(), pos.scale(-1));
+	return R * translate(identity(), pos.scale(-1));
 }
 
 // --- Inverse ---
@@ -988,29 +988,29 @@ Vec4 Mat4::operator*(const Vec4& right) const {
 }
 
 Mat4& Mat4::operator*=(const Mat4& right){
-    *this = *this * right;
-    return *this;
+	*this = *this * right;
+	return *this;
 }
 
 bool Mat4::operator==(const Mat4& right) const {
-    return (this->v[0] == right.v[0]) && (this->v[1] == right.v[1]) && (this->v[2] == right.v[2]) && (this->v[3] == right.v[3]);
+	return (this->v[0] == right.v[0]) && (this->v[1] == right.v[1]) && (this->v[2] == right.v[2]) && (this->v[3] == right.v[3]);
 }
 
 bool Mat4::operator!=(const Mat4& r) const {
-    return !(*this==r);
+	return !(*this==r);
 }
 
 void Mat4::print() const {
-    printf(
-        "[%.2f %.2f %.2f %.2f]\n"
-        "[%.2f %.2f %.2f %.2f]\n"
-        "[%.2f %.2f %.2f %.2f]\n"
-        "[%.2f %.2f %.2f %.2f]\n",
-        v[0].x, v[0].y, v[0].z, v[0].w,
-        v[1].x, v[1].y, v[1].z, v[1].w,
-        v[2].x, v[2].y, v[2].z, v[2].w,
-        v[3].x, v[3].y, v[3].z, v[3].w
-    );
+	printf(
+		"[%.2f %.2f %.2f %.2f]\n"
+		"[%.2f %.2f %.2f %.2f]\n"
+		"[%.2f %.2f %.2f %.2f]\n"
+		"[%.2f %.2f %.2f %.2f]\n",
+		v[0].x, v[0].y, v[0].z, v[0].w,
+		v[1].x, v[1].y, v[1].z, v[1].w,
+		v[2].x, v[2].y, v[2].z, v[2].w,
+		v[3].x, v[3].y, v[3].z, v[3].w
+	);
 }
 
 // -- 
@@ -1325,20 +1325,20 @@ bool Quat::operator!=(const Quat &right) {
 }
 
 Vec3 screenspace_to_worldspace_raycast(double x_screen_space_pos, double y_screen_space_pos, Mat4 view, Mat4 projection, u32 WINDOW_WIDTH, u32 WINDOW_HEIGHT) {
-    float x = ((2.0f * x_screen_space_pos) / WINDOW_WIDTH) - 1.0f; // normalizing to (-1, 1) from (0, 1)
-    float y = 1.0f - ((2.0f * y_screen_space_pos) / WINDOW_HEIGHT);  // normalizing to (-1, 1) from (0, 1) | Also flipping vertically
-    float z = 1.0f;
-    Vec3 ndc = Vec3(x, y, z);
-    Vec4 clip_space = Vec4(ndc.x, ndc.y, ndc.z, 1.0f);
+	float x = ((2.0f * x_screen_space_pos) / WINDOW_WIDTH) - 1.0f; // normalizing to (-1, 1) from (0, 1)
+	float y = 1.0f - ((2.0f * y_screen_space_pos) / WINDOW_HEIGHT);  // normalizing to (-1, 1) from (0, 1) | Also flipping vertically
+	float z = 1.0f;
+	Vec3 ndc = Vec3(x, y, z);
+	Vec4 clip_space = Vec4(ndc.x, ndc.y, ndc.z, 1.0f);
 
-    bool success = false; 
-    Mat4 inverse_projection = projection.inverse(success);
+	bool success = false; 
+	Mat4 inverse_projection = projection.inverse(success);
 
-    Vec4 view_space = inverse_projection * clip_space;
-    view_space = Vec4(view_space.x, view_space.y, view_space.z, 0.0f);
+	Vec4 view_space = inverse_projection * clip_space;
+	view_space = Vec4(view_space.x, view_space.y, view_space.z, 0.0f);
 
-    success = false; 
-    Mat4 inverse_view = view.inverse(success);
-    Vec4 world_space = inverse_view * view_space;
-    return Vec3(world_space).normalize();
+	success = false; 
+	Mat4 inverse_view = view.inverse(success);
+	Vec4 world_space = inverse_view * view_space;
+	return Vec3(world_space).normalize();
 }

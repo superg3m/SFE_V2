@@ -43,7 +43,7 @@ constexpr HashFunction* compile_time_get_hash_function() {
 	} else if (CompileTime<K>::TYPE_IS_TRIVIAL || CompileTime<K>::TYPE_IS_POINTER) {
 		return Hashing::siphash;
 	} else {
-        RUNTIME_ASSERT_MSG(false, "WE ARE IN HELL?\n");
+		RUNTIME_ASSERT_MSG(false, "WE ARE IN HELL?\n");
 		return 0;// K::hash_function;
 	}
 }
@@ -59,245 +59,245 @@ u64 hashmap_safe_hash(HashFunction* hash_func, K key) {
 	} else if constexpr (CompileTime<K>::TYPE_IS_POINTER) {
 		return hash_func((void*)&key, sizeof(K));
 	} else {
-        RUNTIME_ASSERT_MSG(false, "WE ARE IN HELL?\n");
-        return 0;
+		RUNTIME_ASSERT_MSG(false, "WE ARE IN HELL?\n");
+		return 0;
 	}
 }
 
 template <typename K, typename V>
 struct HashmapEntry {
-    K key = {};
-    V value = {};
-    bool filled = false;
-    bool dead = false;
+	K key = {};
+	V value = {};
+	bool filled = false;
+	bool dead = false;
 
-    bool is_valid() const {
-        return filled && !dead;
-    }
+	bool is_valid() const {
+		return filled && !dead;
+	}
 };
 
 template <typename K, typename V>
 struct Hashmap {
-    static_assert(
-        CompileTime<K>::TYPE_IS_TRIVIAL || 
-        CompileTime<K>::TYPE_IS_POINTER || 
-        CompileTime<K>::TYPE_IS_CSTRING ||
-        CompileTime<K>::TYPE_IS_STRING
-    );
+	static_assert(
+		CompileTime<K>::TYPE_IS_TRIVIAL || 
+		CompileTime<K>::TYPE_IS_POINTER || 
+		CompileTime<K>::TYPE_IS_CSTRING ||
+		CompileTime<K>::TYPE_IS_STRING
+	);
 
-    u64 count = 0;
-    u64 dead_count = 0;
-    u64 capacity = DEFAULT_CAPACITY;
-    HashmapEntry<K, V>* entries = nullptr;
-    Allocator allocator = Allocator::invalid();
+	u64 count = 0;
+	u64 dead_count = 0;
+	u64 capacity = DEFAULT_CAPACITY;
+	HashmapEntry<K, V>* entries = nullptr;
+	Allocator allocator = Allocator::invalid();
 
-    struct Iterator {
-        HashmapEntry<K, V>* ptr;
-        HashmapEntry<K, V>* end;
+	struct Iterator {
+		HashmapEntry<K, V>* ptr;
+		HashmapEntry<K, V>* end;
 
-        Iterator(HashmapEntry<K, V>* p, HashmapEntry<K, V>* e)
-            : ptr(p), end(e) {
-            skip();
-        }
+		Iterator(HashmapEntry<K, V>* p, HashmapEntry<K, V>* e)
+			: ptr(p), end(e) {
+			skip();
+		}
 
-        void skip() {
-            while ((ptr != end) && !ptr->is_valid()) {
-                ++ptr;
-            }
-        }
+		void skip() {
+			while ((ptr != end) && !ptr->is_valid()) {
+				++ptr;
+			}
+		}
 
-        HashmapEntry<K, V>& operator*() const {
-            return *ptr;
-        }
+		HashmapEntry<K, V>& operator*() const {
+			return *ptr;
+		}
 
-        Iterator& operator++() {
-            ++ptr;
-            skip();
-            return *this;
-        }
+		Iterator& operator++() {
+			++ptr;
+			skip();
+			return *this;
+		}
 
-        bool operator!=(const Iterator& other) const {
-            return ptr != other.ptr;
-        }
-    };
+		bool operator!=(const Iterator& other) const {
+			return ptr != other.ptr;
+		}
+	};
 
-    Iterator begin() {
-        if (!this->entries) {
-            return Iterator(entries + capacity, entries + capacity);
-        }
+	Iterator begin() {
+		if (!this->entries) {
+			return Iterator(entries + capacity, entries + capacity);
+		}
 
-        return Iterator(entries, entries + capacity);
-    }
+		return Iterator(entries, entries + capacity);
+	}
 
-    Iterator end() {
-        return Iterator(entries + capacity, entries + capacity);
-    }
+	Iterator end() {
+		return Iterator(entries + capacity, entries + capacity);
+	}
 
-    float load_factor() const {
-        return static_cast<float>(dead_count + count) / static_cast<float>(capacity);
-    }
+	float load_factor() const {
+		return static_cast<float>(dead_count + count) / static_cast<float>(capacity);
+	}
 
-    Hashmap(Allocator allocator = Allocator::invalid(), u64 capacity = DEFAULT_CAPACITY) {
+	Hashmap(Allocator allocator = Allocator::invalid(), u64 capacity = DEFAULT_CAPACITY) {
 		this->allocator = allocator;
 		this->capacity = capacity;
 	}
 
-    Hashmap(std::initializer_list<KeyValuePair<K, V>> list, Allocator allocator = Allocator::invalid()) {
+	Hashmap(std::initializer_list<KeyValuePair<K, V>> list, Allocator allocator = Allocator::invalid()) {
 		this->allocator = allocator;
 		this->capacity = DEFAULT_CAPACITY;
 	
-        if (list.size() == 0) return;
+		if (list.size() == 0) return;
 
-        capacity = list.size() * 2;
-        for (const auto& pair : list) {
-            this->put(pair.key, pair.value);
-        }
-    }
+		capacity = list.size() * 2;
+		for (const auto& pair : list) {
+			this->put(pair.key, pair.value);
+		}
+	}
 
-    s64 resolve_collision(const K& key, u64 initial_hash_index) {
-        s64 canonical_hash_index = initial_hash_index;
+	s64 resolve_collision(const K& key, u64 initial_hash_index) {
+		s64 canonical_hash_index = initial_hash_index;
 
-        u64 visited_count = 0;
-        while (true) {
-            auto* entry = &entries[canonical_hash_index];
-            if (!entry->filled) {
-                break;
-            }
+		u64 visited_count = 0;
+		while (true) {
+			auto* entry = &entries[canonical_hash_index];
+			if (!entry->filled) {
+				break;
+			}
 
-            bool equality_match = false;
-            if constexpr (CompileTime<K>::TYPE_IS_CSTRING) {
-                equality_match = String::equal(key, entry->key);
-            } else {
-                equality_match = (key == entry->key);
-            }
+			bool equality_match = false;
+			if constexpr (CompileTime<K>::TYPE_IS_CSTRING) {
+				equality_match = String::equal(key, entry->key);
+			} else {
+				equality_match = (key == entry->key);
+			}
 
-            if (equality_match) {
-                break;
-            }
+			if (equality_match) {
+				break;
+			}
 
-            if (visited_count > capacity) {
-                return -1;
-            }
+			if (visited_count > capacity) {
+				return -1;
+			}
 
-            ++visited_count;
-            canonical_hash_index = (canonical_hash_index + 1) % capacity;
-        }
+			++visited_count;
+			canonical_hash_index = (canonical_hash_index + 1) % capacity;
+		}
 
-        return canonical_hash_index;
-    }
+		return canonical_hash_index;
+	}
 
-    void grow_rehash() {
-        if (!entries) {
-            RUNTIME_ASSERT(capacity);
-            entries = (HashmapEntry<K, V>*)allocator.malloc(capacity * sizeof(HashmapEntry<K, V>), alignof(HashmapEntry<K, V>));
-            Memory::zero(entries, capacity * sizeof(HashmapEntry<K, V>));
-            return;
-        }
+	void grow_rehash() {
+		if (!entries) {
+			RUNTIME_ASSERT(capacity);
+			entries = (HashmapEntry<K, V>*)allocator.malloc(capacity * sizeof(HashmapEntry<K, V>), alignof(HashmapEntry<K, V>));
+			Memory::zero(entries, capacity * sizeof(HashmapEntry<K, V>));
+			return;
+		}
 
-        u64 old_capacity = capacity;
-        auto* old_entries = entries;
+		u64 old_capacity = capacity;
+		auto* old_entries = entries;
 
-        capacity *= 2;
-        size_t new_size = capacity * sizeof(HashmapEntry<K, V>);
-        entries = (HashmapEntry<K, V>*)allocator.malloc(new_size, alignof(HashmapEntry<K, V>));
-        Memory::zero(entries, new_size);
+		capacity *= 2;
+		size_t new_size = capacity * sizeof(HashmapEntry<K, V>);
+		entries = (HashmapEntry<K, V>*)allocator.malloc(new_size, alignof(HashmapEntry<K, V>));
+		Memory::zero(entries, new_size);
 
-        HashFunction* hash_func = compile_time_get_hash_function<K>();
-        for (u64 i = 0; i < old_capacity; ++i) {
-            auto& old_entry = old_entries[i];
-            if (!old_entry.filled || old_entry.dead) continue;
+		HashFunction* hash_func = compile_time_get_hash_function<K>();
+		for (u64 i = 0; i < old_capacity; ++i) {
+			auto& old_entry = old_entries[i];
+			if (!old_entry.filled || old_entry.dead) continue;
 
-            u64 hash = hashmap_safe_hash<K>(hash_func, old_entry.key);
-            s64 index = resolve_collision(old_entry.key, hash % capacity);
-            RUNTIME_ASSERT(index != -1);
+			u64 hash = hashmap_safe_hash<K>(hash_func, old_entry.key);
+			s64 index = resolve_collision(old_entry.key, hash % capacity);
+			RUNTIME_ASSERT(index != -1);
 
-            entries[index] = old_entry;
-        }
+			entries[index] = old_entry;
+		}
 
-        allocator.free(old_entries);
-    }
+		allocator.free(old_entries);
+	}
 
-    bool has(const K& key) {
-        if (!entries) return false;
+	bool has(const K& key) {
+		if (!entries) return false;
 
-        HashFunction* hash_func = compile_time_get_hash_function<K>(); 
-        u64 hash = hashmap_safe_hash(hash_func, key);
-        s64 index = resolve_collision(key, hash % capacity);
-        if (index == -1) return false;
+		HashFunction* hash_func = compile_time_get_hash_function<K>(); 
+		u64 hash = hashmap_safe_hash(hash_func, key);
+		s64 index = resolve_collision(key, hash % capacity);
+		if (index == -1) return false;
 
-        return entries[index].is_valid();
-    }
+		return entries[index].is_valid();
+	}
 
-    void put(const K& key, const V& value) {
-        if (this->allocator == Allocator::invalid()) {
-            this->allocator = Allocator::general();
-        }
+	void put(const K& key, const V& value) {
+		if (this->allocator == Allocator::invalid()) {
+			this->allocator = Allocator::general();
+		}
 
-        if (!entries || load_factor() >= DEFAULT_LOAD_FACTOR) {
-            this->grow_rehash();
-        }
+		if (!entries || load_factor() >= DEFAULT_LOAD_FACTOR) {
+			this->grow_rehash();
+		}
 
-        HashFunction* hash_func = compile_time_get_hash_function<K>(); 
-        u64 hash = hashmap_safe_hash<K>(hash_func, key);
-        s64 index = resolve_collision(key, hash % capacity);
-        RUNTIME_ASSERT(index != -1);
+		HashFunction* hash_func = compile_time_get_hash_function<K>(); 
+		u64 hash = hashmap_safe_hash<K>(hash_func, key);
+		s64 index = resolve_collision(key, hash % capacity);
+		RUNTIME_ASSERT(index != -1);
 
-        auto* entry = &entries[index];
-        if (!entry->filled || entry->dead) {
-            ++count;
-        }
+		auto* entry = &entries[index];
+		if (!entry->filled || entry->dead) {
+			++count;
+		}
 
-        entry->key = key;
-        entry->value = value;
-        entry->filled = true;
-        entry->dead = false;
-    }
+		entry->key = key;
+		entry->value = value;
+		entry->filled = true;
+		entry->dead = false;
+	}
 
-    V& operator[](const K& key) {
-        RUNTIME_ASSERT_MSG(has(key), "Key doesn't exist\n");
+	V& operator[](const K& key) {
+		RUNTIME_ASSERT_MSG(has(key), "Key doesn't exist\n");
 
-        HashFunction* hash_func = compile_time_get_hash_function<K>(); 
-        u64 hash = hashmap_safe_hash(hash_func, key);
-        s64 index = resolve_collision(key, hash % capacity);
-        RUNTIME_ASSERT(index != -1);
+		HashFunction* hash_func = compile_time_get_hash_function<K>(); 
+		u64 hash = hashmap_safe_hash(hash_func, key);
+		s64 index = resolve_collision(key, hash % capacity);
+		RUNTIME_ASSERT(index != -1);
 
-        return entries[index].value;
-    }
+		return entries[index].value;
+	}
 
-    V get(const K& key) {
-        RUNTIME_ASSERT_MSG(has(key), "Key doesn't exist\n");
+	V get(const K& key) {
+		RUNTIME_ASSERT_MSG(has(key), "Key doesn't exist\n");
 
-        HashFunction* hash_func = compile_time_get_hash_function<K>(); 
-        u64 hash = hashmap_safe_hash(hash_func, key);
-        s64 index = resolve_collision(key, hash % capacity);
-        RUNTIME_ASSERT(index != -1);
+		HashFunction* hash_func = compile_time_get_hash_function<K>(); 
+		u64 hash = hashmap_safe_hash(hash_func, key);
+		s64 index = resolve_collision(key, hash % capacity);
+		RUNTIME_ASSERT(index != -1);
 
-        return entries[index].value;
-    }
+		return entries[index].value;
+	}
 
-    V remove(const K& key) {
-        RUNTIME_ASSERT_MSG(has(key), "Key doesn't exist\n");
+	V remove(const K& key) {
+		RUNTIME_ASSERT_MSG(has(key), "Key doesn't exist\n");
 
-        HashFunction* hash_func = compile_time_get_hash_function<K>(); 
-        u64 hash = hashmap_safe_hash(hash_func, key);
-        s64 index = resolve_collision(key, hash % capacity);
-        RUNTIME_ASSERT(index != -1);
+		HashFunction* hash_func = compile_time_get_hash_function<K>(); 
+		u64 hash = hashmap_safe_hash(hash_func, key);
+		s64 index = resolve_collision(key, hash % capacity);
+		RUNTIME_ASSERT(index != -1);
 
-        auto* entry = &entries[index];
+		auto* entry = &entries[index];
 
-        --count;
-        ++dead_count;
-        entry->dead = true;
+		--count;
+		++dead_count;
+		entry->dead = true;
 
-        return entry->value;
-    }
+		return entry->value;
+	}
 
-    void clear() {
-        count = 0;
-        dead_count = 0;
+	void clear() {
+		count = 0;
+		dead_count = 0;
 
-        if (this->entries) {
-            Memory::zero(entries, sizeof(HashmapEntry<K, V>) * capacity);
-        }
-    }
+		if (this->entries) {
+			Memory::zero(entries, sizeof(HashmapEntry<K, V>) * capacity);
+		}
+	}
 };

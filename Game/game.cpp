@@ -77,19 +77,18 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 		}
 	}
 
-	VertexLayout layout = VertexLayout({
+	VertexLayout layout = VertexLayout({{
 		VertexAttribute{4, 0, BufferStrideTypeInfo::MAT4, true},
-	});
+	}, engine->frame_allocator});
 
 	app->instance_cube_vbo = engine->renderer.create_vertex_buffer(app->cube_mesh, layout, app->cube_translations, true);
-
 	app->timer.start(5.0f);
 }
 
 EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* string_intern_map, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
-	app->accumulator += dt * 100;
+	app->accumulator += dt * 10;
 
 	// active_scene.update(dt);
 	if (engine->input.get_key_pressed(KEY_ESCAPE)) {

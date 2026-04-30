@@ -32,20 +32,19 @@ void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
 }
 
 void load_application_function_pointers(ApplicationInitalizeFunc** application_init, ApplicationUpdateFunc** application_update, ApplicationRenderFunc** application_render) {
-    if (dll) {
-        Platform::free_dll(dll);
-        *application_update = nullptr;
-        *application_render = nullptr;
-        dll    = nullptr;
-    }
+	if (dll) {
+		Platform::free_dll(dll);
+		*application_update = nullptr;
+		*application_render = nullptr;
+		dll    = nullptr;
+	}
 
 	Platform::copy_file(dll_name, temp_dll_name, true);
-	
 	last_write_time = Platform::get_file_modification_time(temp_dll_name);
 
 	Error err = Error::SUCCESS;
-    dll = Platform::load_dll(temp_dll_name, err);
-    RUNTIME_ASSERT_MSG(err == Error::SUCCESS, "Failed to load dll | %s\n", error_get_string(err));
+	dll = Platform::load_dll(temp_dll_name, err);
+	RUNTIME_ASSERT_MSG(err == Error::SUCCESS, "Failed to load dll | %s\n", error_get_string(err));
 
 	err = Error::SUCCESS;
 	if (application_init) {
@@ -59,21 +58,21 @@ void load_application_function_pointers(ApplicationInitalizeFunc** application_i
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int frame_buffer_width, int frame_buffer_height) {
-    engine->renderer.FRAME_BUFFER_WIDTH  = frame_buffer_width;
-    engine->renderer.FRAME_BUFFER_HEIGHT = frame_buffer_height;
-    gl_error_check(glViewport(0, 0, frame_buffer_width, frame_buffer_height));
+	engine->renderer.FRAME_BUFFER_WIDTH  = frame_buffer_width;
+	engine->renderer.FRAME_BUFFER_HEIGHT = frame_buffer_height;
+	gl_error_check(glViewport(0, 0, frame_buffer_width, frame_buffer_height));
 
 	// seems like this will be a constant battle might just be worth making renderer and engine a singleton...
-    // Renderer::CreatePickingFrameBuffer(Renderer::FRAME_BUFFER_WIDTH, Renderer::FRAME_BUFFER_HEIGHT);
+	// Renderer::CreatePickingFrameBuffer(Renderer::FRAME_BUFFER_WIDTH, Renderer::FRAME_BUFFER_HEIGHT);
 }
 
 void window_size_callback(GLFWwindow* window, int window_width, int window_height) {
-    engine->renderer.WINDOW_WIDTH = window_width;
-    engine->renderer.WINDOW_HEIGHT = window_height;
+	engine->renderer.WINDOW_WIDTH = window_width;
+	engine->renderer.WINDOW_HEIGHT = window_height;
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    engine->camera.process_mouse_scroll((float)yoffset);
+	engine->camera.process_mouse_scroll((float)yoffset);
 }
 
 GLFWwindow* GLFW_INIT(const int WIDTH, const int HEIGHT) {
@@ -106,8 +105,8 @@ GLFWwindow* GLFW_INIT(const int WIDTH, const int HEIGHT) {
 	glfwSwapInterval(1);
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetWindowSizeCallback(window, window_size_callback);
-    glfwSetScrollCallback(window, scroll_callback);
+	glfwSetWindowSizeCallback(window, window_size_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 	glfwSetInputMode(window, GLFW_CURSOR, engine->mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 	gl_error_check(glEnable(GL_MULTISAMPLE));
 	// glEnable(GL_CULL_FACE);
@@ -131,16 +130,17 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 	this->frame_allocator = frame_allocator;
 
 	this->renderer = Renderer<OpenGL>::create(this->permenant_allocator, this->frame_allocator);
-
 	this->window = GLFW_INIT(this->renderer.WINDOW_WIDTH, this->renderer.WINDOW_HEIGHT);
 	if (!this->window) {
 		return false;
 	}
 
-	this->input.init(engine->permenant_allocator);
+	this->input.init(this->permenant_allocator);
 	if (!INPUT_GLFW_SETUP(&this->input, this->window, nullptr, nullptr, mouse)) {
 		return false;
 	}
+
+	HandleFallback::shader = this->renderer.create_shader({STR("../../../Game/Assets/Shaders/fallback.vert"), STR("../../../Game/Assets/Shaders/fallback.frag")});
 
 	load_application_function_pointers(&this->application_init, &this->application_update, &this->application_render);
 	if (application_init) application_init(this, string_intern_map);

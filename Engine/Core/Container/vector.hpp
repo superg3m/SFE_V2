@@ -14,24 +14,24 @@ struct Vector {
 	u64 capacity = DEFAULT_CAPACITY;
 	T* data = nullptr;
 	Allocator allocator = Allocator::invalid();
-    
+	
    	Vector(Allocator allocator = Allocator::invalid(), u64 capacity = DEFAULT_CAPACITY, u64 count = 0) {
 		this->count = count;
-        this->capacity = capacity;
-        this->data = nullptr;
-        this->allocator = allocator;
+		this->capacity = capacity;
+		this->data = nullptr;
+		this->allocator = allocator;
 	}
 
-    Vector(std::initializer_list<T> list, Allocator allocator = Allocator::invalid()) {
-        this->count = list.size();
-        this->capacity = (this->count * 2) ? (this->count * 2) : DEFAULT_CAPACITY;
-        this->allocator = allocator;
+	Vector(std::initializer_list<T> list, Allocator allocator = Allocator::invalid()) {
+		this->count = list.size();
+		this->capacity = (this->count * 2) ? (this->count * 2) : DEFAULT_CAPACITY;
+		this->allocator = allocator;
 
-        if (list.size() == 0) return;
+		if (list.size() == 0) return;
 
-        if (this->allocator == Allocator::invalid()) {
-            this->allocator = Allocator::general();
-        }
+		if (this->allocator == Allocator::invalid()) {
+			this->allocator = Allocator::general();
+		}
 
 		this->count = list.size();
 		this->capacity = this->count * 2;
@@ -39,102 +39,102 @@ struct Vector {
 		Memory::copy(this->data, this->capacity * sizeof(T), list.begin(), list.size() * sizeof(T));
 	}
 
-    static void copy(Vector<T>* destination, Vector<T>* source) {
-        RUNTIME_ASSERT(destination->data == nullptr);
-        destination->capacity = source->capacity;
-        destination->count = source->count;
-        if (source->data == nullptr) return;
+	static void copy(Vector<T>* destination, Vector<T>* source) {
+		RUNTIME_ASSERT(destination->data == nullptr);
+		destination->capacity = source->capacity;
+		destination->count = source->count;
+		if (source->data == nullptr) return;
 
-        size_t allocation_size = destination->capacity * sizeof(T);
-        destination->data = (T*)destination->allocator.malloc(allocation_size, alignof(T));
-        Memory::copy(destination->data, allocation_size, source->data, allocation_size);
-    }
+		size_t allocation_size = destination->capacity * sizeof(T);
+		destination->data = (T*)destination->allocator.malloc(allocation_size, alignof(T));
+		Memory::copy(destination->data, allocation_size, source->data, allocation_size);
+	}
 
-    void reserve(u64 count) {
-        if (this->allocator == Allocator::invalid()) {
-            this->allocator = Allocator::general();
-        }
+	void reserve(u64 count) {
+		if (this->allocator == Allocator::invalid()) {
+			this->allocator = Allocator::general();
+		}
 
-        const size_t total_allocation_size = sizeof(T) * this->capacity;
-        const size_t old_allocation_size = sizeof(T) * this->count;
-        const size_t new_allocation_size = sizeof(T) * count;
-        if (this->data == nullptr) {
-            this->data = (T*)this->allocator.malloc(new_allocation_size, alignof(T));
-        }
+		const size_t total_allocation_size = sizeof(T) * this->capacity;
+		const size_t old_allocation_size = sizeof(T) * this->count;
+		const size_t new_allocation_size = sizeof(T) * count;
+		if (this->data == nullptr) {
+			this->data = (T*)this->allocator.malloc(new_allocation_size, alignof(T));
+		}
 
-        if (new_allocation_size > total_allocation_size) {
-            this->data = (T*)this->allocator.realloc(this->data, old_allocation_size, new_allocation_size, alignof(T));
-        }
+		if (new_allocation_size > total_allocation_size) {
+			this->data = (T*)this->allocator.realloc(this->data, old_allocation_size, new_allocation_size, alignof(T));
+		}
 
-        this->capacity = count;
-    }
+		this->capacity = count;
+	}
 
 	void resize(u64 count) {
-        if (this->allocator == Allocator::invalid()) {
-            this->allocator = Allocator::general();
-        }
+		if (this->allocator == Allocator::invalid()) {
+			this->allocator = Allocator::general();
+		}
 
-        const size_t total_allocation_size = sizeof(T) * this->capacity;
-        const size_t old_allocation_size = sizeof(T) * this->count;
-        const size_t new_allocation_size = sizeof(T) * count;
-        if (this->data == nullptr) {
-            this->data = (T*)this->allocator.malloc(new_allocation_size, alignof(T));
-        }
+		const size_t total_allocation_size = sizeof(T) * this->capacity;
+		const size_t old_allocation_size = sizeof(T) * this->count;
+		const size_t new_allocation_size = sizeof(T) * count;
+		if (this->data == nullptr) {
+			this->data = (T*)this->allocator.malloc(new_allocation_size, alignof(T));
+		}
 
-        if (new_allocation_size > total_allocation_size) {
-            this->data = (T*)this->allocator.realloc(this->data, old_allocation_size, new_allocation_size, alignof(T));
-        }
+		if (new_allocation_size > total_allocation_size) {
+			this->data = (T*)this->allocator.realloc(this->data, old_allocation_size, new_allocation_size, alignof(T));
+		}
 
-        this->count = count;
-        this->capacity = count;
-    }
+		this->count = count;
+		this->capacity = count;
+	}
 
 	void append(T value) {
-        if (this->allocator == Allocator::invalid()) {
-            this->allocator = Allocator::general();
-        }
+		if (this->allocator == Allocator::invalid()) {
+			this->allocator = Allocator::general();
+		}
 
-        if (!this->data) { 
-            this->data = (T*)this->allocator.malloc(this->capacity * sizeof(T), alignof(T));
-        }
+		if (!this->data) { 
+			this->data = (T*)this->allocator.malloc(this->capacity * sizeof(T), alignof(T));
+		}
 
-        if (this->count == this->capacity) {
-            size_t old_allocation_size = (this->capacity * sizeof(T));
-            this->capacity *= 2;
-            size_t new_allocation_size = (this->capacity * sizeof(T));
-            this->data = (T*)this->allocator.realloc(this->data, old_allocation_size, new_allocation_size, alignof(T));
-        }
+		if (this->count == this->capacity) {
+			size_t old_allocation_size = (this->capacity * sizeof(T));
+			this->capacity *= 2;
+			size_t new_allocation_size = (this->capacity * sizeof(T));
+			this->data = (T*)this->allocator.realloc(this->data, old_allocation_size, new_allocation_size, alignof(T));
+		}
 
-        this->data[this->count++] = value;
-    }
+		this->data[this->count++] = value;
+	}
 
 	void stable_remove(int index) {
-        RUNTIME_ASSERT_MSG(this->count > 0, "You may not remove if the vector is empty!\n");
-        RUNTIME_ASSERT_MSG((index >= 0) && (this->count > index), "index is outside of bounds!\n");
+		RUNTIME_ASSERT_MSG(this->count > 0, "You may not remove if the vector is empty!\n");
+		RUNTIME_ASSERT_MSG((index >= 0) && (this->count > index), "index is outside of bounds!\n");
 
-        for (int i = index; i < this->count - 1; i++) {
-            this->data[i] = this->data[i + 1];
-        }
+		for (int i = index; i < this->count - 1; i++) {
+			this->data[i] = this->data[i + 1];
+		}
 
-        this->count -= 1;
-    }
+		this->count -= 1;
+	}
 
 	void unstable_swapback_remove(int index) {
 		RUNTIME_ASSERT_MSG(this->count > 0, "You may not remove if the vector is empty!\n");
-        RUNTIME_ASSERT_MSG((index >= 0) && (this->count > index), "index is outside of bounds!\n");
+		RUNTIME_ASSERT_MSG((index >= 0) && (this->count > index), "index is outside of bounds!\n");
 
 		this->data[index] = this->data[--this->count];
 	}
 
-    int find(T element) {
-        for (int i = 0; i < this->count; i++) {
-            if (this->data[i] == element) {
-                return i;
-            }
-        }
+	int find(T element) {
+		for (int i = 0; i < this->count; i++) {
+			if (this->data[i] == element) {
+				return i;
+			}
+		}
 
-        return -1;
-    }
+		return -1;
+	}
 
 	T* begin() { return this->data; }
 	T* end() { return this->data + this->count; }

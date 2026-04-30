@@ -3,7 +3,7 @@
 #include "../../../Core/core.hpp"
 
 struct CommandBufferHandle {
-    Handle handle = Handle::invalid();
+	Handle handle = Handle::invalid();
 	CommandBufferHandle(Handle handle) {
 		this->handle = handle;
 	}
@@ -14,7 +14,7 @@ struct CommandBufferHandle {
 };
 
 struct TextureHandle {
-    Handle handle = Handle::invalid();
+	Handle handle = Handle::invalid();
 	TextureHandle(Handle handle) {
 		this->handle = handle;
 	}
@@ -25,7 +25,7 @@ struct TextureHandle {
 };
 
 struct MaterialHandle {
-    Handle handle = Handle::invalid();
+	Handle handle = Handle::invalid();
 	MaterialHandle(Handle handle) {
 		this->handle = handle;
 	}
@@ -36,7 +36,7 @@ struct MaterialHandle {
 };
 
 struct ShaderHandle {
-    Handle handle = Handle::invalid();
+	Handle handle = Handle::invalid();
 	ShaderHandle(Handle handle) {
 		this->handle = handle;
 	}
@@ -47,7 +47,7 @@ struct ShaderHandle {
 };
 
 struct MeshHandle {
-    Handle handle = Handle::invalid();
+	Handle handle = Handle::invalid();
 	MeshHandle(Handle handle) {
 		this->handle = handle;
 	}
@@ -58,7 +58,7 @@ struct MeshHandle {
 };
 
 struct VertexBufferHandle {
-    Handle handle = Handle::invalid();
+	Handle handle = Handle::invalid();
 	VertexBufferHandle(Handle handle) {
 		this->handle = handle;
 	}
@@ -69,7 +69,7 @@ struct VertexBufferHandle {
 };
 
 struct IndexBufferHandle {
-    Handle handle = Handle::invalid();
+	Handle handle = Handle::invalid();
 	IndexBufferHandle(Handle handle) {
 		this->handle = handle;
 	}
@@ -77,4 +77,8 @@ struct IndexBufferHandle {
 	static IndexBufferHandle invalid() {
 		return {Handle::invalid()};
 	}
+};
+
+struct HandleFallback {
+	static ShaderHandle shader;
 };

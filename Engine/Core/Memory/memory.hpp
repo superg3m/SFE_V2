@@ -3,16 +3,16 @@
 #include "../Basic/basic.hpp"
 
 namespace Memory {
-    void zero(void* data, size_t data_size_in_bytes);
-    void copy(void* destination, size_t destination_size, const void* source, size_t source_size);
-    bool equal(const void* buffer_one, size_t b1_size, const void* buffer_two, size_t b2_size);
+	void zero(void* data, size_t data_size_in_bytes);
+	void copy(void* destination, size_t destination_size, const void* source, size_t source_size);
+	bool equal(const void* buffer_one, size_t b1_size, const void* buffer_two, size_t b2_size);
 
-    template <typename T>
-    void swap(T &a, T &b) {
-        T temp = a;
-        a = b;
-        b = temp;
-    }
+	template <typename T>
+	void swap(T &a, T &b) {
+		T temp = a;
+		a = b;
+		b = temp;
+	}
 }
 
 typedef void* (AllocateFunction)(void* ctx, size_t allocation_size, size_t alignment);
@@ -28,7 +28,7 @@ struct Allocator {
 	void* realloc(void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment);
 	void free(void* data);
 
-    static Allocator invalid();
+	static Allocator invalid();
 	static Allocator general();
 
 	bool operator==(Allocator other) const;

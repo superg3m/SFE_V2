@@ -15,48 +15,48 @@ enum class BindingValueType {
 };
 
 struct BindingValue {
-    BindingValueType type;
-    union {
-        bool boolean_binding;
-        int integer_binding;
-        float float_binding;
-        TextureHandle texture_binding;
-        Vec2 vector2_binding;
-        Vec3 vector3_binding;
-        Vec4 vector4_binding;
-        Mat4 mat4_binding;
-    };
+	BindingValueType type;
+	union {
+		bool boolean_binding;
+		int integer_binding;
+		float float_binding;
+		TextureHandle texture_binding;
+		Vec2 vector2_binding;
+		Vec3 vector3_binding;
+		Vec4 vector4_binding;
+		Mat4 mat4_binding;
+	};
 
-    template<typename T>
-    BindingValue(T value) {
-        if constexpr (std::is_same_v<T, bool>) {
-            this->type = BindingValueType::BOOL;
-            this->boolean_binding = value;
-        } else if constexpr (std::is_same_v<T, int>) {
-            this->type = BindingValueType::INTEGER;
-            this->integer_binding = value;
-        } else if constexpr (std::is_same_v<T, float>) {
-            this->type = BindingValueType::FLOAT;
-            this->float_binding = value;
-        } else if constexpr (std::is_same_v<T, TextureHandle>) {
-            this->type = BindingValueType::TEXTURE_HANDLE;
-            this->texture_binding = value;
-        } else if constexpr (std::is_same_v<T, Vec2>) {
-            this->type = BindingValueType::VECTOR2;
-            this->vector2_binding = value;
-        } else if constexpr (std::is_same_v<T, Vec3>) {
-            this->type = BindingValueType::VECTOR3;
-            this->vector3_binding = value;
-        } else if constexpr (std::is_same_v<T, Vec4>) {
-            this->type = BindingValueType::VECTOR4;
-            this->vector4_binding = value;
-        } else if constexpr (std::is_same_v<T, Mat4>) {
-            this->type = BindingValueType::MAT4;
-            this->mat4_binding = value;
-        } else {
-            STATIC_ASSERT(false, "Unsupported BindingValue type");
-        }
-    }
+	template<typename T>
+	BindingValue(T value) {
+		if constexpr (std::is_same_v<T, bool>) {
+			this->type = BindingValueType::BOOL;
+			this->boolean_binding = value;
+		} else if constexpr (std::is_same_v<T, int>) {
+			this->type = BindingValueType::INTEGER;
+			this->integer_binding = value;
+		} else if constexpr (std::is_same_v<T, float>) {
+			this->type = BindingValueType::FLOAT;
+			this->float_binding = value;
+		} else if constexpr (std::is_same_v<T, TextureHandle>) {
+			this->type = BindingValueType::TEXTURE_HANDLE;
+			this->texture_binding = value;
+		} else if constexpr (std::is_same_v<T, Vec2>) {
+			this->type = BindingValueType::VECTOR2;
+			this->vector2_binding = value;
+		} else if constexpr (std::is_same_v<T, Vec3>) {
+			this->type = BindingValueType::VECTOR3;
+			this->vector3_binding = value;
+		} else if constexpr (std::is_same_v<T, Vec4>) {
+			this->type = BindingValueType::VECTOR4;
+			this->vector4_binding = value;
+		} else if constexpr (std::is_same_v<T, Mat4>) {
+			this->type = BindingValueType::MAT4;
+			this->mat4_binding = value;
+		} else {
+			STATIC_ASSERT(false, "Unsupported BindingValue type");
+		}
+	}
 };
 
 struct Material {

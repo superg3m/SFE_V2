@@ -6,7 +6,7 @@ enum class TextureSamplerType {
 };
 
 struct TextureDescription {
-    bool pixel_perfect = false;
-    bool vertical_flip = true;
+	bool pixel_perfect = false;
+	bool vertical_flip = true;
 	TextureSamplerType type = TextureSamplerType::SAMPLER_2D;
 };

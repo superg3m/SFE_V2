@@ -36,8 +36,8 @@ struct HealthComponent : public Component {
 	int current_health = 0;
 	int max_health = 0;
 
-    HealthComponent(Entity* owner, int max_health);
-    void update(float dt) override;
+	HealthComponent(Entity* owner, int max_health);
+	void update(float dt) override;
 
 	void Damage(int dmg);
 };
@@ -57,8 +57,8 @@ struct StatusComponent : public Component {
 	bool stunned = false;
 	Timer status_timer = {};
 
-    StatusComponent(Entity* owner, bool burnable, bool stunnable);
-    void update(float dt) override;
+	StatusComponent(Entity* owner, bool burnable, bool stunnable);
+	void update(float dt) override;
 
 	void StartBurn(float duration, int burn_dmg_per_tick);
 	void StopBurn();
@@ -67,8 +67,8 @@ struct StatusComponent : public Component {
 struct PlayerControllerComponent : public Component {
 	using Component::Component;
 
-    PlayerControllerComponent(Entity* owner);
-    void update(float dt) override;
+	PlayerControllerComponent(Entity* owner);
+	void update(float dt) override;
 };
 
 struct MeshComponent : public Component {
@@ -85,8 +85,8 @@ struct MeshComponent : public Component {
 	// OpenGL::Mesh* aabb_mesh;
 	// bool should_render_mesh_aabb = false;
 
-    MeshComponent(Entity* owner, OpenGL::RenderQueue* queue, OpenGL::Shader* shader, OpenGL::VAO* vao, OpenGL::MeshEntry* entry, OpenGL::Material* material);
-    void update(float dt) override;
+	MeshComponent(Entity* owner, OpenGL::RenderQueue* queue, OpenGL::Shader* shader, OpenGL::VAO* vao, OpenGL::MeshEntry* entry, OpenGL::Material* material);
+	void update(float dt) override;
 };
 
 /*
@@ -94,25 +94,25 @@ struct MeshComponent : public Component {
 struct CameraComponent : public Component {
 	using Component::Component;
 
-    float fov = 60.0f;
-    float near_plane = 0.1f;
-    float far_plane = 1000.0f;
+	float fov = 60.0f;
+	float near_plane = 0.1f;
+	float far_plane = 1000.0f;
 
-    CameraComponent(Entity* owner, bool burnable, bool stunnable);
-    void update(float dt) override;
+	CameraComponent(Entity* owner, bool burnable, bool stunnable);
+	void update(float dt) override;
 
-    Math::Mat4 GetViewMatrix() {
-        bool success = false;
-        Math::Mat4 view = this->owner->GetWorldTrasform().inverse(success);
-        if (!success) {
-            LOG_ERROR("Failed to inverse camera world trasform\n");
-        }
+	Math::Mat4 GetViewMatrix() {
+		bool success = false;
+		Math::Mat4 view = this->owner->GetWorldTrasform().inverse(success);
+		if (!success) {
+			LOG_ERROR("Failed to inverse camera world trasform\n");
+		}
 
-        return view;
-    }
+		return view;
+	}
 
-    Math::Mat4 GetProjectionMatrix(float aspect_ratio) {
-        return Math::Mat4::Perspective(this->fov, aspect_ratio, this->near_plane, this->far_plane);
-    }
+	Math::Mat4 GetProjectionMatrix(float aspect_ratio) {
+		return Math::Mat4::Perspective(this->fov, aspect_ratio, this->near_plane, this->far_plane);
+	}
 };
 */
