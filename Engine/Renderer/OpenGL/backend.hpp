@@ -39,8 +39,13 @@ struct OpenGL {
 	};
 
 	struct Shader {
-		unsigned int program_id = 0;
+		static Vector<String> fallback_paths;
 
+		unsigned int program_id = 0;
+		bool using_fallback = false;
+		Vector<String> shader_paths;
+		Hashmap<String, UniformDesc> uniforms;
+	
 		Shader() = default;
 		Shader(Vector<String> shader_paths) {
 			this->uniforms = Hashmap<String, UniformDesc>(shader_paths.allocator);
@@ -69,9 +74,6 @@ struct OpenGL {
 		void set_mat4(String name, const Mat4& mat);
 		void set_material(OpenGL* backend, Material* material);
 	private:
-		Vector<String> shader_paths;
-		Hashmap<String, UniformDesc> uniforms;
-
 		u32 create_shader_program(Vector<String> shader_paths);
 		GLenum type_from_path(String path);
 		void check_compile_error(unsigned int source_id, String path);
@@ -252,20 +254,11 @@ struct OpenGL {
 				case RequestType::SHADER_CREATE: {
 					Shader& shader = this->shaders.get(request.shader.user.handle);
 					shader = Shader(request.shader.shader_paths);
-					if (shader.program_id == 0) {
-						Shader& fallback = this->shaders.get(HandleFallback::shader.handle);
-						shader = fallback;
-					}
 				} break;
 
 				case RequestType::SHADER_RECOMPILE: {
 					Shader& shader = this->shaders.get(request.shader.user.handle);
 					shader.compile();
-
-					if (shader.program_id == 0) {
-						Shader& fallback = this->shaders.get(HandleFallback::shader.handle);
-						shader = fallback;
-					}
 				} break;
 
 				case RequestType::MESH_LOAD: {

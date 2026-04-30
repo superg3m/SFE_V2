@@ -78,7 +78,3 @@ struct IndexBufferHandle {
 		return {Handle::invalid()};
 	}
 };
-
-struct HandleFallback {
-	static ShaderHandle shader;
-};

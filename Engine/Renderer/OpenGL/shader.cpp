@@ -1,9 +1,13 @@
 #include "backend.hpp"
 #include "../../Platform/platform.hpp"
 
+Vector<String> OpenGL::Shader::fallback_paths = Vector<String>({
+	STR("../../../Game/Assets/Shaders/fallback.vert"),
+	STR("../../../Game/Assets/Shaders/fallback.frag"),
+});
+
 u32 OpenGL::Shader::create_shader_program(Vector<String> shader_paths) {
 	u32 shader_program_id = glCreateProgram();
-	this->shader_paths = shader_paths;
 
 	u32 shader_source_count = 0;
 	u32 shader_source_ids[8] = {};
@@ -22,6 +26,17 @@ u32 OpenGL::Shader::create_shader_program(Vector<String> shader_paths) {
 		glGetProgramInfoLog(shader_program_id, 512, NULL, info_log);
 		LOG_ERROR("LINKING_FAILED {%s}\n", shader_paths[0].data);
 		LOG_ERROR("%s -- --------------------------------------------------- --\n", info_log);
+
+		if (!using_fallback) {
+			LOG_INFO("Using Fallback\n", info_log);
+			this->using_fallback = true;
+
+			for (int i = 0; i < shader_source_count; i++) {
+				glDeleteShader(shader_source_ids[i]);
+			}
+
+			return OpenGL::Shader::create_shader_program(fallback_paths);
+		}
 		
 		return 0;
 	}
@@ -50,6 +65,7 @@ u32 OpenGL::Shader::create_shader_program(Vector<String> shader_paths) {
 
 void OpenGL::Shader::compile() {
 	this->uniforms.clear();
+	this->using_fallback = false;
 	this->program_id = this->create_shader_program(this->shader_paths);
 }
 

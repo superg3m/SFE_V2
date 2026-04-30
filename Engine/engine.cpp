@@ -139,9 +139,7 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 	if (!INPUT_GLFW_SETUP(&this->input, this->window, nullptr, nullptr, mouse)) {
 		return false;
 	}
-
-	HandleFallback::shader = this->renderer.create_shader({STR("../../../Game/Assets/Shaders/fallback.vert"), STR("../../../Game/Assets/Shaders/fallback.frag")});
-
+	
 	load_application_function_pointers(&this->application_init, &this->application_update, &this->application_render);
 	if (application_init) application_init(this, string_intern_map);
 
