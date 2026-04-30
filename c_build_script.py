@@ -76,6 +76,7 @@ RELATIVE_GLAD_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glad"
 RELATIVE_STB_ROOT = f"{RELATIVE_ENGINE_VENDOR}/stb"
 RELATIVE_GLM_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glm"
 RELATIVE_IMGUI_ROOT = f"{RELATIVE_ENGINE_VENDOR}/imgui"
+RELATIVE_NFD_ROOT = f"{RELATIVE_ENGINE_VENDOR}/nativefiledialog"
 
 RELATIVE_GAME_ROOT = "../../../Game"
 
@@ -128,6 +129,18 @@ INCLUDES = [
     f"{RELATIVE_ASSIMP_ROOT}/include",
 ]
 
+nfd = []
+if IS_WINDOWS():
+    nfd = [
+        f"{RELATIVE_NFD_ROOT}/src/nfd_common.c",
+        f"{RELATIVE_NFD_ROOT}/src/nfd_win.cpp"
+    ]
+elif IS_DARWIN():
+    nfd = [
+        f"{RELATIVE_NFD_ROOT}/src/nfd_common.c",
+        f"{RELATIVE_NFD_ROOT}/src/nfd.cocoa.m"
+    ] 
+
 # ---------------------------------------------------------------------------------------
 
 procedures_config = {
@@ -137,9 +150,10 @@ procedures_config = {
         source_files = [
             f"{RELATIVE_ENGINE_ROOT}/sfe.cpp",
             
+            f"{RELATIVE_IMGUI_ROOT}/*.cpp",
             f"{RELATIVE_GLAD_ROOT}/src/glad.c",
             f"{RELATIVE_STB_ROOT}/stb_image.c",
-        ],
+        ] + nfd,
         additional_libs = [],
         include_paths = INCLUDES,
         compiler_inject_into_args=[]
