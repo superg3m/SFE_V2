@@ -146,8 +146,8 @@ EXPORT_FN void application_render(Engine* engine, float dt) {
 	Mat4 view = engine->get_view_matrix();
 	Mat4 projection = engine->get_projection_matrix();
 	engine->renderer.material_set_uniforms(app->material, {{
-		{String::allocate("uContainer"), app->container_texture},
-		{String::allocate("uFace"), app->face_texture},
+		{"uContainer", app->container_texture},
+		{"uFace", app->face_texture},
 	}, engine->frame_allocator});
 
 	if (engine->reloaded_dll) {
