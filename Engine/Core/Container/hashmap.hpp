@@ -33,12 +33,16 @@ constexpr HashFunction* compile_time_get_hash_function() {
 template<typename K>
 u64 hashmap_safe_hash(HashFunction* hash_func, K key) {
 	if constexpr (CompileTime<K>::TYPE_IS_CSTRING) {
+        LOG_WARN("MAN WE ARE JUT RELLAY SUCK 1: %s\n", key);
 		return hash_func((void*)key, 0);
 	} else if constexpr (CompileTime<K>::TYPE_IS_STRING) {
+        LOG_WARN("MAN WE ARE JUT RELLAY SUCK 2\n");
 		return hash_func(&key, 0);
 	} else if constexpr (CompileTime<K>::TYPE_IS_TRIVIAL && !CompileTime<K>::TYPE_IS_POINTER) {
+        LOG_WARN("MAN WE ARE JUT RELLAY SUCK 3\n");
 		return hash_func(&key, sizeof(K));
 	} else if constexpr (CompileTime<K>::TYPE_IS_POINTER) {
+        LOG_WARN("MAN WE ARE JUT RELLAY SUCK 4\n");
 		return hash_func((void*)&key, sizeof(K));
 	} else {
 		RUNTIME_ASSERT_MSG(false, "WE ARE IN HELL?\n");
@@ -191,7 +195,7 @@ struct Hashmap {
             auto& old_entry = old_entries[i];
             if (!old_entry.filled || old_entry.dead) continue;
 
-            u64 hash = hashmap_safe_hash<K>(hash_func, old_entry.key);
+            u64 hash = hashmap_safe_hash<K>(this->hash_func, old_entry.key);
             s64 index = resolve_collision(old_entry.key, hash % capacity);
             RUNTIME_ASSERT(index != -1);
 
@@ -216,13 +220,21 @@ struct Hashmap {
             this->allocator = Allocator::general();
         }
 
+        LOG_INFO("BEFORE_REHASH\n");
+
         if (!entries || load_factor() >= DEFAULT_LOAD_FACTOR) {
             this->grow_rehash();
         }
 
-        u64 hash = hashmap_safe_hash<K>(hash_func, key);
+        LOG_INFO("AFTER_REHASH\n");
+        u64 hash = hashmap_safe_hash<K>(this->hash_func, key);
+        LOG_INFO("safe_hash done\n");
+
+        LOG_INFO("BEFORE_COLLISION_RESOLUTION\n");
         s64 index = resolve_collision(key, hash % capacity);
         RUNTIME_ASSERT(index != -1);
+
+        LOG_INFO("AFTER_RESOLVING\n");
 
         auto* entry = &entries[index];
         if (!entry->filled || entry->dead) {
@@ -230,9 +242,16 @@ struct Hashmap {
         }
 
         entry->key = key;
+        if constexpr (CompileTime<K>::TYPE_IS_CSTRING) {
+            entry->key = String::allocate(this->allocator, key, String::cstr_length(key));
+        } else {
+            entry->key = key;
+        }
         entry->value = value;
         entry->filled = true;
         entry->dead = false;
+
+        LOG_INFO("AFTER_EVERYTHING\n");
     }
 
     V& operator[](const K& key) {

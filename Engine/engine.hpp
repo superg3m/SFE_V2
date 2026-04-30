@@ -14,7 +14,7 @@ struct Engine {
 	Input input;
 
 	Camera camera = Camera(0, 1, 10);
-	bool mouse_captured = true;
+	bool mouse_captured = false;
 	bool reloaded_dll;
 	void* application_state;
 

@@ -18,18 +18,20 @@ struct RenderCommand {
 
 template<typename B>
 struct Renderer {
-    B backend;
+    B backend = {};
 
     int WINDOW_WIDTH = 800;
     int WINDOW_HEIGHT = 800;
     int FRAME_BUFFER_WIDTH = 0;
     int FRAME_BUFFER_HEIGHT = 0;
 
+    Allocator permanent_allocator = Allocator::invalid();
     Allocator frame_allocator = Allocator::invalid();
 
     Vector<Request> requests;
     static Renderer create(Allocator permanent_allocator, Allocator frame_allocator) {
         Renderer ret = {};
+        ret.permanent_allocator = permanent_allocator;
         ret.frame_allocator = frame_allocator;
         ret.requests = Vector<Request>(ret.frame_allocator);
 
@@ -130,7 +132,7 @@ struct Renderer {
     MaterialHandle create_material(ShaderHandle shader) {
         MaterialHandle material = this->backend.materials.acquire();
         Material& material_slot = this->backend.materials.get(material.handle);
-        material_slot = Material(shader);
+        material_slot = Material(this->permanent_allocator, shader);
 
         return material;
     }
@@ -152,11 +154,19 @@ struct Renderer {
 
     void material_set_uniforms(MaterialHandle material, Hashmap<const char*, BindingValue> uniforms) {
         Material& material_slot = this->backend.materials.get(material.handle);
+
+        LOG_ERROR("AFTER SLOT GET\n");
+
         for (auto& entry : uniforms) {
             const char* k = entry.key;
             BindingValue v = entry.value;
+            LOG_ERROR("BEFORE FIRST UNIFORM: k: %s\n", k);
+            LOG_ERROR("ENTRIES: %p\n", material_slot.bindings.entries);
             material_slot.set_uniform(k, v);
+            LOG_ERROR("AFTER FIRST UNIFORM: k: %s\n", k);
         }
+
+        LOG_ERROR("AFTER SETTING ALL THE UNFIROMS\n");
     }
 
     void shader_recompile(ShaderHandle shader) {

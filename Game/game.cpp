@@ -22,7 +22,7 @@ struct AppState {
 	Timer timer = {};
 };
 
-extern "C" /*__declspec(dllexport)*/ void application_init(Engine* engine) {
+EXPORT_FN void application_init(Engine* engine) {
 	engine->application_state = engine->permenant_allocator.malloc(sizeof(AppState), alignof(AppState));
 	AppState* app = (AppState*)engine->application_state;
 	*app = {};
@@ -86,7 +86,7 @@ extern "C" /*__declspec(dllexport)*/ void application_init(Engine* engine) {
 	app->timer.start(5.0f);
 }
 
-extern "C" /*__declspec(dllexport)*/ void application_update(Engine* engine, float dt) {
+EXPORT_FN void application_update(Engine* engine, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
 	app->accumulator += dt * 100;
@@ -130,7 +130,7 @@ extern "C" /*__declspec(dllexport)*/ void application_update(Engine* engine, flo
 	}
 }
 
-extern "C" /*__declspec(dllexport)*/ void application_render(Engine* engine, float dt) {
+EXPORT_FN void application_render(Engine* engine, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
 	if(app->timer.tick(dt)) {
@@ -138,21 +138,33 @@ extern "C" /*__declspec(dllexport)*/ void application_render(Engine* engine, flo
 		app->timer.reset();
 	}
 
+	if (engine->reloaded_dll) {
+		LOG_ERROR("AFTER TICK\n");
+	}
+
 	Mat4 model = Mat4::rotate(Mat4::identity(), Quat::from_euler(app->accumulator, app->accumulator, 0));
 	Mat4 view = engine->get_view_matrix();
 	Mat4 projection = engine->get_projection_matrix();
 	engine->renderer.material_set_uniforms(app->material, {{
-		{"uContainer", app->container_texture},
-		{"uFace", app->face_texture},
+		{String::allocate("uContainer"), app->container_texture},
+		{String::allocate("uFace"), app->face_texture},
 	}, engine->frame_allocator});
 
+	if (engine->reloaded_dll) {
+		LOG_ERROR("AFTER UNIFORM\n");
+	}
+
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	// engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
+	engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
 	// engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
 
 	model = Mat4::translate(model, -5, 0, 0);
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	// engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
+	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
+
+	if (engine->reloaded_dll) {
+		LOG_ERROR("AFTER DRAWS?\n");
+	}
 
 	/*
 	Mesh backpack_mesh = engine->renderer.backend.meshes.get(app.backpack_mesh_handle);
@@ -181,7 +193,8 @@ extern "C" /*__declspec(dllexport)*/ void application_render(Engine* engine, flo
 // https://www.youtube.com/watch?v=QAeRxfeFAo0
 
 /*
-- []
+- [] string interning? This si fucked.... Hashmap<String, const char*>
+- [] seperate dll from all the platform code, make platform be its own system like input
 - [] Remove all constructors except for containers and other places it makes sense, in those places make sure you have a default constructor
 - [] Make sure you have as close to general allocation. I'm very very concerned about allocations across dll boundaries
 - [] AABB renderer

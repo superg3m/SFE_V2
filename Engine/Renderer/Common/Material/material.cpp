@@ -13,7 +13,9 @@ void Material::set_float(const char* name, float value) {
 }
 
 void Material::set_texture(const char* name, TextureHandle value) {
+    LOG_ERROR("SET_TEXTURE???\n");
     this->bindings.put(name, value);
+    LOG_ERROR("AFTER SET_TEXTURE???\n");
 }
 
 void Material::set_vec2(const char* name, const Vec2& value) {

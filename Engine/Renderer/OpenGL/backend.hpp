@@ -343,13 +343,13 @@ struct OpenGL {
     bool WIREFRAME = false;
     int DRAW_CALL_COUNT = 0;
 
-    Registry<OpenGL::Texture, 256> textures;
-    Registry<Material, 256> materials;
-	Registry<OpenGL::Shader, 256> shaders;
-	Registry<OpenGL::VertexArrayObject, 256> vaos;
-	Registry<OpenGL::VertexBuffer, 256> vbos;
-	Registry<OpenGL::IndexBuffer, 256> ebos;
-	Registry<OpenGL::CommandBuffer, 256> command_buffers;
-	Registry<OpenGL::MeshEntry, 256> mesh_entries;
-	Registry<OpenGL::Mesh, 256> meshes;
+    Registry<OpenGL::Texture, 256> textures = {};
+    Registry<Material, 256> materials = {};
+	Registry<OpenGL::Shader, 256> shaders = {};
+	Registry<OpenGL::VertexArrayObject, 256> vaos = {};
+	Registry<OpenGL::VertexBuffer, 256> vbos = {};
+	Registry<OpenGL::IndexBuffer, 256> ebos = {};
+	Registry<OpenGL::CommandBuffer, 256> command_buffers = {};
+	Registry<OpenGL::MeshEntry, 256> mesh_entries = {};
+	Registry<OpenGL::Mesh, 256> meshes = {};
 };

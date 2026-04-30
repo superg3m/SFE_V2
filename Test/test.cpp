@@ -583,10 +583,3 @@ int main() {
 
 	return 0;
 }
-
-// Entity stuff
-
-// this will turn into a dll
-// the idea is just to submit commands
-
-// 3d grid of lines
