@@ -1,4 +1,5 @@
 #include "engine.hpp"
+#include "Editor/editor.hpp"
 
 INTERNAL_LINKAGE Platform::DLL* dll = nullptr;
 INTERNAL_LINKAGE const char* dll_name = "game.dll";
@@ -7,6 +8,7 @@ INTERNAL_LINKAGE Platform::FileTime last_write_time = {};
 
 Engine* engine = nullptr;
 extern Hashmap<String, String>* string_intern_map;
+extern Editor* editor;
 
 void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
 	static bool first = true;
@@ -139,6 +141,8 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 	if (!INPUT_GLFW_SETUP(&this->input, this->window, nullptr, nullptr, mouse)) {
 		return false;
 	}
+
+	if (editor) editor->init(this);
 	
 	load_application_function_pointers(&this->application_init, &this->application_update, &this->application_render);
 	if (application_init) application_init(this, string_intern_map);
@@ -153,6 +157,7 @@ void Engine::update(float dt) {
 		this->reloaded_dll = true;
 	}
 
+	// i'm gui stuff here
 	if (this->application_update) application_update(this, string_intern_map, dt);
 
 	input.poll();
@@ -163,6 +168,8 @@ void Engine::render(float dt) {
 	
 	this->renderer.backend.resolve_requests(this->renderer.requests, this->frame_allocator);
 	this->renderer.requests.clear();
+
+	if (editor) editor->render(this);
 
 	this->reloaded_dll = false;
 }

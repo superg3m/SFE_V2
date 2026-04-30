@@ -1,7 +1,9 @@
 #include "engine.hpp"
+#include "Editor/editor.hpp"
 
-extern Engine* engine;
 extern Hashmap<String, String>* string_intern_map;
+extern Editor* editor;
+extern Engine* engine;
 
 int main() {
 	constexpr int PROGRAM_MEMORY_CAPACITY = MB(50);
@@ -27,6 +29,9 @@ int main() {
 
 	string_intern_map = (Hashmap<String, String>*)permanent_arena_allocator.malloc(sizeof(Hashmap<String, String>), alignof(Hashmap<String, String>));
 	*string_intern_map = Hashmap<String, String>(string_arena_allocator);
+
+	editor = (Editor*)permanent_arena_allocator.malloc(sizeof(Editor), alignof(Editor));
+	*editor = {};
 
 	engine = (Engine*)permanent_arena_allocator.malloc(sizeof(Engine), alignof(Engine));
 	*engine = {}; 

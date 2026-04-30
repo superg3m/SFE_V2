@@ -1,26 +1,5 @@
 #include <sfe.hpp>
-
-struct AppState {
-	ShaderHandle cube_shader = ShaderHandle::invalid();
-	MaterialHandle material = MaterialHandle::invalid();
-	VertexBufferHandle instance_cube_vbo = VertexBufferHandle::invalid();
-	MeshHandle cube_mesh = MeshHandle::invalid();
-
-	ShaderHandle backpack_shader = ShaderHandle::invalid();
-	MeshHandle backpack_mesh = MeshHandle::invalid();
-
-	TextureHandle container_texture = TextureHandle::invalid();
-	TextureHandle face_texture = TextureHandle::invalid();
-
-	Pipeline opaque_pipeline = {};
-	Pipeline opaque_wireframe_pipeline = {};
-	bool use_opaque_pipeline = true;
-	float accumulator = 0.0;
-
-	Vector<Mat4> cube_translations;
-
-	Timer timer = {};
-};
+#include "game.hpp"
 
 EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_intern_map) {
 	engine->application_state = engine->permenant_allocator.malloc(sizeof(AppState), alignof(AppState));
@@ -180,10 +159,7 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 // https://www.youtube.com/watch?v=QAeRxfeFAo0
 
 /*
-- [] get rid of all Hashmap<const char*, ...> hashmaps
-- [] Depricate allowing Hashmap<const char*, ...> const char*'s are so dangerous...
-- [] string interning? This si fucked.... Hashmap<String, const char*>
-- [] seperate dll from all the platform code, make platform be its own system like input
+- [] seperate dll from all the platform code, make platform be its own system like input (remove glfw from platform code...)
 - [] Remove all constructors except for containers and other places it makes sense, in those places make sure you have a default constructor
 - [] Make sure you have as close to general allocation. I'm very very concerned about allocations across dll boundaries
 - [] AABB renderer
@@ -284,8 +260,6 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 			return (ambient + diffuse + specular);
 		}
 	}
-
-	diffuse_light()
 
 - [] Entity stuff
 - [] 3d grid of lines (should be simple?)

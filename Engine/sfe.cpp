@@ -4,4 +4,5 @@
 #include "Renderer/renderer.cpp"
 #include "Renderer/OpenGL/backend.cpp"
 #include "Camera/camera.cpp"
+#include "Editor/editor.cpp"
 #include "engine.cpp"

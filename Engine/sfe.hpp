@@ -5,4 +5,5 @@
 #include "Renderer/OpenGL/backend.hpp"
 #include "Renderer/renderer.hpp"
 #include "Camera/camera.hpp"
+#include "Editor/editor.hpp"
 #include "engine.hpp"

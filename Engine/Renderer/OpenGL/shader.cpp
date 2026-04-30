@@ -85,6 +85,106 @@ static const char* gl_enum_to_string(GLenum type) {
 	}
 }
 
+// TODO(Jovanni): think about shader header
+/*
+- [] Shader Header is a really interesting idea
+	u8* shader_header_data = Platform::read_entire_file("shader_header.h")
+	u8* shader_vert_source = Platform::read_entire_file("shader.vert")
+	u8* shader_frag_source = Platform::read_entire_file("shader.frag")
+	String::append(shader_header_data, length, shader_vert_source);
+	String::append(shader_header_data, length, shader_frag_source);
+
+	shader_header.h: {
+		vec3 CalcDirLight(const DirLight light, const vec3 normal, const vec3 viewDir, const vec2 texCoord) {
+			vec3 lightDir = normalize(-light.direction); // Directional light direction is inverse of uniform value
+
+			// Diffuse calculation
+			float diffuse_factor = max(dot(normal, lightDir), 0.0f);
+
+			// Specular calculation
+			vec3 reflectDir = reflect(-lightDir, normal); // Light direction, not negative light direction
+			float specular_factor = pow(max(dot(viewDir, reflectDir), 0.0f), uMaterial.shininess);
+
+			// Get material colors
+			vec3 diffuse_mat_color = getDiffuseColor(texCoord);
+			vec3 specular_mat_color = getSpecularColor(texCoord);
+
+			// Combine light and material components
+			vec3 ambient = light.ambient * (uMaterial.ambient_color + diffuse_mat_color); // Ambient usually uses diffuse color as well
+			vec3 diffuse = light.diffuse * diffuse_factor * diffuse_mat_color;
+			vec3 specular = light.specular * specular_factor * specular_mat_color;
+
+			return (ambient + diffuse + specular);
+		}
+
+		vec3 CalcPointLight(const PointLight light, const vec3 normal, const vec3 fragPos, const vec3 viewDir, const vec2 texCoord) {
+			vec3 lightDir = normalize(light.position - fragPos);
+
+			// Diffuse calculation
+			float diffuse_factor = max(dot(normal, lightDir), 0.0f);
+
+			// Specular calculation
+			vec3 reflectDir = reflect(-lightDir, normal);
+			float specular_factor = pow(max(dot(viewDir, reflectDir), 0.0f), uMaterial.shininess);
+
+			// Attenuation calculation (fixed float suffixes)
+			float distance = length(light.position - fragPos);
+			float attenuation = 1.0f / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+
+			// Get material colors
+			vec3 diffuse_mat_color = getDiffuseColor(texCoord);
+			vec3 specular_mat_color = getSpecularColor(texCoord);
+
+			// Combine light and material components
+			vec3 ambient = light.ambient * (uMaterial.ambient_color + diffuse_mat_color);
+			vec3 diffuse = light.diffuse * diffuse_factor * diffuse_mat_color;
+			vec3 specular = light.specular * specular_factor * specular_mat_color;
+
+			// Apply attenuation
+			ambient *= attenuation;
+			diffuse *= attenuation;
+			specular *= attenuation;
+
+			return (ambient + diffuse + specular);
+		}
+
+		vec3 CalcSpotLight(const SpotLight light, const vec3 normal, const vec3 fragPos, const vec3 viewDir, const vec2 texCoord) {
+			vec3 lightDir = normalize(light.position - fragPos);
+
+			// Diffuse calculation
+			float diffuse_factor = max(dot(normal, lightDir), 0.0f);
+
+			// Specular calculation
+			vec3 reflectDir = reflect(-lightDir, normal);
+			float specular_factor = pow(max(dot(viewDir, reflectDir), 0.0f), uMaterial.shininess);
+
+			// Attenuation calculation (fixed float suffixes)
+			float distance = length(light.position - fragPos);
+			float attenuation = 1.0f / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+
+			// Spotlight effect
+			float theta = dot(lightDir, normalize(-light.direction)); // Angle between fragment-to-light and spotlight direction
+			float epsilon = light.cutOff - light.outerCutOff; // Blending range
+			float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0f, 1.0f); // Smooth step for falloff
+
+			// Get material colors
+			vec3 diffuse_mat_color = getDiffuseColor(texCoord);
+			vec3 specular_mat_color = getSpecularColor(texCoord);
+
+			// Combine light and material components
+			vec3 ambient = light.ambient * (uMaterial.ambient_color + diffuse_mat_color);
+			vec3 diffuse = light.diffuse * diffuse_factor * diffuse_mat_color;
+			vec3 specular = light.specular * specular_factor * specular_mat_color;
+
+			// Apply attenuation and spotlight intensity
+			ambient *= attenuation * intensity;
+			diffuse *= attenuation * intensity;
+			specular *= attenuation * intensity;
+
+			return (ambient + diffuse + specular);
+		}
+	}
+*/
 GLenum OpenGL::Shader::type_from_path(String shader_source_path) {
 	s64 extension_index = String::last_index_of(shader_source_path.data, shader_source_path.length, STRING_LIT_ARG("."));
 	RUNTIME_ASSERT_MSG(extension_index != -1, "Missing extension (.vert, .frag)\n");
@@ -159,7 +259,6 @@ void OpenGL::Shader::use() const {
 	gl_error_check(glUseProgram(this->program_id));
 }
 
-// TODO(Jovanni): Make this use the locations instead of string lookups
 void OpenGL::Shader::set_model(Mat4 &model) {
 	this->set_mat4(STR("uModel"), model);
 }

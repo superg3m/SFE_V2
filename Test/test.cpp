@@ -460,9 +460,6 @@ int main() {
 		20, 21, 22, 21, 20, 23  // Top
 	};
 
-	// TODO(Jovanni): I want some way to convey pipeline is similar in structure to another pipeline
-	// maybe I will say PNT_opaque_pipeline
-
 	ShaderHandle model_shader = engine.renderer.create_shader({"../../Assets/Shaders/model.vert", "../../Assets/Shaders/model.frag"});
 	ShaderHandle cube_shader = engine.renderer.create_shader({"../../Assets/Shaders/cube.vert", "../../Assets/Shaders/cube.frag"});
 	ShaderHandle quad_shader = engine.renderer.create_shader({"../../Assets/Shaders/screen_quad.vert", "../../Assets/Shaders/screen_quad.frag"});
