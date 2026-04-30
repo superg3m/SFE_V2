@@ -165,7 +165,7 @@ procedures_config = {
         ],
         additional_libs = libs,
         include_paths = INCLUDES,
-        compiler_inject_into_args=[]
+        compiler_inject_into_args=inject
     )
 }
 

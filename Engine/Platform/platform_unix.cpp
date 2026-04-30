@@ -150,8 +150,8 @@ namespace Platform {
 	FileTime get_file_modification_time(const char* file_path) {
 		FileTime file_time = {}; 
 
-		if (Platform::file_exists(file_path)) {
-			LOG_ERROR("file_name/path is likely wrong: get_file_modification_time(%s)\n", file_path);
+		if (!Platform::file_exists(file_path)) {
+			// LOG_ERROR("file_name/path is likely wrong: get_file_modification_time(%s)\n", file_path);
 			return file_time;
 		}
 

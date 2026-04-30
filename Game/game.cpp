@@ -1,4 +1,4 @@
-#include <sfe.hpp>
+#include <sfe_dll.hpp>
 
 struct AppState {
 	ShaderHandle cube_shader = ShaderHandle::invalid();
