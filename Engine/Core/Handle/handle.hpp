@@ -51,6 +51,17 @@ struct Registry {
 		return ret;
 	}
 
+	Vector<Handle> handle_list(Allocator allocator) {
+		Vector<Handle> handles = Vector<Handle>(allocator);
+		for (int i = 0; i < N; i++) {
+			if (slots[i].allocated == false) continue;
+
+			handles.append(Handle::create(i, slots[i].generation));
+		}
+
+		return handles;
+	}
+
 	Handle acquire() {
 		Handle handle = Handle::invalid();
 		for (int i = 0; i < N; i++) {

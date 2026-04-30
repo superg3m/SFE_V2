@@ -134,7 +134,7 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
 
-	/*
+	/*s
 	Mesh backpack_mesh = engine->renderer.backend.meshes.get(app.backpack_mesh_handle);
 	for (MeshEntry& entry : backpack_mesh.entries) {
 		RenderCommand command = {};
