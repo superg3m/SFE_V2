@@ -138,10 +138,6 @@ EXPORT_FN void application_render(Engine* engine, float dt) {
 		app->timer.reset();
 	}
 
-	if (engine->reloaded_dll) {
-		LOG_ERROR("AFTER TICK\n");
-	}
-
 	Mat4 model = Mat4::rotate(Mat4::identity(), Quat::from_euler(app->accumulator, app->accumulator, 0));
 	Mat4 view = engine->get_view_matrix();
 	Mat4 projection = engine->get_projection_matrix();
@@ -193,6 +189,8 @@ EXPORT_FN void application_render(Engine* engine, float dt) {
 // https://www.youtube.com/watch?v=QAeRxfeFAo0
 
 /*
+- [] get rid of all Hashmap<const char*, ...> hashmaps
+- [] Depricate allowing Hashmap<const char*, ...> const char*'s are so dangerous...
 - [] string interning? This si fucked.... Hashmap<String, const char*>
 - [] seperate dll from all the platform code, make platform be its own system like input
 - [] Remove all constructors except for containers and other places it makes sense, in those places make sure you have a default constructor

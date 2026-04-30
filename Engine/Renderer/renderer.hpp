@@ -155,18 +155,11 @@ struct Renderer {
     void material_set_uniforms(MaterialHandle material, Hashmap<const char*, BindingValue> uniforms) {
         Material& material_slot = this->backend.materials.get(material.handle);
 
-        LOG_ERROR("AFTER SLOT GET\n");
-
         for (auto& entry : uniforms) {
             const char* k = entry.key;
             BindingValue v = entry.value;
-            LOG_ERROR("BEFORE FIRST UNIFORM: k: %s\n", k);
-            LOG_ERROR("ENTRIES: %p\n", material_slot.bindings.entries);
             material_slot.set_uniform(k, v);
-            LOG_ERROR("AFTER FIRST UNIFORM: k: %s\n", k);
         }
-
-        LOG_ERROR("AFTER SETTING ALL THE UNFIROMS\n");
     }
 
     void shader_recompile(ShaderHandle shader) {

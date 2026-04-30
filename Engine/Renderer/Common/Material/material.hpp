@@ -72,7 +72,6 @@ struct Material {
 	}
 
 	void set_uniform(const char* name, BindingValue value) {
-		LOG_ERROR("NOW WE ARE IN HELL\n");
 		switch (value.type) {
 			case BindingValueType::BOOL: {
 				this->set_bool(name, value.boolean_binding);
@@ -87,7 +86,6 @@ struct Material {
 			} break;
 
 			case BindingValueType::TEXTURE_HANDLE: {
-				LOG_ERROR("TEXTURE_HANLDE PRINT THIS?: %p\n", this);
 				this->set_texture(name, value.texture_binding);
 			} break;
 

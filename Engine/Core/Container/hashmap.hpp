@@ -16,6 +16,18 @@ struct CompileTime {
 	static constexpr bool TYPE_IS_POINTER = std::is_pointer_v<T>;
 };
 
+// NOTE(Jovanni):
+/*
+I have depricated const char* keys because I have found that when working accross dll boundaries
+some sort of String (length based string struct) is necessary in order to support string interning.
+if you have a const char* string literal from the dll and the dll is umapped / unloaded from you process
+space you are in for a world of hurt. 
+
+The remedy for this seemingly intractable problem is the have a dedicated string region in your program that
+is purely used for unique string content. Then have a Hashmap<String, void*> cached_string 
+
+*/
+
 template <typename K>
 constexpr HashFunction* compile_time_get_hash_function() {
 	if constexpr (CompileTime<K>::TYPE_IS_CSTRING) {
@@ -220,33 +232,27 @@ struct Hashmap {
             this->allocator = Allocator::general();
         }
 
-        LOG_INFO("BEFORE_REHASH\n");
-
         if (!entries || load_factor() >= DEFAULT_LOAD_FACTOR) {
             this->grow_rehash();
         }
 
-        LOG_INFO("AFTER_REHASH\n");
         u64 hash = hashmap_safe_hash<K>(this->hash_func, key);
         LOG_INFO("safe_hash done\n");
 
-        LOG_INFO("BEFORE_COLLISION_RESOLUTION\n");
         s64 index = resolve_collision(key, hash % capacity);
         RUNTIME_ASSERT(index != -1);
-
-        LOG_INFO("AFTER_RESOLVING\n");
 
         auto* entry = &entries[index];
         if (!entry->filled || entry->dead) {
             ++count;
         }
 
-        entry->key = key;
         if constexpr (CompileTime<K>::TYPE_IS_CSTRING) {
-            entry->key = String::allocate(this->allocator, key, String::cstr_length(key));
+            entry->key = String::allocate(this->allocator, key, String::cstr_length(key)); TODO(Jovanni): REMOVE THIS BECUASE ALLOCATING IS SO BAD, DO STRING INTERNING
         } else {
             entry->key = key;
         }
+
         entry->value = value;
         entry->filled = true;
         entry->dead = false;
