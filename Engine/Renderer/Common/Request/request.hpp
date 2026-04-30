@@ -107,6 +107,7 @@ struct VertexBufferRequest {
 
 //  buffer.count * sizeof(T), buffer.data,
 struct IndexBufferRequest {
+    IndexBufferHandle user = IndexBufferHandle::invalid();
     MeshHandle mesh = MeshHandle::invalid();
     u32* data = nullptr;
     size_t count = 0;
@@ -154,6 +155,7 @@ struct Request {
 	union {
 		TextureRequest texture;
         VertexBufferRequest vbo;
+        IndexBufferRequest ebo;
         MeshRequest mesh;
         ShaderRequest shader;
 		DrawCallRequest draw_call;

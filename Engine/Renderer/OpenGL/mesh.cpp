@@ -1,5 +1,6 @@
 #include "backend.hpp"
 #include <stb_image.h>
+#include <float.h>
 
 INTERNAL_LINKAGE Mat4 convert_assimp_matrix_to_glm(const aiMatrix4x4& ai_matrix) {
 	Mat4 ret = Mat4::identity();

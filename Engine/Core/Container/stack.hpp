@@ -33,7 +33,6 @@ struct Stack {
 		this->data[this->count++] = value;
 	}
 
-	template<typename T>
 	T stack_pop() {
 		RUNTIME_ASSERT_MSG(!this->empty(), "You may not pop if the stack is empty!\n");
 		return this->data[--this->count];
@@ -44,7 +43,7 @@ struct Stack {
 		return this->data[this->count - 1];
 	}
 
-	static void copy(Stack<T>* destination, Stack<T>* source) {
+	static void copy(Stack* destination, Stack* source) {
 		destination->capacity = source->capacity;
 		destination->count = source->count;
 

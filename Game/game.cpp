@@ -22,7 +22,7 @@ struct AppState {
 	Timer timer = {};
 };
 
-extern "C" __declspec(dllexport) void application_init(Engine* engine) {
+extern "C" /*__declspec(dllexport)*/ void application_init(Engine* engine) {
 	engine->application_state = engine->permenant_allocator.malloc(sizeof(AppState), alignof(AppState));
 	AppState* app = (AppState*)engine->application_state;
 	*app = {};
@@ -86,7 +86,7 @@ extern "C" __declspec(dllexport) void application_init(Engine* engine) {
 	app->timer.start(5.0f);
 }
 
-extern "C" __declspec(dllexport) void application_update(Engine* engine, float dt) {
+extern "C" /*__declspec(dllexport)*/ void application_update(Engine* engine, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
 	app->accumulator += dt * 100;
@@ -130,7 +130,7 @@ extern "C" __declspec(dllexport) void application_update(Engine* engine, float d
 	}
 }
 
-extern "C" __declspec(dllexport) void application_render(Engine* engine, float dt) {
+extern "C" /*__declspec(dllexport)*/ void application_render(Engine* engine, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
 	if(app->timer.tick(dt)) {

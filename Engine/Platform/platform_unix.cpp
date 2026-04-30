@@ -2,6 +2,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <sys/stat.h>
+#include <time.h>
 
 namespace Platform {
 	bool initialize() { return true; }
@@ -9,7 +10,10 @@ namespace Platform {
 	double get_seconds_elapsed() { return 0.0; }
 
 	void sleep(u32 ms) {
-		usleep(ms * 1000);
+		struct timespec ts;
+		ts.tv_sec = 0;           // seconds
+		ts.tv_nsec = ms * 1000000L; // 1 million nanoseconds = 1ms
+		nanosleep(&ts, NULL);
 	}
 
 	bool file_exists(const char* path) {
@@ -24,7 +28,7 @@ namespace Platform {
 		return true;
 	}
 
-	bool copy_file(const char* source_path, const char* dest_path, int block_until_success) {
+	bool copy_file(const char* source_path, const char* dest_path, bool block_until_success) {
 		const size_t BUFFER_SIZE = 4096;
 
 		while (true) {
@@ -59,7 +63,7 @@ namespace Platform {
 
 			if (success) return true;
 			if (!block_until_success) return false;
-			platform_sleep(10);
+			Platform::sleep(10);
 		}
 	}
 
@@ -100,7 +104,7 @@ namespace Platform {
 		if (fread(file_data, out_file_size, 1, file_handle) != 1) {
 			LOG_ERROR("fread() failed: read_entire_file(%s)\n", file_name);
 			error = Error::RESOURCE_NOT_FOUND;
-			a.free(a.ctx, file_data);
+			a.free(file_data);
 			fclose(file_handle);
 
 			return nullptr;
@@ -146,7 +150,7 @@ namespace Platform {
 	FileTime get_file_modification_time(const char* file_path) {
 		FileTime file_time = {}; 
 
-		if (platform_file_exists(file_path)) {
+		if (Platform::file_exists(file_path)) {
 			LOG_ERROR("file_name/path is likely wrong: get_file_modification_time(%s)\n", file_path);
 			return file_time;
 		}
@@ -167,8 +171,9 @@ namespace Platform {
 		return a.time == b.time;
 	}
 
-	INTERNAL_LINKAGE void* unix_malloc(void* ctx, size_t allocation_size) {
+	INTERNAL_LINKAGE void* unix_malloc(void* ctx, size_t allocation_size, size_t alignment) {
 		UNUSED(ctx);
+		UNUSED(alignment);
 		return malloc(allocation_size);
 	}
 
@@ -177,12 +182,19 @@ namespace Platform {
 		free(data);
 	}
 
-	INTERNAL_LINKAGE void* unix_realloc(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size) {
+	INTERNAL_LINKAGE void* unix_realloc(void* ctx, void* data, size_t old_allocation_size, size_t new_allocation_size, size_t alignment) {
 		UNUSED(ctx);
+		UNUSED(old_allocation_size);
+		UNUSED(alignment);
 		return realloc(data, new_allocation_size);
 	}
 
 	Allocator get_allocator() {
-		return allocator_general();
+		Allocator allocator = {};
+		allocator.ctx = nullptr;
+		allocator.malloc_cb = unix_malloc;
+		allocator.free_cb = unix_free;
+
+		return allocator;
 	}
 }
