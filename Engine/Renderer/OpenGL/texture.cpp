@@ -10,14 +10,17 @@ void OpenGL::Texture::flip_vertically_in_place(u8* data, int width, int height) 
 	}
 }
 
-OpenGL::Texture OpenGL::Texture::load_from_file(u32 texture_unit, const char* path, TextureDescription desc) {
-	RUNTIME_ASSERT_MSG(Platform::file_exists(path), "Texture path: '%s' doesn't exist!\n", path);
+OpenGL::Texture OpenGL::Texture::load_from_file(u32 texture_unit, String path, TextureDescription desc) {
+	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(path);
+	RUNTIME_ASSERT_MSG(Platform::file_exists(path.data), "Texture path: '%s' doesn't exist!\n", path);
 
 	GLenum TEXTURE_VERTICAL_FLIP = desc.vertical_flip;
 
 	int width, height, nrChannels;
 	stbi_set_flip_vertically_on_load(TEXTURE_VERTICAL_FLIP);
-	u8* data = stbi_load(path, &width, &height, &nrChannels, 0);
+
+	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(path);
+	u8* data = stbi_load(path.data, &width, &height, &nrChannels, 0);
 	stbi_set_flip_vertically_on_load(false);
 
 	Texture ret = Texture::load_from_memory(texture_unit, data, width, height, nrChannels, desc);
@@ -87,7 +90,7 @@ OpenGL::Texture OpenGL::Texture::load_from_memory(u32 texture_unit, const u8* da
 }
 
 // {right, left, top, bottom, front, back}
-OpenGL::Texture OpenGL::Texture::load_cube_map(u32 texture_unit, Vector<const char*> texture_paths) {
+OpenGL::Texture OpenGL::Texture::load_cube_map(u32 texture_unit, Vector<String> texture_paths) {
 	u32 texture = 0;
 	gl_error_check(glGenTextures(1, &texture));
 	gl_error_check(glBindTexture(GL_TEXTURE_CUBE_MAP, texture));
@@ -99,9 +102,10 @@ OpenGL::Texture OpenGL::Texture::load_cube_map(u32 texture_unit, Vector<const ch
 
 	unsigned char *data = nullptr;  
 	for(int i = 0; i < texture_paths.count; i++) {
-		RUNTIME_ASSERT_MSG(Platform::file_exists(texture_paths[i]), "Texture path: '%s' doesn't exist!\n", texture_paths[i]);
+		INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(texture_paths[i]);
+		RUNTIME_ASSERT_MSG(Platform::file_exists(texture_paths[i].data), "Texture path: '%s' doesn't exist!\n", texture_paths[i].data);
 		int width, height, nrChannels;
-		data = stbi_load(texture_paths[i], &width, &height, &nrChannels, 0);
+		data = stbi_load(texture_paths[i].data, &width, &height, &nrChannels, 0);
 		
 		GLenum format = 0;
 		if (nrChannels == 1) {

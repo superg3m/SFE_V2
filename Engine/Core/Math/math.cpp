@@ -765,13 +765,13 @@ Mat4 Mat4::scale(Mat4 mat, float s) {
 }
 
 Mat4 Mat4::scale(Mat4 mat, Vec3 s) {
-    Mat4 S(
+    Mat4 Scale(
         s.x,0,0,0,
         0,s.y,0,0,
         0,0,s.z,0,
         0,0,0,1
     );
-    return S * mat;
+    return Scale * mat;
 }
 
 Mat4 Mat4::scale(Mat4 mat, float sx,float sy,float sz){

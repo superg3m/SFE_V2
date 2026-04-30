@@ -28,3 +28,5 @@ struct Pipeline {
 		return Memory::equal(this, sizeof(Pipeline), &other, sizeof(Pipeline));
 	}
 };
+
+INVARIENT_TRIVAL_TYPE(Pipeline);

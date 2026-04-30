@@ -22,7 +22,7 @@ struct AppState {
 	Timer timer = {};
 };
 
-EXPORT_FN void application_init(Engine* engine) {
+EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_intern_map) {
 	engine->application_state = engine->permenant_allocator.malloc(sizeof(AppState), alignof(AppState));
 	AppState* app = (AppState*)engine->application_state;
 	*app = {};
@@ -54,15 +54,15 @@ EXPORT_FN void application_init(Engine* engine) {
 	};
 
 	TextureDescription desc = {};
-	app->container_texture = engine->renderer.create_texture(0, "../../../Game/Assets/Textures/container.jpg", desc);
-	app->face_texture = engine->renderer.create_texture(1, "../../../Game/Assets/Textures/awesomeface.png", desc);
+	app->container_texture = engine->renderer.create_texture(0, STR_INTERN("../../../Game/Assets/Textures/container.jpg"), desc);
+	app->face_texture = engine->renderer.create_texture(1, STR_INTERN("../../../Game/Assets/Textures/awesomeface.png"), desc);
 
-	app->cube_shader = engine->renderer.create_shader({"../../../Game/Assets/Shaders/cube.vert", "../../../Game/Assets/Shaders/cube.frag"});
+	app->cube_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/cube.vert"), STR_INTERN("../../../Game/Assets/Shaders/cube.frag")});
 	app->material = engine->renderer.create_material(app->cube_shader);
 	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
 
-	app->backpack_shader = engine->renderer.create_shader({"../../../Game/Assets/Shaders/model.vert", "../../../Game/Assets/Shaders/model.frag"});
-	app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, "../../../Game/Assets/Models/Backpack/backpack.obj");
+	app->backpack_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/model.vert"), STR_INTERN("../../../Game/Assets/Shaders/model.frag")});
+	app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
 
 	app->cube_translations = Vector<Mat4>(engine->permenant_allocator);
 	int index = 0;
@@ -86,7 +86,7 @@ EXPORT_FN void application_init(Engine* engine) {
 	app->timer.start(5.0f);
 }
 
-EXPORT_FN void application_update(Engine* engine, float dt) {
+EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* string_intern_map, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
 	app->accumulator += dt * 100;
@@ -130,8 +130,12 @@ EXPORT_FN void application_update(Engine* engine, float dt) {
 	}
 }
 
-EXPORT_FN void application_render(Engine* engine, float dt) {
+EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* string_intern_map, float dt) {
 	AppState* app = (AppState*)engine->application_state;
+
+	if (engine->reloaded_dll) {
+		LOG_INFO("RELOADED\n");
+	}
 
 	if(app->timer.tick(dt)) {
 		app->use_opaque_pipeline = !app->use_opaque_pipeline;
@@ -142,15 +146,15 @@ EXPORT_FN void application_render(Engine* engine, float dt) {
 	Mat4 view = engine->get_view_matrix();
 	Mat4 projection = engine->get_projection_matrix();
 	engine->renderer.material_set_uniforms(app->material, {{
-		{"uContainer", app->container_texture},
-		{"uFace", app->face_texture},
+		{STR_INTERN("uFace"), app->face_texture},
+		{STR_INTERN("uContainer"), app->container_texture},
 	}, engine->frame_allocator});
 
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
-	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
+ 	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
 
-	model = Mat4::translate(model, -5, 0, 0);
+	model = Mat4::translate(model, 0, 5, 0);
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
 

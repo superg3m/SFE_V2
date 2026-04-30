@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../Basic/basic.hpp"
 #include "../Memory/memory.hpp"
 #include "../Assert/assert.hpp"

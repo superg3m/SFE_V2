@@ -1,9 +1,12 @@
+#pragma once
+
 #include "../Basic/basic.hpp"
 #include "../Memory/memory.hpp"
 #include "../Assert/assert.hpp"
 #include "../Logger/logger.hpp"
 #include "../Hashing/hashing.hpp"
 #include "../String/string.hpp"
+#include <initializer_list>
 
 using HashFunction = u64(const void*, size_t);
 using EqualFunction = bool(const void*, size_t, const void*, size_t);
@@ -26,6 +29,9 @@ space you are in for a world of hurt.
 The remedy for this seemingly intractable problem is the have a dedicated string region in your program that
 is purely used for unique string content. Then have a Hashmap<String, void*> cached_string 
 
+Ok antoher thing thats really annoying across dll boundarires is the hash_fucntion on the actualy hashmap
+basically if I load a dll and make a map it will use the data segmenet from the dll and when its unloaded that pointer is no longer valid.
+there really isn't a good way I can think of to fix this other than to remove the ability to have runtime hash function...
 */
 
 template <typename K>
@@ -37,8 +43,8 @@ constexpr HashFunction* compile_time_get_hash_function() {
 	} else if (CompileTime<K>::TYPE_IS_TRIVIAL || CompileTime<K>::TYPE_IS_POINTER) {
 		return Hashing::siphash;
 	} else {
-		RUNTIME_ASSERT(false);
-		return nullptr;
+        RUNTIME_ASSERT_MSG(false, "WE ARE IN HELL?\n");
+		return 0;// K::hash_function;
 	}
 }
 
@@ -53,8 +59,8 @@ u64 hashmap_safe_hash(HashFunction* hash_func, K key) {
 	} else if constexpr (CompileTime<K>::TYPE_IS_POINTER) {
 		return hash_func((void*)&key, sizeof(K));
 	} else {
-		RUNTIME_ASSERT_MSG(false, "WE ARE IN HELL?\n");
-		return 0;
+        RUNTIME_ASSERT_MSG(false, "WE ARE IN HELL?\n");
+        return 0;
 	}
 }
 
@@ -83,7 +89,6 @@ struct Hashmap {
     u64 dead_count = 0;
     u64 capacity = DEFAULT_CAPACITY;
     HashmapEntry<K, V>* entries = nullptr;
-    HashFunction* hash_func = compile_time_get_hash_function<K>();
     Allocator allocator = Allocator::invalid();
 
     struct Iterator {
@@ -132,16 +137,14 @@ struct Hashmap {
         return static_cast<float>(dead_count + count) / static_cast<float>(capacity);
     }
 
-    Hashmap(Allocator allocator = Allocator::invalid(), u64 capacity = DEFAULT_CAPACITY, HashFunction* hash_func = compile_time_get_hash_function<K>()) {
+    Hashmap(Allocator allocator = Allocator::invalid(), u64 capacity = DEFAULT_CAPACITY) {
 		this->allocator = allocator;
 		this->capacity = capacity;
-		this->hash_func = hash_func;
 	}
 
-    Hashmap(std::initializer_list<KeyValuePair<K, V>> list, Allocator allocator = Allocator::invalid(), HashFunction* hash_func = compile_time_get_hash_function<K>()) {
+    Hashmap(std::initializer_list<KeyValuePair<K, V>> list, Allocator allocator = Allocator::invalid()) {
 		this->allocator = allocator;
 		this->capacity = DEFAULT_CAPACITY;
-		this->hash_func = hash_func;
 	
         if (list.size() == 0) return;
 
@@ -199,11 +202,12 @@ struct Hashmap {
         entries = (HashmapEntry<K, V>*)allocator.malloc(new_size, alignof(HashmapEntry<K, V>));
         Memory::zero(entries, new_size);
 
+        HashFunction* hash_func = compile_time_get_hash_function<K>();
         for (u64 i = 0; i < old_capacity; ++i) {
             auto& old_entry = old_entries[i];
             if (!old_entry.filled || old_entry.dead) continue;
 
-            u64 hash = hashmap_safe_hash<K>(this->hash_func, old_entry.key);
+            u64 hash = hashmap_safe_hash<K>(hash_func, old_entry.key);
             s64 index = resolve_collision(old_entry.key, hash % capacity);
             RUNTIME_ASSERT(index != -1);
 
@@ -216,6 +220,7 @@ struct Hashmap {
     bool has(const K& key) {
         if (!entries) return false;
 
+        HashFunction* hash_func = compile_time_get_hash_function<K>(); 
         u64 hash = hashmap_safe_hash(hash_func, key);
         s64 index = resolve_collision(key, hash % capacity);
         if (index == -1) return false;
@@ -232,7 +237,8 @@ struct Hashmap {
             this->grow_rehash();
         }
 
-        u64 hash = hashmap_safe_hash<K>(this->hash_func, key);
+        HashFunction* hash_func = compile_time_get_hash_function<K>(); 
+        u64 hash = hashmap_safe_hash<K>(hash_func, key);
         s64 index = resolve_collision(key, hash % capacity);
         RUNTIME_ASSERT(index != -1);
 
@@ -250,6 +256,7 @@ struct Hashmap {
     V& operator[](const K& key) {
         RUNTIME_ASSERT_MSG(has(key), "Key doesn't exist\n");
 
+        HashFunction* hash_func = compile_time_get_hash_function<K>(); 
         u64 hash = hashmap_safe_hash(hash_func, key);
         s64 index = resolve_collision(key, hash % capacity);
         RUNTIME_ASSERT(index != -1);
@@ -260,6 +267,7 @@ struct Hashmap {
     V get(const K& key) {
         RUNTIME_ASSERT_MSG(has(key), "Key doesn't exist\n");
 
+        HashFunction* hash_func = compile_time_get_hash_function<K>(); 
         u64 hash = hashmap_safe_hash(hash_func, key);
         s64 index = resolve_collision(key, hash % capacity);
         RUNTIME_ASSERT(index != -1);
@@ -270,6 +278,7 @@ struct Hashmap {
     V remove(const K& key) {
         RUNTIME_ASSERT_MSG(has(key), "Key doesn't exist\n");
 
+        HashFunction* hash_func = compile_time_get_hash_function<K>(); 
         u64 hash = hashmap_safe_hash(hash_func, key);
         s64 index = resolve_collision(key, hash % capacity);
         RUNTIME_ASSERT(index != -1);

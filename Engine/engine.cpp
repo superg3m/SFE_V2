@@ -6,6 +6,7 @@ INTERNAL_LINKAGE const char* temp_dll_name = "application_temp.dll";
 INTERNAL_LINKAGE Platform::FileTime last_write_time = {};
 
 Engine* engine = nullptr;
+extern Hashmap<String, String>* string_intern_map;
 
 void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
 	static bool first = true;
@@ -130,6 +131,7 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 	this->frame_allocator = frame_allocator;
 
 	this->renderer = Renderer<OpenGL>::create(this->permenant_allocator, this->frame_allocator);
+
 	this->window = GLFW_INIT(this->renderer.WINDOW_WIDTH, this->renderer.WINDOW_HEIGHT);
 	if (!this->window) {
 		return false;
@@ -141,7 +143,7 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 	}
 
 	load_application_function_pointers(&this->application_init, &this->application_update, &this->application_render);
-	if (application_init) application_init(this);
+	if (application_init) application_init(this, string_intern_map);
 
 	return true;
 }
@@ -153,13 +155,13 @@ void Engine::update(float dt) {
 		this->reloaded_dll = true;
 	}
 
-	if (this->application_update) application_update(this, dt);
+	if (this->application_update) application_update(this, string_intern_map, dt);
 
 	input.poll();
 }
 
 void Engine::render(float dt) {
-	if (this->application_render) application_render(this, dt);
+	if (this->application_render) application_render(this, string_intern_map, dt);
 	
 	this->renderer.backend.resolve_requests(this->renderer.requests, this->frame_allocator);
 	this->renderer.requests.clear();

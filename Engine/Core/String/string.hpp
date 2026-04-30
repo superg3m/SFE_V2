@@ -10,7 +10,8 @@ struct String {
     const char* data = nullptr;
     u64 length = 0;
 
-    String(const char* data, u64 length);
+    static String create(const char* data, u64 length);
+    static String intern(void* string_intern_map, const char* data, u64 length);
     bool operator==(const String& other) const;
     bool operator!=(const String& other) const;
 
@@ -38,3 +39,6 @@ struct String {
 
     static String between_delimiters(const char* str, u64 str_length, const char* start_delimitor, u64 start_delimitor_length, const char* end_delimitor, u64 end_delimitor_length);
 };
+
+#define STR(s) (String{s, sizeof(s) - 1})
+#define STR_INTERN(s) (String::intern(string_intern_map, s, sizeof(s) - 1))

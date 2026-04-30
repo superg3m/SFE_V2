@@ -61,7 +61,8 @@ INTERNAL_LINKAGE AABB calculate_aabb(Vector<Vertex>& vertices, int base_vertex, 
 	return AABB::from_center_extents(center, extents);
 }
 
-INTERNAL_LINKAGE void load_assimp_texture(OpenGL* backend, Material* material, int i, const aiScene* scene, String directory, aiTextureType ai_texture_type, const char* name) {
+INTERNAL_LINKAGE void load_assimp_texture(OpenGL* backend, Material* material, int i, const aiScene* scene, String directory, aiTextureType ai_texture_type, String name) {
+	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(name);
 	const aiMaterial* ai_material = scene->mMaterials[i];
 	if (ai_material->GetTextureCount(ai_texture_type) <= 0) {
 		return;
@@ -83,10 +84,10 @@ INTERNAL_LINKAGE void load_assimp_texture(OpenGL* backend, Material* material, i
 			int width, height, nrChannel = 0;
 			u8* image_data = stbi_load_from_memory((u8*)ai_texture->pcData, ai_texture->mWidth, &width, &height, &nrChannel, 0);
 			texture = OpenGL::Texture::load_from_memory(ai_texture_type, image_data, width, height, nrChannel, {});
-			LOG_DEBUG("Material: %d | has embedded Texture of type: %s\n", i, name);
+			LOG_DEBUG("Material: %d | has embedded Texture of type: %s\n", i, name.data);
 		} else {
-			LOG_DEBUG("Material: %d | has external texture of type: %s\n", i, name);
-			texture = OpenGL::Texture::load_from_file(ai_texture_type, filename, {});
+			LOG_DEBUG("Material: %d | has external texture of type: %s\n", i, name.data);
+			texture = OpenGL::Texture::load_from_file(ai_texture_type, String::create(filename, length), {});
 		}
 
 		material->set_uniform(name, TextureHandle(texture_handle));
@@ -366,11 +367,12 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material) {
 	return ret;
 }
 
-OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, ShaderHandle shader, const char* path) {
+OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, ShaderHandle shader, String path) {
 	Mesh ret = {};
 	Assimp::Importer importer;
 	unsigned int assimp_flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;
-	const aiScene* scene = importer.ReadFile(path, assimp_flags);
+	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(path);
+	const aiScene* scene = importer.ReadFile(path.data, assimp_flags);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 		LOG_ERROR("ASSIMP ERROR: %s\n", importer.GetErrorString());
 	}
@@ -385,14 +387,14 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, ShaderHandle shader, 
 	ret.vertices.reserve(total_vertex_count);
 	ret.indices.reserve(total_index_count);
 
-	u64 path_length = String::cstr_length(path);
-	int index = String::last_index_of(path, path_length, STRING_LIT_ARG("/"));
+	u64 path_length = String::cstr_length(path.data);
+	int index = String::last_index_of(path.data, path_length, STRING_LIT_ARG("/"));
 	if (index == -1) {
-		index = String::last_index_of(path, path_length, STRING_LIT_ARG("\\"));
+		index = String::last_index_of(path.data, path_length, STRING_LIT_ARG("\\"));
 		RUNTIME_ASSERT(index != -1);
 	}
 
-	String directory = String(path, index);
+	String directory = String(path.data, index);
     Hashmap<int, MaterialHandle> material_index_to_material_handle = {};
 	for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
 		const aiMaterial* ai_material = scene->mMaterials[i];

@@ -1,10 +1,28 @@
 #include "string.hpp"
 #include "../Memory/memory.hpp"
 #include "../Assert/assert.hpp"
+#include "../Container/hashmap.hpp"
 
-String::String(const char* data, u64 length) {
-	this->data = data;
-	this->length = length;
+String String::create(const char* data, u64 length) {
+	return {data, length};
+}
+
+String String::intern(void* string_intern_map, const char* data, u64 length) {
+	Hashmap<String, String>* intern_map = (Hashmap<String, String>*)string_intern_map;
+	RUNTIME_ASSERT(string_intern_map);
+	String ret = {};
+	String key = {data, length};
+	if (intern_map->has(key)) {
+		String value = intern_map->get(key);
+		ret.data = value.data;
+		ret.length = value.length;
+		return ret;
+	}
+
+	String value = {String::allocate(intern_map->allocator, data, length), length};
+	intern_map->put(key, value);
+
+	return value;
 }
 
 bool String::operator==(const String& other) const {
@@ -290,3 +308,5 @@ String String::between_delimiters(const char* str, u64 str_length, const char* s
 
 	return ret;
 }
+
+Hashmap<String, String>* string_intern_map = nullptr;

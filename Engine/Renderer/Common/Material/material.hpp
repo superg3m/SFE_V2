@@ -60,18 +60,18 @@ struct BindingValue {
 };
 
 struct Material {
-	static constexpr const char* DIFFUSE_TEXTURE = "uDiffuseTexture"; // texture unit = aiTextureType_DIFFUSE
+	static constexpr String DIFFUSE_TEXTURE = STR("uDiffuseTexture"); // texture unit = aiTextureType_DIFFUSE
 
 	ShaderHandle shader = ShaderHandle::invalid();
-	Hashmap<const char*, BindingValue> bindings;
+	Hashmap<String, BindingValue> bindings;
 
 	Material() = default;
 	Material(Allocator allocator, ShaderHandle shader) {
 		this->shader = shader;
-		this->bindings = Hashmap<const char*, BindingValue>(allocator);
+		this->bindings = Hashmap<String, BindingValue>(allocator);
 	}
 
-	void set_uniform(const char* name, BindingValue value) {
+	void set_uniform(String name, BindingValue value) {
 		switch (value.type) {
 			case BindingValueType::BOOL: {
 				this->set_bool(name, value.boolean_binding);
@@ -106,15 +106,15 @@ struct Material {
 			} break;
 		}
 	}
-	void set_bool(const char* name, bool value);
-	void set_int(const char* name, int value);
-	void set_float(const char* name, float value);
-	void set_texture(const char* name, TextureHandle texture);
-	void set_vec2(const char* name, const Vec2& value);
-	void set_vec2(const char* name, float x, float y);
-	void set_vec3(const char* name, const Vec3& value);
-	void set_vec3(const char* name, float x, float y, float z);
-	void set_vec4(const char* name, const Vec4& value);
-	void set_vec4(const char* name, float x, float y, float z, float w);
-	void set_mat4(const char* name, const Mat4& mat);
+	void set_bool(String name, bool value);
+	void set_int(String name, int value);
+	void set_float(String name, float value);
+	void set_texture(String name, TextureHandle texture);
+	void set_vec2(String name, const Vec2& value);
+	void set_vec2(String name, float x, float y);
+	void set_vec3(String name, const Vec3& value);
+	void set_vec3(String name, float x, float y, float z);
+	void set_vec4(String name, const Vec4& value);
+	void set_vec4(String name, float x, float y, float z, float w);
+	void set_mat4(String name, const Mat4& mat);
 };

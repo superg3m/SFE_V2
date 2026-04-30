@@ -38,7 +38,7 @@ struct Renderer {
         return ret;
     }
 
-    TextureHandle create_texture(u32 texture_unit, const char* path, TextureDescription& desc) {
+    TextureHandle create_texture(u32 texture_unit, String path, TextureDescription& desc) {
         TextureHandle texture = this->backend.textures.acquire();
         Request request = Request::create_texture(texture, texture_unit, path, desc);
         this->requests.append(request);
@@ -46,7 +46,7 @@ struct Renderer {
         return texture;
     }
 
-    TextureHandle create_texture(u32 texture_unit, Vector<const char*> cube_map_texture_paths) {
+    TextureHandle create_texture(u32 texture_unit, Vector<String> cube_map_texture_paths) {
         TextureHandle texture = this->backend.textures.acquire();
         Request request = Request::create_texture(texture, texture_unit,cube_map_texture_paths);
         this->requests.append(request);
@@ -108,7 +108,7 @@ struct Renderer {
         this->requests.append(request);
     }
 
-    MeshHandle create_mesh(ShaderHandle shader, const char *path) {
+    MeshHandle create_mesh(ShaderHandle shader, String path) {
         MeshHandle mesh = this->backend.meshes.acquire();
         Request request = Request::create_mesh(mesh, shader, path);
         this->requests.append(request);
@@ -122,7 +122,7 @@ struct Renderer {
         return mesh;
     }
 
-    ShaderHandle create_shader(Vector<const char*> shader_paths) {
+    ShaderHandle create_shader(Vector<String> shader_paths) {
         ShaderHandle shader = this->backend.shaders.acquire();
         Request request = Request::create_shader(shader, shader_paths);
         this->requests.append(request);
@@ -152,11 +152,11 @@ struct Renderer {
         this->requests.append(request);
     }
 
-    void material_set_uniforms(MaterialHandle material, Hashmap<const char*, BindingValue> uniforms) {
+    void material_set_uniforms(MaterialHandle material, Hashmap<String, BindingValue> uniforms) {
         Material& material_slot = this->backend.materials.get(material.handle);
 
         for (auto& entry : uniforms) {
-            const char* k = entry.key;
+            String k = entry.key;
             BindingValue v = entry.value;
             material_slot.set_uniform(k, v);
         }

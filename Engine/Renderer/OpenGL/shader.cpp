@@ -1,13 +1,13 @@
 #include "backend.hpp"
 #include "../../Platform/platform.hpp"
 
-u32 OpenGL::Shader::create_shader_program(Vector<const char*> shader_paths) {
+u32 OpenGL::Shader::create_shader_program(Vector<String> shader_paths) {
     u32 shader_program_id = glCreateProgram();
     this->shader_paths = shader_paths;
 
     u32 shader_source_count = 0;
     u32 shader_source_ids[8] = {};
-    for (const char* path : shader_paths) {
+    for (String path : shader_paths) {
         u32 shader_source_id = this->shader_source_compile(path);
         glAttachShader(shader_program_id, shader_source_id);
         shader_source_ids[shader_source_count++] = shader_source_id;
@@ -39,7 +39,7 @@ u32 OpenGL::Shader::create_shader_program(Vector<const char*> shader_paths) {
 
         int location = glGetUniformLocation(shader_program_id, name);
         UniformDesc value = UniformDesc{type, location};
-        this->uniforms.put(name, value);
+        this->uniforms.put(String::create(name, name_length), value);
     }
 
     return shader_program_id;
@@ -66,12 +66,11 @@ static const char* gl_enum_to_string(GLenum type) {
     }
 }
 
-GLenum OpenGL::Shader::type_from_path(const char* shader_source_path) {
-    u64 len = String::cstr_length(shader_source_path);
-    s64 extension_index = String::last_index_of(shader_source_path, len, STRING_LIT_ARG("."));
+GLenum OpenGL::Shader::type_from_path(String shader_source_path) {
+    s64 extension_index = String::last_index_of(shader_source_path.data, shader_source_path.length, STRING_LIT_ARG("."));
     RUNTIME_ASSERT_MSG(extension_index != -1, "Missing extension (.vert, .frag)\n");
     
-    String extension = String(shader_source_path + extension_index, len - extension_index);
+    String extension = String(shader_source_path.data + extension_index, shader_source_path.length - extension_index);
     if (String::contains(extension.data, extension.length,  STRING_LIT_ARG(".vert"))) {
         return GL_VERTEX_SHADER;
     } else if (String::contains(extension.data, extension.length,  STRING_LIT_ARG(".frag"))) {
@@ -84,7 +83,7 @@ GLenum OpenGL::Shader::type_from_path(const char* shader_source_path) {
     return GL_INVALID_ENUM;
 }
 
-void OpenGL::Shader::check_compile_error(unsigned int source_id, const char* path) {
+void OpenGL::Shader::check_compile_error(unsigned int source_id, String path) {
     int success;
     char info_log[1024];
     gl_error_check(glGetShaderiv(source_id, GL_COMPILE_STATUS, &success));
@@ -95,12 +94,13 @@ void OpenGL::Shader::check_compile_error(unsigned int source_id, const char* pat
     }
 }
 
-unsigned int OpenGL::Shader::shader_source_compile(const char* path) {
+unsigned int OpenGL::Shader::shader_source_compile(String path) {
     size_t file_size = 0;
     Error error = Error::SUCCESS;
     Allocator allocator = Allocator::general();
-    GLchar* shader_source = (GLchar*)Platform::read_entire_file(allocator, path, file_size, error);
-    RUNTIME_ASSERT_MSG(error == Error::SUCCESS, "Shader Error: %s\n", path, error_get_string(error));
+    INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(path);
+    GLchar* shader_source = (GLchar*)Platform::read_entire_file(allocator, path.data, file_size, error);
+    RUNTIME_ASSERT_MSG(error == Error::SUCCESS, "Shader Error: %s | Err: %s\n", path.data, error_get_string(error));
 
     GLenum type = this->type_from_path(path);
     unsigned int source_id = glCreateShader(type);
@@ -113,7 +113,7 @@ unsigned int OpenGL::Shader::shader_source_compile(const char* path) {
     return source_id;
 }
 
-unsigned int OpenGL::Shader::get_uniform_location(const char* name, GLenum type) {
+unsigned int OpenGL::Shader::get_uniform_location(String name, GLenum type) {
     if (this->uniforms.has(name)) {
         UniformDesc expected = this->uniforms.get(name);
         if (expected.type != type) {
@@ -124,7 +124,8 @@ unsigned int OpenGL::Shader::get_uniform_location(const char* name, GLenum type)
         return expected.location;
     }
 
-    int location = glGetUniformLocation(this->program_id, name);
+    INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(name);
+    int location = glGetUniformLocation(this->program_id, name.data);
     this->uniforms.put(name, UniformDesc{type, location}); // this type might be wrong, but theres no great robust way to do arrays that I know of...
     if (location == -1) {
         LOG_ERROR("Shader {%s} Uniform: '%s' does not exists\n", this->shader_paths[0], name);
@@ -139,24 +140,24 @@ void OpenGL::Shader::use() const {
 
 // TODO(Jovanni): Make this use the locations instead of string lookups
 void OpenGL::Shader::set_model(Mat4 &model) {
-    this->set_mat4("uModel", model);
+    this->set_mat4(STR("uModel"), model);
 }
 
 void OpenGL::Shader::set_view(Mat4 &view) {
-    this->set_mat4("uView", view);
+    this->set_mat4(STR("uView"), view);
 }
 
 void OpenGL::Shader::set_projection(Mat4 &projection) {
-    this->set_mat4("uProjection", projection);
+    this->set_mat4(STR("uProjection"), projection);
 }
 
-void OpenGL::Shader::set_bool(const char* name, bool value) {
+void OpenGL::Shader::set_bool(String name, bool value) {
     gl_error_check(glUniform1i(this->get_uniform_location(name, GL_BOOL), (int)value));
 }
-void OpenGL::Shader::set_int(const char* name, int value) {
+void OpenGL::Shader::set_int(String name, int value) {
     gl_error_check(glUniform1i(this->get_uniform_location(name, GL_INT), value));
 }
-void OpenGL::Shader::set_texture(const char* name, Texture texture) {
+void OpenGL::Shader::set_texture(String name, Texture texture) {
     RUNTIME_ASSERT(texture.type == TextureSamplerType::SAMPLER_2D);
 
     gl_error_check(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
@@ -164,7 +165,7 @@ void OpenGL::Shader::set_texture(const char* name, Texture texture) {
 
     gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_2D), texture.texture_unit));
 }
-void OpenGL::Shader::set_texture_cube(const char* name, Texture texture) {
+void OpenGL::Shader::set_texture_cube(String name, Texture texture) {
     RUNTIME_ASSERT(texture.type == TextureSamplerType::CUBEMAP_3D);
 
     gl_error_check(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
@@ -172,34 +173,34 @@ void OpenGL::Shader::set_texture_cube(const char* name, Texture texture) {
 
     gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_CUBE), texture.texture_unit));
 }
-void OpenGL::Shader::set_float(const char* name, float value) {
+void OpenGL::Shader::set_float(String name, float value) {
     gl_error_check(glUniform1f(this->get_uniform_location(name, GL_FLOAT), value));
 }
-void OpenGL::Shader::set_vec2(const char* name, const Vec2& value) {
+void OpenGL::Shader::set_vec2(String name, const Vec2& value) {
     gl_error_check(glUniform2fv(this->get_uniform_location(name, GL_FLOAT_VEC2), 1, &value.x));
 }
-void OpenGL::Shader::set_vec2(const char* name, float x, float y) {
+void OpenGL::Shader::set_vec2(String name, float x, float y) {
     gl_error_check(glUniform2f(this->get_uniform_location(name, GL_FLOAT_VEC2), x, y));
 }
-void OpenGL::Shader::set_vec3(const char* name, const Vec3& value) {
+void OpenGL::Shader::set_vec3(String name, const Vec3& value) {
     gl_error_check(glUniform3fv(this->get_uniform_location(name, GL_FLOAT_VEC3), 1, &value.x));
 }
-void OpenGL::Shader::set_vec3(const char* name, float x, float y, float z) {
+void OpenGL::Shader::set_vec3(String name, float x, float y, float z) {
     gl_error_check(glUniform3f(this->get_uniform_location(name, GL_FLOAT_VEC3), x, y, z));
 }
-void OpenGL::Shader::set_vec4(const char* name, const Vec4& value) {
+void OpenGL::Shader::set_vec4(String name, const Vec4& value) {
     gl_error_check(glUniform4fv(this->get_uniform_location(name, GL_FLOAT_VEC4), 1, &value.x));
 }
-void OpenGL::Shader::set_vec4(const char* name, float x, float y, float z, float w) {
+void OpenGL::Shader::set_vec4(String name, float x, float y, float z, float w) {
     gl_error_check(glUniform4f(this->get_uniform_location(name, GL_FLOAT_VEC4), x, y, z, w));
 }
-void OpenGL::Shader::set_mat4(const char* name, const Mat4& mat) {
+void OpenGL::Shader::set_mat4(String name, const Mat4& mat) {
     gl_error_check(glUniformMatrix4fv(this->get_uniform_location(name, GL_FLOAT_MAT4), 1, GL_TRUE, &mat.v[0].x));
 }
 
 void OpenGL::Shader::set_material(OpenGL* backend, Material* material) {
     for (const auto entry : material->bindings) {
-        const char* k = entry.key; 
+        String k = entry.key; 
         BindingValue v = entry.value;
 
         switch (v.type) {

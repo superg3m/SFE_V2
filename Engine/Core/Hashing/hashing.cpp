@@ -1,5 +1,6 @@
 #include "../Hashing/hashing.hpp"
 #include "../String/string.hpp"
+#include "../Logger/logger.hpp"
 
 // Original location:
 // https://github.com/majek/csiphash/1

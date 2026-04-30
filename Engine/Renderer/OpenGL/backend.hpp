@@ -28,9 +28,9 @@ struct OpenGL {
         TextureSamplerType type = TextureSamplerType::SAMPLER_2D;
 
         static void flip_vertically_in_place(u8* data, int width, int height);
-        static Texture load_from_file(u32 texture_unit, const char* path, TextureDescription desc);
+        static Texture load_from_file(u32 texture_unit, String path, TextureDescription desc);
         static Texture load_from_memory(u32 texture_unit, const u8* data, int width, int height, int channels, TextureDescription desc);
-        static Texture load_cube_map(u32 texture_unit, Vector<const char*> cube_map_texture_paths);
+        static Texture load_cube_map(u32 texture_unit, Vector<String> cube_map_texture_paths);
     };
 
     struct UniformDesc {
@@ -41,7 +41,7 @@ struct OpenGL {
     struct Shader {
         unsigned int program_id = 0;
         Shader() = default;
-        Shader(Vector<const char*> shader_paths) {
+        Shader(Vector<String> shader_paths) {
             this->shader_paths = shader_paths;
             this->compile();
         }
@@ -53,28 +53,28 @@ struct OpenGL {
         void set_view(Mat4 &view);
         void set_projection(Mat4 &projection);
 
-        void set_bool(const char* name, bool value);
-        void set_int(const char* name, int value);
-        void set_float(const char* name, float value);
-        void set_texture(const char* name, Texture texture);
-        void set_texture_cube(const char* name, Texture texture);
-        void set_vec2(const char* name, const Vec2& value);
-        void set_vec2(const char* name, float x, float y);
-        void set_vec3(const char* name, const Vec3& value);
-        void set_vec3(const char* name, float x, float y, float z);
-        void set_vec4(const char* name, const Vec4& value);
-        void set_vec4(const char* name, float x, float y, float z, float w);
-        void set_mat4(const char* name, const Mat4& mat);
+        void set_bool(String name, bool value);
+        void set_int(String name, int value);
+        void set_float(String name, float value);
+        void set_texture(String name, Texture texture);
+        void set_texture_cube(String name, Texture texture);
+        void set_vec2(String name, const Vec2& value);
+        void set_vec2(String name, float x, float y);
+        void set_vec3(String name, const Vec3& value);
+        void set_vec3(String name, float x, float y, float z);
+        void set_vec4(String name, const Vec4& value);
+        void set_vec4(String name, float x, float y, float z, float w);
+        void set_mat4(String name, const Mat4& mat);
         void set_material(OpenGL* backend, Material* material);
     private:
-        Vector<const char*> shader_paths;
-        Hashmap<const char*, UniformDesc> uniforms;
+        Vector<String> shader_paths;
+        Hashmap<String, UniformDesc> uniforms;
 
-        u32 create_shader_program(Vector<const char*> shader_paths);
-        GLenum type_from_path(const char* path);
-        void check_compile_error(unsigned int source_id, const char* path);
-        unsigned int shader_source_compile(const char* path);
-        unsigned int get_uniform_location(const char* name, GLenum type);
+        u32 create_shader_program(Vector<String> shader_paths);
+        GLenum type_from_path(String path);
+        void check_compile_error(unsigned int source_id, String path);
+        unsigned int shader_source_compile(String path);
+        unsigned int get_uniform_location(String name, GLenum type);
     };
 
     struct VertexArrayObject {
@@ -200,7 +200,7 @@ struct OpenGL {
         static Mesh cube(MaterialHandle material);
         static Mesh axis_aligned_bounding_box(MaterialHandle material, AABB aabb);
         static Mesh axis_aligned_bounding_box(MaterialHandle material);
-        static Mesh load_from_file(OpenGL* backend, ShaderHandle shader_handle, const char* path);
+        static Mesh load_from_file(OpenGL* backend, ShaderHandle shader_handle, String path);
 
     private:
         Vector<Vertex> vertices;

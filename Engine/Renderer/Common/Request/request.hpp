@@ -25,20 +25,20 @@ enum class RequestType {
 struct TextureRequest {
     TextureHandle user = TextureHandle::invalid();
     u32 texture_unit = INT_MAX;
-    const char* path = nullptr;
+    String path = {};
 	TextureDescription description = {};
-    Vector<const char*> cubemap_paths = {};
+    Vector<String> cubemap_paths = {};
 
     TextureRequest() = default;
 
-    TextureRequest(TextureHandle user, u32 texture_unit, const char* path, TextureDescription description) {
+    TextureRequest(TextureHandle user, u32 texture_unit, String path, TextureDescription description) {
         this->user = user;
         this->texture_unit = texture_unit;
         this->path = path;
         this->description = description;
     }
 
-    TextureRequest(TextureHandle user, u32 texture_unit, Vector<const char*> cubemap_paths) {
+    TextureRequest(TextureHandle user, u32 texture_unit, Vector<String> cubemap_paths) {
         this->user = user;
         this->texture_unit = texture_unit;
         this->cubemap_paths = cubemap_paths;
@@ -127,14 +127,14 @@ struct MeshRequest {
     MeshHandle user = MeshHandle::invalid();
     MaterialHandle material = MaterialHandle::invalid();
     ShaderHandle shader = ShaderHandle::invalid();
-    const char* path = nullptr;
+    String path = nullptr;
 
     MeshRequest(MeshHandle user, MaterialHandle material) {
         this->user = user;
         this->material = material;
     }
 
-    MeshRequest(MeshHandle user, ShaderHandle shader, const char* path) {
+    MeshRequest(MeshHandle user, ShaderHandle shader, String path) {
         this->user = user;
         this->shader = shader;
         this->path = path;
@@ -143,7 +143,7 @@ struct MeshRequest {
 
 struct ShaderRequest {
     ShaderHandle user;
-    Vector<const char*> shader_paths = {};
+    Vector<String> shader_paths = {};
 };
 
 
@@ -161,7 +161,7 @@ struct Request {
 		DrawCallRequest draw_call;
 	};
 
-    static Request create_texture(TextureHandle user, u32 texture_unit, const char* path, TextureDescription description) {
+    static Request create_texture(TextureHandle user, u32 texture_unit, String path, TextureDescription description) {
         Request ret = {};
         ret.type = RequestType::TEXTURE2D_LOAD;
         ret.texture = TextureRequest(user, texture_unit, path, description);
@@ -169,7 +169,7 @@ struct Request {
         return ret;
     }
 
-    static Request create_texture(TextureHandle user, u32 texture_unit, Vector<const char*> cubemap_paths) {
+    static Request create_texture(TextureHandle user, u32 texture_unit, Vector<String> cubemap_paths) {
         Request ret = {};
         ret.type = RequestType::TEXTURE3D_LOAD;
         ret.texture = TextureRequest(user, texture_unit, cubemap_paths);
@@ -195,7 +195,7 @@ struct Request {
     }
 
 
-    static Request create_mesh(MeshHandle user, ShaderHandle shader, const char* path) {
+    static Request create_mesh(MeshHandle user, ShaderHandle shader, String path) {
         Request ret = {};
         ret.type = RequestType::MESH_LOAD;
         ret.mesh = MeshRequest(user, shader, path);
@@ -211,7 +211,7 @@ struct Request {
         return ret;
     }
 
-    static Request create_shader(ShaderHandle user, Vector<const char*> shader_paths) {
+    static Request create_shader(ShaderHandle user, Vector<String> shader_paths) {
         Request ret = {};
         ret.type = RequestType::SHADER_CREATE;
         ret.shader.user = user;

@@ -4,9 +4,9 @@
 #include "Renderer/OpenGL/backend.hpp"
 
 struct Engine;
-typedef void(ApplicationInitalizeFunc)(Engine* engine);
-typedef void(ApplicationUpdateFunc)(Engine* engine, float dt);
-typedef void(ApplicationRenderFunc)(Engine* engine, float dt);
+typedef void(ApplicationInitalizeFunc)(Engine* engine, Hashmap<String, String>* string_intern_map);
+typedef void(ApplicationUpdateFunc)(Engine* engine, Hashmap<String, String>* string_intern_map, float dt);
+typedef void(ApplicationRenderFunc)(Engine* engine, Hashmap<String, String>* string_intern_map, float dt);
 
 struct Engine {
 	GLFWwindow* window;
@@ -19,6 +19,7 @@ struct Engine {
 	void* application_state;
 
 	Allocator permenant_allocator;
+	Allocator string_allocator;
 	Allocator frame_allocator;
 
 	Mat4 get_view_matrix();
