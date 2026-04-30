@@ -143,6 +143,8 @@ void* Arena::realloc(void* data, size_t old_allocation_size, size_t new_allocati
 }
 
 void Arena::pop_to(size_t new_used) {
+	// i'm also zeroing out hte memery just to see if I have any bugs, with lik frame areans and such...
+	Memory::zero(this->base_address, this->used);
 	this->used = new_used;
 }
 

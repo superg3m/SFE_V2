@@ -46,9 +46,9 @@ struct Renderer {
         return texture;
     }
 
-    TextureHandle create_texture(u32 texture_unit, Vector<String> cube_map_texture_paths) {
+    TextureHandle create_texture(u32 texture_unit, std::initializer_list<String> cube_map_texture_paths) {
         TextureHandle texture = this->backend.textures.acquire();
-        Request request = Request::create_texture(texture, texture_unit,cube_map_texture_paths);
+        Request request = Request::create_texture(texture, texture_unit, Vector<String>(cube_map_texture_paths, this->frame_allocator));
         this->requests.append(request);
 
         return texture;
@@ -152,7 +152,7 @@ struct Renderer {
         this->requests.append(request);
     }
 
-    void material_set_uniforms(MaterialHandle material, Hashmap<String, BindingValue> uniforms) {
+    void material_set_uniforms(MaterialHandle material, std::initializer_list<KeyValuePair<String, BindingValue>> uniforms) {
         Material& material_slot = this->backend.materials.get(material.handle);
 
         for (auto& entry : uniforms) {

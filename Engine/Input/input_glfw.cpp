@@ -9,7 +9,7 @@ bool INPUT_GLFW_SETUP(Input* input, GLFWwindow* window, GLFWkeyfun key_cb, GLFWm
     ctx.cb_keyboard = key_cb;
     ctx.cb_mouse_button = mouse_button_cb;
     ctx.cb_mouse_move = mouse_move_cb;
-    ctx.glfw_to_key_code = {
+    ctx.glfw_to_key_code = {{
         // Letters
         {GLFW_KEY_A, KEY_A},
         {GLFW_KEY_B, KEY_B},
@@ -92,7 +92,7 @@ bool INPUT_GLFW_SETUP(Input* input, GLFWwindow* window, GLFWkeyfun key_cb, GLFWm
         {GLFW_MOUSE_BUTTON_LEFT,   MOUSE_BUTTON_LEFT},
         {GLFW_MOUSE_BUTTON_RIGHT,  MOUSE_BUTTON_RIGHT},
         {GLFW_MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_MIDDLE}
-    };
+    }, input->input_state.allocator};
     
     glfwSetKeyCallback(window, [](GLFWwindow*, int key, int scancode, int action, int mods) {
         if (ctx.cb_keyboard) {
