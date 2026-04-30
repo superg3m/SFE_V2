@@ -584,16 +584,7 @@ int main() {
 	return 0;
 }
 
-// abstract the render_queue into the renderer.
-// see how hard it is to do instanced stuff
-
-// probably take a look at the ::create(...) stuff see if you can get away with not doing that?
 // Entity stuff
-// MeshHandle
-// renderer.draw_mesh()
-
-// ok it kind of defeats the purpose when I have to use the rendere.backend.registry
-// figure out how to fix this...
 
 // this will turn into a dll
 // the idea is just to submit commands

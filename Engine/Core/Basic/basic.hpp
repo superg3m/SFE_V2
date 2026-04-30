@@ -124,9 +124,12 @@ constexpr float EPSILON = 0.0001f;
 
 #if defined(_MSC_VER)
 	#define UNUSED_FUNCTION
+	#define EXPORT_FN extern "C" __declspec(dllexport)
 #elif defined(__clang__)
 	#define UNUSED_FUNCTION __attribute__((used))
+	#define EXPORT_FN extern "C" 
 #elif defined(__GNUC__) || defined(__GNUG__)
 	#define UNUSED_FUNCTION __attribute__((used))
+	#define EXPORT_FN extern "C" 
 #endif
 
