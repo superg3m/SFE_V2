@@ -37,6 +37,7 @@ there really isn't a good way I can think of to fix this other than to remove th
 template <typename K>
 constexpr HashFunction* compile_time_get_hash_function() {
 	if constexpr (CompileTime<K>::TYPE_IS_CSTRING) {
+		STATIC_ASSERT(false); // getting read to depricate cstring keys in favor of String{data, length}
 		return Hashing::cstring_hash;
 	} else if (CompileTime<K>::TYPE_IS_STRING) {
 		return Hashing::string_view_hash;

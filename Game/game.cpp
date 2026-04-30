@@ -132,10 +132,6 @@ EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* strin
 EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* string_intern_map, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
-	if (engine->reloaded_dll) {
-		LOG_INFO("RELOADED\n");
-	}
-
 	if(app->timer.tick(dt)) {
 		app->use_opaque_pipeline = !app->use_opaque_pipeline;
 		app->timer.reset();
