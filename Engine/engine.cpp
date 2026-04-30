@@ -149,38 +149,20 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 void Engine::update(float dt) {
 	Platform::FileTime new_time = Platform::get_file_modification_time(dll_name);
 	if (Platform::compare_file_modification_time(new_time, last_write_time) == false) {
-		LOG_ERROR("RELOADED\n");
 		load_application_function_pointers(nullptr, &this->application_update, &this->application_render);
-		LOG_ERROR("AFTER POINTERS\n");
 		this->reloaded_dll = true;
 	}
 
 	if (this->application_update) application_update(this, dt);
 
-	if (this->reloaded_dll) {
-		LOG_ERROR("AFTER UPDATE\n");
-	}
-
 	input.poll();
 }
 
 void Engine::render(float dt) {
-	if (this->reloaded_dll) {
-		LOG_ERROR("BEFORE RENDER\n");
-	}
-
 	if (this->application_render) application_render(this, dt);
-
-	if (this->reloaded_dll) {
-		LOG_ERROR("AFTER RENDER\n");
-	}
 	
 	this->renderer.backend.resolve_requests(this->renderer.requests, this->frame_allocator);
 	this->renderer.requests.clear();
-
-	if (this->reloaded_dll) {
-		LOG_ERROR("AFTER RESOLVING\n");
-	}
 
 	this->reloaded_dll = false;
 }

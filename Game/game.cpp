@@ -146,21 +146,13 @@ EXPORT_FN void application_render(Engine* engine, float dt) {
 		{"uFace", app->face_texture},
 	}, engine->frame_allocator});
 
-	if (engine->reloaded_dll) {
-		LOG_ERROR("AFTER UNIFORM\n");
-	}
-
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
-	// engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
+	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
 
 	model = Mat4::translate(model, -5, 0, 0);
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
-
-	if (engine->reloaded_dll) {
-		LOG_ERROR("AFTER DRAWS?\n");
-	}
 
 	/*
 	Mesh backpack_mesh = engine->renderer.backend.meshes.get(app.backpack_mesh_handle);
