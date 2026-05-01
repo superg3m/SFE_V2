@@ -184,7 +184,7 @@ procedures_config = {
         build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
         output_name = "sfe_runtime.exe",
         source_files = [
-            f"{RELATIVE_ENGINE_ROOT}/Runtime/core.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/Runtime/runtime.cpp",
         ],
         additional_libs = ["vendor.lib"],
         include_paths = INCLUDES,

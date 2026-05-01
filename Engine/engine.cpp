@@ -142,6 +142,9 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 	// RendererAPI renderer = Dx12::API();
 
 	renderer.execute_requests(api);
+	// api has a function pointer
+	// api->execute_request(request);
+	// 
 
 	this->input.init(this->permenant_allocator);
 	if (!INPUT_GLFW_SETUP(&this->input, this->window, nullptr, nullptr, mouse)) {
