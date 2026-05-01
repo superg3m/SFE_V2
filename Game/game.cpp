@@ -30,7 +30,6 @@ renderer.end_frame(cmd)
 
 */
 
-
 EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_intern_map) {
 	engine->application_state = engine->permenant_allocator.malloc(sizeof(AppState), alignof(AppState));
 	AppState* app = (AppState*)engine->application_state;

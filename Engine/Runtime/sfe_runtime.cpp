@@ -286,6 +286,8 @@ int main() {
 	if (!engine->init(permanent_arena_allocator, frame_arena_allocator)) {
 		return -1;
 	}
+
+	// while (!PlatformSystem::window_should_close())
 	
 	// engine.run();
 
