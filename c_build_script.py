@@ -103,7 +103,7 @@ if IS_WINDOWS():
         GET_LIB_FLAG(cc, "Winmm"),
     ]
 elif IS_DARWIN():
-    inject += ["-Wl,-rpath,@executable_path"]
+    inject += ["-Wl,-rpath,@executable_path", "-fpic"]
     libs += [
         f"{RELATIVE_GLFW_ROOT}/bin/macos/lib-arm64/libglfw3.a",
         f"{RELATIVE_ASSIMP_ROOT}/bin/macos/libassimp.dylib",
