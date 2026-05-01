@@ -1,20 +1,6 @@
 #pragma once
 
-#include "Common/common.hpp"
-
-// using VertexArrayObject = typename B::VertexArrayObject;
-// using VertexArrayObjectHandle = Handle<VertexArrayObject>;
-
-/*
-struct RenderCommand {
-	MeshHandle mesh;
-	PipelineHandle pipeline;
-	Mat4 model = Mat4::identity();
-	Mat4 view = Mat4::identity();
-	Mat4 projection = Mat4::identity();
-	u32 instance_count = 1;
-};
-*/
+#include "renderer_api.hpp"
 
 template<typename B>
 struct Renderer {

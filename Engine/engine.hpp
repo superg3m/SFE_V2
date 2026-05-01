@@ -19,7 +19,6 @@ struct Engine {
 	void* application_state;
 
 	Allocator permenant_allocator;
-	Allocator string_allocator;
 	Allocator frame_allocator;
 
 	Mat4 get_view_matrix();

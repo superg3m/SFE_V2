@@ -145,17 +145,48 @@ elif IS_DARWIN():
 recompile = True if IS_WINDOWS() else False
 
 procedures_config = {
-    "SFE": ProcedureConfig(
+	"Core": ProcedureConfig(
         build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
-        output_name = "sfe.lib",
+        output_name = "core.lib",
         source_files = [
-            f"{RELATIVE_ENGINE_ROOT}/sfe.cpp",
-            
+            f"{RELATIVE_ENGINE_ROOT}/Core/core.cpp",
+        ],
+        additional_libs = [],
+        include_paths = INCLUDES,
+        compiler_inject_into_args=[]
+    ),
+ 
+ 	"API": ProcedureConfig(
+        build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
+        output_name = "api.lib",
+        source_files = [
+            f"{RELATIVE_ENGINE_ROOT}/Core/core.cpp",
+        ],
+        additional_libs = [],
+        include_paths = INCLUDES,
+        compiler_inject_into_args=[]
+    ),
+  
+  	"Vendor": ProcedureConfig(
+        build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
+        output_name = "vendor.lib",
+        source_files = [
             f"{RELATIVE_IMGUI_ROOT}/*.cpp",
             f"{RELATIVE_GLAD_ROOT}/src/glad.c",
             f"{RELATIVE_STB_ROOT}/stb_image.c",
         ] + nfd,
         additional_libs = [],
+        include_paths = INCLUDES,
+        compiler_inject_into_args=[]
+    ),
+ 
+ 	"Entrypoint": ProcedureConfig(
+        build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
+        output_name = "sfe_runtime.exe",
+        source_files = [
+            f"{RELATIVE_ENGINE_ROOT}/Runtime/core.cpp",
+        ],
+        additional_libs = ["vendor.lib"],
         include_paths = INCLUDES,
         compiler_inject_into_args=[]
     ),
@@ -166,7 +197,7 @@ procedures_config = {
         source_files = [
             f"{RELATIVE_GAME_ROOT}/game.cpp",
         ],
-        additional_libs = libs,
+        additional_libs = [],
         include_paths = INCLUDES,
         compiler_inject_into_args=[],
         on_source_change_recompile=recompile #doesn't work on mac because of codesign (BS)

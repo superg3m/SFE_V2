@@ -137,6 +137,12 @@ bool Engine::init(Allocator permenant_allocator, Allocator frame_allocator) {
 		return false;
 	}
 
+	RendererAPI api = OpenGL::API();
+	// RendererAPI renderer = Vulkan::API();
+	// RendererAPI renderer = Dx12::API();
+
+	renderer.execute_requests(api);
+
 	this->input.init(this->permenant_allocator);
 	if (!INPUT_GLFW_SETUP(&this->input, this->window, nullptr, nullptr, mouse)) {
 		return false;

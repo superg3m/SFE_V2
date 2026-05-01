@@ -1,6 +1,36 @@
 #include <sfe.hpp>
 #include "game.hpp"
 
+// engine->set_main_camera(app->camera);
+// engine->get_view_matrix();
+// engine->get_projection_matrix();
+
+/*
+renderer.material_set_uniforms(app->material, {
+	{STR_INTERN("uContainer"), app->container_texture},
+	{STR_INTERN("uFace"), app->face_texture},
+});
+
+Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
+renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
+renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
+
+PlatformCommand()
+RenderCommand()
+
+// https://docs.unity3d.com/6000.4/Documentation/ScriptReference/Rendering.CommandBuffer.html
+
+model = Mat4::translate(model, 0, 5, 0);
+pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
+
+CommandBufferHandle cmd = renderer.begin_frame()
+	cmd.bind_pipeline(pipeline);
+	cmd.draw_mesh(app->backpack_mesh, model, view, projection);
+renderer.end_frame(cmd)
+
+*/
+
+
 EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_intern_map) {
 	engine->application_state = engine->permenant_allocator.malloc(sizeof(AppState), alignof(AppState));
 	AppState* app = (AppState*)engine->application_state;
@@ -133,28 +163,6 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	model = Mat4::translate(model, 0, 5, 0);
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
-
-	/*s
-	Mesh backpack_mesh = engine->renderer.backend.meshes.get(app.backpack_mesh_handle);
-	for (MeshEntry& entry : backpack_mesh.entries) {
-		RenderCommand command = {};
-		command.pipeline = app.use_opaque_pipeline ? engine->renderer.opaque_pipeline : engine->renderer.opaque_wireframe_pipeline;
-		command.material = entry.material_handle;
-		command.vao = backpack_mesh.vao;
-		command.main_vbo = backpack_mesh.vbo;
-		command.extra_vbos = Vector<VertexBufferHandle>({}, engine->frame_allocator);
-		command.ebo = backpack_mesh.ebo;
-		command.mesh_entry = entry;
-		command.model = Mat4::identity();
-		command.view = app.camera.get_view_matrix();
-		command.projection = Mat4::perspective(app.camera.zoom, (float)Renderer::WINDOW_WIDTH / (float)Renderer::WINDOW_HEIGHT, 0.1f, 1000.0f);
-		command.instance_count = 1;
-
-		// engine->renderer.submit(command);
-	}
-
-	Memory::copy(engine->application_state, sizeof(AppState), &app, sizeof(AppState));
-	*/
 }
 
 // https://www.youtube.com/watch?v=9R2rRLbBkHU

@@ -348,6 +348,7 @@ struct OpenGL {
 	bool WIREFRAME = false;
 	int DRAW_CALL_COUNT = 0;
 
+	Vector<Request> request = {};
 	Registry<OpenGL::Texture, 256> textures = {};
 	Registry<Material, 256> materials = {};
 	Registry<OpenGL::Shader, 256> shaders = {};
