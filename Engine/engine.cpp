@@ -42,7 +42,7 @@ void load_application_function_pointers(ApplicationInitalizeFunc** application_i
 	}
 
 	Platform::copy_file(dll_name, temp_dll_name, true);
-	last_write_time = Platform::get_file_modification_time(temp_dll_name);
+	last_write_time = Platform::get_file_modification_time(dll_name);
 
 	Error err = Error::SUCCESS;
 	dll = Platform::load_dll(temp_dll_name, err);

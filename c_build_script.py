@@ -18,8 +18,7 @@ from c_build.source.Manager import *
 # ---------------------------------------------------------------------------------------
 
 cc: CompilerConfig = CompilerConfig(
-    compiler_name = C_BUILD_COMPILER_NAME() if C_BUILD_IS_DEPENDENCY() else "INVALID_COMPILER",
-    compiler_std_version="c++20"
+    compiler_name = C_BUILD_COMPILER_NAME() if C_BUILD_IS_DEPENDENCY() else "INVALID_COMPILER"
 )
 
 pc: ProjectConfig = ProjectConfig(
@@ -138,10 +137,12 @@ if IS_WINDOWS():
 elif IS_DARWIN():
     nfd = [
         f"{RELATIVE_NFD_ROOT}/src/nfd_common.c",
-        f"{RELATIVE_NFD_ROOT}/src/nfd.cocoa.m"
+        f"{RELATIVE_NFD_ROOT}/src/nfd_cocoa.mm"
     ] 
 
 # ---------------------------------------------------------------------------------------
+
+recompile = True if IS_WINDOWS() else False
 
 procedures_config = {
     "SFE": ProcedureConfig(
@@ -168,7 +169,7 @@ procedures_config = {
         additional_libs = libs,
         include_paths = INCLUDES,
         compiler_inject_into_args=[],
-        on_source_change_recompile=True
+        on_source_change_recompile=recompile #doesn't work on mac because of codesign (BS)
     ),
     
     "SFE EntryPoint": ProcedureConfig(

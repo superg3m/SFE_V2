@@ -121,6 +121,10 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	Mat4 view = engine->get_view_matrix();
 	Mat4 projection = engine->get_projection_matrix();
 
+	if (engine->reloaded_dll) {
+		LOG_ERROR("RELOADED\n");
+	}
+
 	engine->renderer.material_set_uniforms(app->material, {
 		{STR_INTERN("uContainer"), app->container_texture},
 		{STR_INTERN("uFace"), app->face_texture},

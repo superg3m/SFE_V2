@@ -125,7 +125,7 @@ struct MeshRequest {
 	MeshHandle user = MeshHandle::invalid();
 	MaterialHandle material = MaterialHandle::invalid();
 	ShaderHandle shader = ShaderHandle::invalid();
-	String path = nullptr;
+	String path = {};
 
 	MeshRequest(MeshHandle user, MaterialHandle material) {
 		this->user = user;
