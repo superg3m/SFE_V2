@@ -103,11 +103,9 @@ struct OpenGL {
 	struct VertexBuffer {
 		u32 id;
 		GLenum gl_usage;
-		VertexLayout layout;
 
 		static VertexBuffer create(VertexArrayObject vao, VertexLayout layout, void* data, int count, size_t element_size, bool dynamic = true) {
 			VertexBuffer ret = {};
-			ret.layout = layout;
 			ret.gl_usage = dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
 
 			gl_error_check(glBindVertexArray(vao.id));
