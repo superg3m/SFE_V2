@@ -160,7 +160,7 @@ procedures_config = {
         build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
         output_name = "api.lib",
         source_files = [
-            f"{RELATIVE_ENGINE_ROOT}/Core/core.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/API/api.cpp",
         ],
         additional_libs = [],
         include_paths = INCLUDES,

@@ -64,14 +64,14 @@
 	X(KEY_Y,				'Y')	\
 	X(KEY_Z,				'Z')	\
 	X(KEY_LEFT_BRACKET,		'[')	\
-	X(KEY_BACKSLASH,		'\\')	\
+	X(KEY_FORWARDSLASH,		'\\')	\
 	X(KEY_RIGHT_BRACKET,	']')	\
 	X(KEY_CARROT,			'^')	\
 	X(KEY_UNDERSCORE,		'_')	\
 	X(KEY_LEFT_CURLY,		'{')	\
 	X(KEY_PIPE,				'|')	\
 	X(KEY_RIGHT_CURLY,		'}')	\
-	X(KEY_RIGHT_CURLY,		'~')	\
+	X(KEY_TILDA,			'~')	\
 
 #define X_COMPLEX_KEYCODE  \
 	X(KEY_ENTER)           \

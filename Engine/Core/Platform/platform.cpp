@@ -5,5 +5,3 @@
 #else
 	#include "platform_unix.cpp"
 #endif
-
-#include "platform_glfw.cpp"

@@ -1,14 +1,19 @@
-	
-typedef void DLL;
-struct FileTime {
-	#if defined(PLATFORM_WINDOWS)
-		FILETIME time;
-	#else
-		time_t time;
-	#endif
-};
+#pragma once
 
-struct PlatformAPI {
+#include "../Core/core.hpp"
+
+namespace Platform {
+	typedef void DLL;
+	struct FileTime {
+		#if defined(PLATFORM_WINDOWS)
+			FILETIME time;
+		#else
+			time_t time;
+		#endif
+	};
+
+	bool initialize();
+	void shutdown();
 	void sleep(u32 ms);
 	double get_seconds_elapsed();
 	bool file_exists(const char* path);
@@ -24,6 +29,10 @@ struct PlatformAPI {
 	DLL* load_dll(const char* dll_path, Error& error);
 	DLL* free_dll(DLL* dll);
 	void* get_function_address(DLL* dll, const char* proc_name);
+
+	char* get_executable_directory();
+	char* get_asset_directory();
+
 	FileTime get_file_modification_time(const char* file_path);
 
 	/**
@@ -36,4 +45,5 @@ struct PlatformAPI {
 	 * @return bool 
 	 */
 	bool compare_file_modification_time(FileTime a, FileTime b);
-};
+	Allocator get_allocator();
+}
