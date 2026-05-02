@@ -1,35 +1,23 @@
-#include <windowsx.h>
-#include <timeapi.h>
-
+#include <chrono>
 #include "platform.hpp"
 
-double g_frequency = {0};
-double g_start_time = {0};
-TIMECAPS g_device_time_caps;
+std::chrono::steady_clock::time_point start = {};
 
 namespace Platform {
 	bool init() {
-		LARGE_INTEGER frequency;
-		QueryPerformanceFrequency(&frequency);
-		g_frequency = (double)frequency.QuadPart;
-
-		LARGE_INTEGER start_time;
-		QueryPerformanceCounter(&start_time);
-		g_start_time = (double)start_time.QuadPart;
-		
-		if (timeGetDevCaps(&g_device_time_caps, sizeof(TIMECAPS)) != MMSYSERR_NOERROR) {
-			MessageBoxA(0, "Failed to get timecaps!", "Error!", MB_ICONEXCLAMATION | MB_OK);
-
-			return false;
-		}
-
+		start = std::chrono::steady_clock::now();
 		LOG_DEBUG("Platform initalization!\n");
+
 		return true;
 	}
 
 	void shutdown() {
-		timeEndPeriod(g_device_time_caps.wPeriodMin);
 		LOG_DEBUG("Platform Shutdown!\n");
+	}
+
+	double get_seconds_elapsed() {
+		std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+		return (double)(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count()) / 1000.0;
 	}
 
 	bool file_exists(const char* path) {
@@ -50,14 +38,6 @@ namespace Platform {
 
 	void sleep(u32 ms) {
 		Sleep((DWORD)ms);
-	}
-
-	double get_seconds_elapsed() {
-		LARGE_INTEGER counter = {0};
-		QueryPerformanceCounter(&counter);
-		double time_in_seconds = (double)(counter.QuadPart - g_start_time) / (double)g_frequency;
-
-		return time_in_seconds;
 	}
 
 	u8* read_entire_file(Allocator a, const char* file_path, size_t& out_file_size, Error& error) {

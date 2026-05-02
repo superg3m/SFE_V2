@@ -98,7 +98,6 @@ if IS_WINDOWS():
         GET_LIB_FLAG(cc, "User32"),
         GET_LIB_FLAG(cc, "Gdi32"),
         GET_LIB_FLAG(cc, "OpenGL32"),
-        GET_LIB_FLAG(cc, "Winmm"),
     ]
 elif IS_DARWIN():
     inject += ["-Wl,-rpath,@executable_path", "-fpic"]

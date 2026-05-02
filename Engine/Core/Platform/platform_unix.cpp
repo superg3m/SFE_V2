@@ -4,10 +4,25 @@
 #include <sys/stat.h>
 #include <time.h>
 
+#include <chrono>
+std::chrono::steady_clock::time_point start = {};
+
 namespace Platform {
-	bool init() { return true; }
-	void shutdown() {}
-	double get_seconds_elapsed() { return 0.0; }
+	bool init() {
+		start = std::chrono::steady_clock::now();
+		LOG_DEBUG("Platform initalization!\n");
+
+		return true;
+	}
+
+	void shutdown() {
+		LOG_DEBUG("Platform Shutdown!\n");
+	}
+
+	double get_seconds_elapsed() {
+		std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+		return (double)(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count()) / 1000.0;
+	}
 
 	void sleep(u32 ms) {
 		struct timespec ts;
