@@ -5,7 +5,6 @@
 
 Engine* engine = nullptr;
 extern Hashmap<String, String>* string_intern_map;
-extern Editor* editor;
 
 constexpr int PROGRAM_MEMORY_CAPACITY = MB(50);
 constexpr int PERMANENT_MEMORY_CAPACITY = MB(10);
@@ -76,15 +75,11 @@ int main() {
 
 		string_intern_map = (Hashmap<String, String>*)memory.permanent_allocator.malloc(sizeof(Hashmap<String, String>), alignof(Hashmap<String, String>));
 		*string_intern_map = Hashmap<String, String>(memory.permanent_allocator);
-
-		editor = (Editor*)memory.permanent_allocator.malloc(sizeof(Editor), alignof(Editor));
-		*editor = {};
 	}
 
 	InputSystem input = {};
 	Renderer<OpenGL> renderer = {};
 
-	
 	engine->memory = memory;
 	engine->window = Window::create(800, 600, "HelloWorld");
 	engine->renderer = renderer.API(memory);
@@ -96,7 +91,8 @@ int main() {
 	INTERNAL_LINKAGE ApplicationUpdateFunc*    application_update = nullptr;
 	INTERNAL_LINKAGE ApplicationRenderFunc*    application_render = nullptr;
 
-	editor->init(engine);
+	Editor editor = {};
+	editor.init(engine);
 	load_application_function_pointers(&application_init, &application_update, &application_render);
 	application_init(engine, string_intern_map);
 
@@ -119,7 +115,7 @@ int main() {
 		if (application_update) application_update(engine, string_intern_map, dt);
 		if (application_render) application_render(engine, string_intern_map, dt);
 		engine->renderer.execute_request();
-		if (editor) editor->render(engine);
+		editor.render(engine, &renderer);
 		
 		engine->reloaded_dll = false;
 		engine->window.pump_messages();
