@@ -1,95 +1,124 @@
 #include "../Core/core.hpp"
-#include "Platform/platform.hpp"
 #include "Editor/editor.hpp"
 
 extern Hashmap<String, String>* string_intern_map;
 extern Editor* editor;
-extern Engine* engine;
+
+constexpr int PROGRAM_MEMORY_CAPACITY = MB(50);
+constexpr int PERMANENT_MEMORY_CAPACITY = MB(10);
+constexpr int FRAME_MEMORY_CAPACITY = MB(10);
 
 struct MemoryContext {
-	Arena permanent_arena
-	Arena permanent_arena
-	Arena permanent_arena
-	Arena permanent_arena
+	Arena permanent_arena;
+	// Arena transient_arena;
+	Arena frame_arena;
 
-	Allocator platform_allocator;
-	Allocator program_arena_allocator;
-	Allocator string_arena_allocator;
-	Allocator temp_arena_allocator;
+	Allocator permanent_allocator;
+	// Allocator transient_allocator;
+	Allocator frame_arena_allocator;
+};
+
+void memory_init(MemoryContext ctx) {
+	string_intern_map = (Hashmap<String, String>*)ctx.permanent_allocator.malloc(sizeof(Hashmap<String, String>), alignof(Hashmap<String, String>));
+	*string_intern_map = Hashmap<String, String>(ctx.permanent_allocator);
+
+	editor = (Editor*)ctx.permanent_allocator.malloc(sizeof(Editor), alignof(Editor));
+	*editor = {};
 }
 
-void memory_initialize() {
-	
+struct Engine {
+	MemoryContext memory;
+	// InputState input;
+	// RendererAPI renderer;
+	// Window window;
+	bool reloaded_dll = false;
+};
+
+typedef void(ApplicationInitalizeFunc)(Engine* engine, Hashmap<String, String>* string_intern_map);
+typedef void(ApplicationUpdateFunc)(Engine* engine, Hashmap<String, String>* string_intern_map, float dt);
+typedef void(ApplicationRenderFunc)(Engine* engine, Hashmap<String, String>* string_intern_map, float dt);
+
+void load_application_function_pointers(ApplicationInitalizeFunc** application_init, ApplicationUpdateFunc** application_update, ApplicationRenderFunc** application_render) {
+	if (dll) {
+		Platform::free_dll(dll);
+		*application_update = nullptr;
+		*application_render = nullptr;
+		dll    = nullptr;
+	}
+
+	Platform::copy_file(dll_name, temp_dll_name, true);
+	last_write_time = Platform::get_file_modification_time(dll_name);
+
+	Error err = Error::SUCCESS;
+	dll = Platform::load_dll(temp_dll_name, err);
+	RUNTIME_ASSERT_MSG(err == Error::SUCCESS, "Failed to load dll | %s\n", error_get_string(err));
+
+	err = Error::SUCCESS;
+	if (application_init) {
+		*application_init = (ApplicationInitalizeFunc*)Platform::get_function_address(dll, "application_init");
+	}
+
+	*application_update = (ApplicationUpdateFunc*)Platform::get_function_address(dll, "application_update");
+	*application_render = (ApplicationRenderFunc*)Platform::get_function_address(dll, "application_render");
+
+	RUNTIME_ASSERT(*application_update && *application_render);
 }
 
 int main() {
-	constexpr int PROGRAM_MEMORY_CAPACITY = MB(50);
 	Allocator platform_allocator = Platform::get_allocator();
 
 	void* program_memory = platform_allocator.malloc(PROGRAM_MEMORY_CAPACITY, alignof(u8));
 	Arena program_arena = Arena::fixed(program_memory, PROGRAM_MEMORY_CAPACITY);
 	Allocator program_arena_allocator = program_arena.to_allocator();
 
-	constexpr int STRING_MEMORY_CAPACITY = MB(10);
-	void* string_memory = program_arena.push(STRING_MEMORY_CAPACITY, alignof(u8));
-	Arena string_arena = Arena::fixed(string_memory, STRING_MEMORY_CAPACITY);
-	Allocator string_arena_allocator = string_arena.to_allocator();
+	MemoryContext memory = {};
+	memory.permanent_arena = Arena::fixed(program_arena.push(PERMANENT_MEMORY_CAPACITY, alignof(u8)), PERMANENT_MEMORY_CAPACITY);
+	memory.permanent_allocator = memory.permanent_arena.to_allocator();
+	memory.frame_arena = Arena::fixed(program_arena.push(FRAME_MEMORY_CAPACITY, alignof(u8)), FRAME_MEMORY_CAPACITY);
+	memory.permanent_allocator = memory.frame_arena.to_allocator();
 
-	constexpr int PERMANENT_MEMORY_CAPACITY = MB(10);
-	void* permenant_memory = program_arena.push(PERMANENT_MEMORY_CAPACITY, alignof(u8));
-	Arena permanent_arena = Arena::fixed(permenant_memory, PERMANENT_MEMORY_CAPACITY);
-	Allocator permanent_arena_allocator = permanent_arena.to_allocator();
-
-	constexpr int FRAME_MEMORY_CAPACITY = MB(10);
-	void* frame_memory = program_arena.push(FRAME_MEMORY_CAPACITY, alignof(u8));
-	Arena frame_arena = Arena::fixed(frame_memory, FRAME_MEMORY_CAPACITY);
-	Allocator frame_arena_allocator = frame_arena.to_allocator();
+	Platform::init();
+	// 	Input::init();
+	memory_init(memory);
+	// Window window = Window::create();
+	// RendererAPI renderer = OpenGL::API();
+	// RendererAPI renderer = Vulkan::API();
+	// RendererAPI renderer = Dx12::API();
 
 	/*
-	Platform::init();
-	Input::init();
+	Engine engine = {};
+	engine.memory = memory 
+	engine.window = window;
+	engine.renderer = renderer;
+	egnine.input = input;
 
-	Window::create();
+	float dt = 0.0f;
+	float previous_time = Platform::get_seconds_elapsed();
+	while (!window.should_close()) {
+		float current_time = Platform::get_seconds_elapsed();
+		dt = current_time - previous_time;
+		previous_time = current_time;
+			
+		input.poll();
 
-	while (!PlatformSystem::window_should_close()) {
+		Platform::FileTime new_time = Platform::get_file_modification_time(dll_name);
+		if (Platform::compare_file_modification_time(new_time, last_write_time) == false) {
+			load_application_function_pointers(nullptr, &application_update, &application_render);
+			egnine.reloaded_dll = true;
+		}
+
+		if (application_update) application_update(this, string_intern_map, dt);
+		if (this->application_update) application_update(this, string_intern_map, dt);
+		
+		if (this->application_render) application_render(this, string_intern_map, dt);
+		this->renderer.backend.resolve_requests(this->renderer.requests, this->frame_allocator);
+		if (editor) editor->render(this);
+
+		engine.renderer.execute_requests(api);
+		engine.reloaded_dll = false;
 	}
 	*/
-
-	string_intern_map = (Hashmap<String, String>*)permanent_arena_allocator.malloc(sizeof(Hashmap<String, String>), alignof(Hashmap<String, String>));
-	*string_intern_map = Hashmap<String, String>(string_arena_allocator);
-
-	editor = (Editor*)permanent_arena_allocator.malloc(sizeof(Editor), alignof(Editor));
-	*editor = {};
-
-	engine = (Engine*)permanent_arena_allocator.malloc(sizeof(Engine), alignof(Engine));
-	*engine = {}; 
-	if (!engine->init(permanent_arena_allocator, frame_arena_allocator)) {
-		return -1;
-	}
-
-	// while (!PlatformSystem::window_should_close())
 	
-	// engine.run();
-
-	// get this glfw code out of here! Just do engine.run();
-	float dt = 0.0f;
-	float previous_time = glfwGetTime();
-	float accumulator = 0.0f;
-	while (!glfwWindowShouldClose(engine->window)) {
-		Temp frame_temp = Temp::begin(&frame_arena);
-			float current_time = glfwGetTime();
-			dt = current_time - previous_time;
-			previous_time = current_time;
-			accumulator += dt * 10;
-
-			engine->update(dt);
-			engine->render(dt);
-
-			glfwSwapBuffers(engine->window);
-			glfwPollEvents();
-		frame_temp.end();
-	}
-
 	platform_allocator.free(program_memory);
 
 	return 0;

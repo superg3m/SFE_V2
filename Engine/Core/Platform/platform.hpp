@@ -12,7 +12,7 @@ namespace Platform {
 		#endif
 	};
 
-	bool initialize();
+	bool init();
 	void shutdown();
 	void sleep(u32 ms);
 	double get_seconds_elapsed();
@@ -29,10 +29,6 @@ namespace Platform {
 	DLL* load_dll(const char* dll_path, Error& error);
 	DLL* free_dll(DLL* dll);
 	void* get_function_address(DLL* dll, const char* proc_name);
-
-	char* get_executable_directory();
-	char* get_asset_directory();
-
 	FileTime get_file_modification_time(const char* file_path);
 
 	/**

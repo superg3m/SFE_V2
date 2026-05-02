@@ -5,6 +5,7 @@
 #include "Container/container.hpp"
 #include "Logger/logger.hpp"
 #include "Memory/memory.hpp"
+#include "Platform/platform.hpp"
 #include "String/string.hpp"
 #include "Math/math.hpp"
 #include "Hashing/hashing.hpp"

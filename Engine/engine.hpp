@@ -18,9 +18,6 @@ struct Engine {
 	bool reloaded_dll;
 	void* application_state;
 
-	Allocator permenant_allocator;
-	Allocator frame_allocator;
-
 	Mat4 get_view_matrix();
 	Mat4 get_projection_matrix();
 

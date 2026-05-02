@@ -8,7 +8,7 @@ double g_start_time = {0};
 TIMECAPS g_device_time_caps;
 
 namespace Platform {
-	bool initialize() {
+	bool init() {
 		LARGE_INTEGER frequency;
 		QueryPerformanceFrequency(&frequency);
 		g_frequency = (double)frequency.QuadPart;
