@@ -496,12 +496,6 @@ struct Request {
 	}
 };
 
-typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
-// typedef void(AquireTextureHandleFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
-// typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
-// typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
-// typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
-
 typedef VertexBufferHandle(AcquireVertexBufferFunc)(void* b);
 typedef MeshHandle(AcquireMeshFunc)(void* b);
 typedef ShaderHandle(AcquireShaderFunc)(void* b);
@@ -523,7 +517,7 @@ struct RenderAPI {
 
 	template<typename T>
 	VertexBufferHandle create_vbo(MeshHandle mesh, VertexLayout layout, Vector<T>& buffer, bool dynamic = false) {
-		VertexBufferHandle vbo = this->_private_acquire_texture_handle(this->b);
+		VertexBufferHandle vbo = this->_private_acquire_vbo_handle(this->b);
 		Request request = Request::create_vertex_buffer(vbo, mesh, layout, buffer, dynamic);
 		this->requests.append(request);
 

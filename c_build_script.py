@@ -141,7 +141,7 @@ elif IS_DARWIN():
 
 # ---------------------------------------------------------------------------------------
 
-recompile = True if IS_WINDOWS() else False
+recompile = True # if IS_WINDOWS() else False
 
 procedures_config = {
 	"Core": ProcedureConfig(
@@ -209,7 +209,7 @@ procedures_config = {
         ],
         additional_libs = libs + ["core.lib", "runtime.lib", "editor.lib", "vendor.lib"],
         include_paths = INCLUDES,
-        compiler_inject_into_args=[]
+        compiler_inject_into_args=inject
     ),
     
     "Game DLL":  ProcedureConfig(
@@ -220,7 +220,7 @@ procedures_config = {
         ],
         additional_libs = libs + ["core.lib", "api.lib"],
         include_paths = INCLUDES,
-        compiler_inject_into_args=[],
+        compiler_inject_into_args=inject,
         on_source_change_recompile=recompile #doesn't work on mac because of codesign (BS)
     ),
 }

@@ -5,7 +5,7 @@
 #include <time.h>
 
 namespace Platform {
-	bool initialize() { return true; }
+	bool init() { return true; }
 	void shutdown() {}
 	double get_seconds_elapsed() { return 0.0; }
 
