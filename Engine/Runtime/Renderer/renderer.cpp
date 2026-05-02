@@ -1,3 +1,4 @@
+#include "renderer.hpp"
 #include "renderer_api.cpp"
 #include "OpenGL/backend.cpp"
 

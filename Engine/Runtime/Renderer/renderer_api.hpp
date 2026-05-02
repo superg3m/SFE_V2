@@ -485,13 +485,14 @@ typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
 // typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
 // typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
 
-typedef Handle(AcquireVertexBufferFunc)();
-typedef Handle(AcquireMeshFunc)();
-typedef Handle(AcquireShaderFunc)();
-typedef Handle(AcquireMaterialFunc)();
-typedef Handle(AcquireTextureFunc)();
+typedef Handle(AcquireVertexBufferFunc)(void* b);
+typedef Handle(AcquireMeshFunc)(void* b);
+typedef Handle(AcquireShaderFunc)(void* b);
+typedef Handle(AcquireMaterialFunc)(void* b);
+typedef Handle(AcquireTextureFunc)(void* b);
 
 struct RenderAPI {
+	void* b = nullptr;
 	Vector<Request> requests = {};
 	
 	// AquireTextureHandleFunc* acquire_texture_handle = nullptr;
@@ -502,8 +503,6 @@ struct RenderAPI {
     AcquireMaterialFunc*     acquire_material_handle = nullptr;
     AcquireTextureFunc*      acquire_texture_handle = nullptr;
 	
-	SubmitMeshFunc* create_vbo_func = nullptr;
-	SubmitMeshFunc* submit_mesh_func = nullptr;
 	// SubmitMeshFunc* execute_requests; void execute_requests(Vector<Requet>& request);
 
 	template<typename T>

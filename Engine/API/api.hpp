@@ -16,7 +16,7 @@ struct MemoryContext {
 struct Engine {
 	MemoryContext memory;
 	InputState input;
-	// RendererAPI renderer;
+	RenderAPI renderer;
 	Window window;
 	bool reloaded_dll = false;
 	void* application_state = nullptr;

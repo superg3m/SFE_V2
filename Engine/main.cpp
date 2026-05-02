@@ -76,14 +76,13 @@ int main() {
 		editor = (Editor*)memory.permanent_allocator.malloc(sizeof(Editor), alignof(Editor));
 		*editor = {};
 	}
-	// RendererAPI renderer = OpenGL::API();
-	// RendererAPI renderer = Vulkan::API();
-	// RendererAPI renderer = Dx12::API();
+
+	Renderer<OpenGL> renderer = {};
 
 	Engine engine = {};
 	engine.memory = memory;
 	engine.window = Window::create(800, 600, "HelloWorld");
-	// engine.renderer = renderer;
+	engine.renderer = renderer.API();
 	// egnine.input = input;
 
 	INTERNAL_LINKAGE ApplicationInitalizeFunc* application_init = nullptr;

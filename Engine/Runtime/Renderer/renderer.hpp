@@ -1,18 +1,55 @@
 #pragma once
 
 #include "renderer_api.hpp"
+#include "OpenGL/backend.hpp"
 
 template<typename B>
 struct Renderer {
 	B backend = {};
 
-	int WINDOW_WIDTH = 800;
-	int WINDOW_HEIGHT = 800;
-	int FRAME_BUFFER_WIDTH = 0;
-	int FRAME_BUFFER_HEIGHT = 0;
+	static Handle acquire_vbo_handle(void* b) {
+		B* backend = (B*)b; 
+		return backend->vbos.acquire();
+	}
 
-	Allocator permanent_allocator = Allocator::invalid();
-	Allocator frame_allocator = Allocator::invalid();
+	static Handle acquire_mesh_handle(void* b) {
+		B* backend = (B*)b; 
+		return backend->meshes.acquire();
+	}
+
+	static Handle acquire_shader_handle(void* b) {
+		B* backend = (B*)b; 
+		return backend->shaders.acquire();
+	}
+
+	static Handle acquire_material_handle(void* b) {
+		B* backend = (B*)b; 
+		return backend->materials.acquire();
+	}
+
+	static Handle acquire_texture_handle(void* b) {
+		B* backend = (B*)b; 
+		return backend->textures.acquire();
+	}
+
+	RenderAPI API() {
+		RenderAPI api = {};
+		api.b = &this->backend;
+		api.acquire_vbo_handle = &acquire_vbo_handle;
+		api.acquire_mesh_handle = &acquire_mesh_handle;
+		api.acquire_shader_handle = &acquire_shader_handle;
+		api.acquire_material_handle = &acquire_material_handle;
+		api.acquire_texture_handle = &acquire_texture_handle;
+
+		return api;
+	}
+
+
+	// static RenderAPI Vulkan();
+	// static RenderAPI Dx12();
+
+	/*
+
 
 	Vector<Request> requests;
 	static Renderer create(Allocator permanent_allocator, Allocator frame_allocator) {
@@ -151,6 +188,7 @@ struct Renderer {
 		Request request = Request::shader_recompile(shader);
 		this->requests.append(request);
 	}
+	*/
 	
 	// TODO(Jovanni): Account for framebuffer
 	// CommandBufferHandle begin_frame(u32 framebuffer = 0);
