@@ -106,9 +106,11 @@ void InputSystem::poll() {
 		}
 
 		int glfw_key_code = ctx.glfw_key_map[key_code];
+		/*
 		if (ctx.glfw_key_map[glfw_key_code] == -1) {
 			LOG_WARN("Missing glfw mapping | Code: %d\n", key_code);
 		}
+		*/
 
 		int glfw_state = glfwGetKey(ctx.window, glfw_key_code);
 		this->input_state.keys[key_code] = updated_key_state(key_state, glfw_state != GLFW_RELEASE);

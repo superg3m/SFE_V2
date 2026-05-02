@@ -77,13 +77,15 @@ int main() {
 		*editor = {};
 	}
 
+	InputSystem input = {};
 	Renderer<OpenGL> renderer = {};
 
 	Engine engine = {};
 	engine.memory = memory;
 	engine.window = Window::create(800, 600, "HelloWorld");
 	engine.renderer = renderer.API();
-	// egnine.input = input;
+
+	input.init(engine.window.ctx);
 
 	INTERNAL_LINKAGE ApplicationInitalizeFunc* application_init = nullptr;
 	INTERNAL_LINKAGE ApplicationUpdateFunc*    application_update = nullptr;
@@ -100,7 +102,8 @@ int main() {
 		dt = current_time - previous_time;
 		previous_time = current_time;
 			
-		// input.poll();
+		input.poll();
+		engine.input = input.input_state;
 
 		Platform::FileTime new_time = Platform::get_file_modification_time(dll_name);
 		if (Platform::compare_file_modification_time(new_time, last_write_time) == false) {
