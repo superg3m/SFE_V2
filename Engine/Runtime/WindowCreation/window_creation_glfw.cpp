@@ -15,6 +15,8 @@ Window Window::create(const int WIDTH, const int HEIGHT, const char* name, bool 
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	#endif
 
+	ret.WINDOW_WIDTH = WIDTH;
+	ret.WINDOW_HEIGHT = HEIGHT;
 	ret.ctx = glfwCreateWindow(WIDTH, HEIGHT, name, nullptr, nullptr);
 	GLFWwindow* window = (GLFWwindow*)ret.ctx;
 	RUNTIME_ASSERT_MSG(window != nullptr, "Failed to create GLFW window\n");

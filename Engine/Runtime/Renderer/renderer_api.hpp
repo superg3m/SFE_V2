@@ -505,7 +505,7 @@ typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
 typedef VertexBufferHandle(AcquireVertexBufferFunc)(void* b);
 typedef MeshHandle(AcquireMeshFunc)(void* b);
 typedef ShaderHandle(AcquireShaderFunc)(void* b);
-typedef MaterialHandle(AcquireMaterialFunc)(void* b);
+typedef MaterialHandle(AcquireMaterialFunc)(void* b, ShaderHandle shader);
 typedef TextureHandle(AcquireTextureFunc)(void* b);
 typedef void(ExecuteRequests)(void* b, Vector<Request>& requests, MemoryContext memory);
 
@@ -559,10 +559,7 @@ struct RenderAPI {
 	}
 
 	MaterialHandle create_material(ShaderHandle shader) {
-		MaterialHandle material = this->_private_acquire_material_handle(this->b);
-		// Material& material_slot = this->backend.materials.get(material.handle);
-		// material_slot = Material(this->permanent_allocator, shader);
-
+		MaterialHandle material = this->_private_acquire_material_handle(this->b, shader);
 		return material;
 	}
 
@@ -570,6 +567,8 @@ struct RenderAPI {
 		this->_private_execute_requests(this->b, this->requests, this->memory);
 		this->requests.clear();
 	}
+
+	// material_set_uniforms
 
 	void draw_mesh(Pipeline pipeline, MeshHandle mesh, Mat4 model, Mat4 view, Mat4 projection, u32 instance_count = 1) {
 		Request request = Request::create_draw_call(pipeline, mesh, model, view, projection, instance_count);

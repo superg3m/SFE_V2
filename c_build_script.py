@@ -24,7 +24,7 @@ cc: CompilerConfig = CompilerConfig(
 pc: ProjectConfig = ProjectConfig(
     project_name = "SFE",
     project_dependencies = [],
-    project_debug_with_visual_studio = False,
+    project_debug_with_visual_studio = True,
     project_executable_names = ["main.exe"]
 )
 
@@ -218,7 +218,7 @@ procedures_config = {
         source_files = [
             f"{RELATIVE_GAME_ROOT}/game.cpp",
         ],
-        additional_libs = libs + ["core.lib"],
+        additional_libs = libs + ["core.lib", "api.lib"],
         include_paths = INCLUDES,
         compiler_inject_into_args=[],
         on_source_change_recompile=recompile #doesn't work on mac because of codesign (BS)

@@ -71,6 +71,7 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 	app->backpack_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/model.vert"), STR_INTERN("../../../Game/Assets/Shaders/model.frag")});
 	app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
 
+	/*
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
 	int index = 0;
 	float offset = 0.1f;
@@ -83,10 +84,12 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 			app->cube_translations.append(Mat4::translate(Mat4::identity(), translation).transpose());
 		}
 	}
+	
 
 	VertexLayout layout = VertexLayout({{
 		VertexAttribute{4, 0, BufferStrideTypeInfo::MAT4, true},
 	}, engine->memory.frame_allocator});
+	*/
 
 	// app->instance_cube_vbo = engine->renderer.create_vertex_buffer(app->cube_mesh, layout, app->cube_translations, true);
 	app->timer.start(5.0f);
@@ -151,21 +154,19 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	}
 
 	Mat4 model = Mat4::rotate(Mat4::identity(), Quat::from_euler(app->accumulator, app->accumulator, 0));
-	// Mat4 view = engine->get_view_matrix();
-	// Mat4 projection = engine->get_projection_matrix();
+	Mat4 view = engine->get_view_matrix();
+	Mat4 projection = engine->get_projection_matrix();
 
-	/*
 	engine->renderer.material_set_uniforms(app->material, {
 		{STR_INTERN("uContainer"), app->container_texture},
 		{STR_INTERN("uFace"), app->face_texture},
 	});
-	*/
 
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	// engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
-	// engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
+	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection); // , app->cube_translations.count);
 
-	model = Mat4::translate(model, 0, 5, 0);
+	// model = Mat4::translate(model, 0, 5, 0);
 	// pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	// engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
 }

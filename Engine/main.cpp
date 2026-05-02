@@ -83,7 +83,8 @@ int main() {
 	Engine engine = {};
 	engine.memory = memory;
 	engine.window = Window::create(800, 600, "HelloWorld");
-	engine.renderer = renderer.API();
+	engine.renderer = renderer.API(memory);
+	engine.camera = Camera::create(0, 0, 10);
 
 	input.init(engine.window.ctx);
 

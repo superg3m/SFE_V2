@@ -9,27 +9,31 @@ struct Renderer {
 
 	static VertexBufferHandle acquire_vbo_handle(void* b) {
 		B* backend = (B*)b;
-		return VertexBufferHandle(backend->vbos.acquire());
+		return backend->vbos.acquire();
 	}
 
 	static MeshHandle acquire_mesh_handle(void* b) {
 		B* backend = (B*)b; 
-		return MeshHandle(backend->meshes.acquire());
+		return backend->meshes.acquire();
 	}
 
 	static ShaderHandle acquire_shader_handle(void* b) {
 		B* backend = (B*)b; 
-		return ShaderHandle(backend->shaders.acquire());
+		return backend->shaders.acquire();
 	}
 
-	static MaterialHandle acquire_material_handle(void* b) {
-		B* backend = (B*)b; 
-		return MaterialHandle(backend->materials.acquire());
+	static MaterialHandle acquire_material_handle(void* b, ShaderHandle shader) {
+		B* backend = (B*)b;
+		Handle material = backend->materials.acquire();
+		Material& material_slot = backend->materials.get(material);
+		material_slot = Material(shader);
+
+		return material;
 	}
 
 	static TextureHandle acquire_texture_handle(void* b) {
 		B* backend = (B*)b; 
-		return TextureHandle(backend->textures.acquire());
+		return backend->textures.acquire();
 	}
 
 	static void execute_requests(void* b, Vector<Request>& requests, MemoryContext memory) {
@@ -37,9 +41,10 @@ struct Renderer {
 		backend->execute_requests(requests, memory);
 	}
 
-	RenderAPI API() {
+	RenderAPI API(MemoryContext memory) {
 		RenderAPI api = {};
 		api.b = &this->backend;
+		api.memory = memory;
 		api._private_acquire_vbo_handle = &acquire_vbo_handle;
 		api._private_acquire_mesh_handle = &acquire_mesh_handle;
 		api._private_acquire_shader_handle = &acquire_shader_handle;
