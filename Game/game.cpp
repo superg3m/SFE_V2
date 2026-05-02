@@ -113,10 +113,9 @@ EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* strin
 	}
 	*/
 
-	/*
 	if (engine->input.get_key_pressed(KEY_R)) {
-		engine->renderer.shader_recompile(app->cube_shader);
-		engine->renderer.shader_recompile(app->backpack_shader);
+		// engine->renderer.shader_recompile(app->cube_shader);
+		// engine->renderer.shader_recompile(app->backpack_shader);
 	}
 
 	if (engine->input.get_key(KEY_SPACE, PRESSED|DOWN)) {
@@ -142,7 +141,6 @@ EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* strin
 	if (engine->input.get_key(KEY_D, PRESSED|DOWN)) {
 		engine->camera.process_keyboard(CameraDirection::RIGHT, dt); 
 	}
-	*/
 }
 
 EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* string_intern_map, float dt) {
@@ -157,10 +155,12 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	Mat4 view = engine->get_view_matrix();
 	Mat4 projection = engine->get_projection_matrix();
 
+	/*
 	engine->renderer.material_set_uniforms(app->material, {
 		{STR_INTERN("uContainer"), app->container_texture},
 		{STR_INTERN("uFace"), app->face_texture},
 	});
+	*/
 
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	// engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
