@@ -21,7 +21,7 @@ namespace Platform {
 
 	void sleep(u32 ms) {
 		struct timespec ts;
-		ts.tv_sec = 0;           // seconds
+		ts.tv_sec = 0;
 		ts.tv_nsec = ms * 1000000L; // 1 million nanoseconds = 1ms
 		nanosleep(&ts, NULL);
 	}
