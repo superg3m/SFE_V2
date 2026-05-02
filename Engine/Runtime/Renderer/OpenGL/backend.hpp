@@ -290,7 +290,7 @@ struct OpenGL {
 		}
 
 		// eventually do every frame_buffer as well...
-		// NOTE(Jovanni): this isn't techinally right because I want to be able to order the pipelines
+		// TODO(Jovanni): this isn't techinally right because I want to be able to order the pipelines
 		// for example opaques should draw before transparent ones. ANd also transparent ones hould be sorted...
 		CommandBuffer cmd = {};
 		cmd.begin_frame();
@@ -342,13 +342,44 @@ struct OpenGL {
 		));
 	}
 
+	void create_picking_frameBuffer(int WIDTH, int HEIGHT) {
+        glGenFramebuffers(1, &this->picking_fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, this->picking_fbo);
+
+        glGenTextures(1, &this->picking_texture);
+        glBindTexture(GL_TEXTURE_2D, this->picking_texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, WIDTH, HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, this->picking_texture, 0);
+
+        u32 rbo;
+        glGenRenderbuffers(1, &rbo);
+        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, WIDTH, HEIGHT);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+        
+        RUNTIME_ASSERT_MSG(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "FBO setup failed\n");
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+	OpenGL create() {
+		OpenGL ret = {};
+
+
+		
+	}
+
 	s32 BOUND_VAO_ID = -1;
 	s32 BOUND_PROGRAM_ID = -1;
 	bool DEPTH_TEST = false;
 	bool STENCIL = false;
 	bool BLENDING = false;
 	bool WIREFRAME = false;
-	int DRAW_CALL_COUNT = 0;
+	u32  DRAW_CALL_COUNT = 0;
+
+	u32 picking_fbo = INT_MAX; 
+	u32 picking_texture = INT_MAX;
 
 	Vector<Request> request = {};
 	Registry<OpenGL::Texture, 256> textures = {};

@@ -174,7 +174,7 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 
 	model = Mat4::translate(model, 0, 5, 0);
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	// engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
+	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
 
 	if (engine->reloaded_dll) {
 		LOG_DEBUG("After draw 2\n");

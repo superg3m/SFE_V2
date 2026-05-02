@@ -1,6 +1,7 @@
 #pragma once
 
 #include <API/api.hpp>
+#include <Runtime/ECS/ecs.hpp>
 
 struct AppState {
 	ShaderHandle cube_shader = ShaderHandle::invalid();

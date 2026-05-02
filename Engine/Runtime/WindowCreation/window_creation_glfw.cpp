@@ -54,6 +54,8 @@ Window Window::create(const int WIDTH, const int HEIGHT, const char* name, bool 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetWindowSizeCallback(window, window_size_callback);
 
+	glfwGetFramebufferSize(window, &ret.FRAMEBUFFER_WIDTH, &ret.FRAMEBUFFER_HEIGHT);
+
 	return ret;
 }
 

@@ -37,7 +37,8 @@ struct Transform {
 };
 
 struct Entity {
-	u32 id; // the actual index/unique id into an entity array owned by the engine
+	EntityHandle handle;
+
 	const char* name;
 	bool alive = true; 
 	bool active = true;

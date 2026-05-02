@@ -1,17 +1,9 @@
 
 #pragma once
-#include <core.hpp>
+#include "../../Core/core.hpp"
+#include "../Renderer/renderer_api.hpp"
 
 struct Entity;
-namespace OpenGL {
-	struct Mesh;
-	struct MeshEntry;
-
-	struct Shader;
-	struct Material;
-	struct RenderQueue;
-	struct VAO;
-}
 
 struct Component {
 	Entity* owner = nullptr;
@@ -74,18 +66,14 @@ struct PlayerControllerComponent : public Component {
 struct MeshComponent : public Component {
 	using Component::Component;
 
-	OpenGL::VAO* vao = nullptr;
-	OpenGL::MeshEntry* entry = nullptr;
-	OpenGL::Material* material = nullptr;
-	OpenGL::RenderQueue* queue;
+	Pipeline pipeline;
+	MeshHandle mesh = MeshHandle::invalid();
+	int entry_index = 0;
 
 	bool should_render_mesh = true;
 	bool render_mesh_wireframe = false;
 
-	// OpenGL::Mesh* aabb_mesh;
-	// bool should_render_mesh_aabb = false;
-
-	MeshComponent(Entity* owner, OpenGL::RenderQueue* queue, OpenGL::Shader* shader, OpenGL::VAO* vao, OpenGL::MeshEntry* entry, OpenGL::Material* material);
+	MeshComponent(Entity* owner, Pipeline pipeline, MeshHandle mesh, int entry_index = 0;, bool should_render_mesh = true);
 	void update(float dt) override;
 };
 

@@ -4,6 +4,30 @@
 #include "../Runtime/Renderer/renderer.hpp"
 #include "../../Game/game.hpp"
 
+inline void draw_entity_node(Entity* e, EntityHandle selected) {
+    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+
+    if (e->children.count == 0) {
+        flags |= ImGuiTreeNodeFlags_Leaf;
+    }
+
+    if (selected == e->handle) {
+        flags |= ImGuiTreeNodeFlags_Selected;
+    }
+
+    bool open = ImGui::TreeNodeEx((void*)e->handle.id, flags, "%s", e->name);
+    if (ImGui::IsItemClicked()) {
+        selected = e->handle;
+    }
+
+    if (open) {
+        for (Entity* child : e->children) {
+            draw_entity_node(child, selected);
+        }
+        ImGui::TreePop();
+    }
+}
+
 struct Engine;
 struct Editor {
 	void init(Engine* engine);
