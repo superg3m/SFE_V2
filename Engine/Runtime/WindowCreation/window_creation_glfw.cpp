@@ -1,12 +1,8 @@
+#include "../Core/core.hpp"
 #include "window_creation.hpp"
-#include <GLFW/glfw3.h>
-#include <glad/glad.h>
+#include "../../Vendor/vendor.hpp"
 
-struct GLFW_WindowContext {
-	GLFWwindow* window = nullptr;
-};
-
-void Window::create(const int WIDTH, const int HEIGHT, const char* name, bool vsync) {
+Window Window::create(const int WIDTH, const int HEIGHT, const char* name, bool vsync) {
 	Window ret = {};
 	RUNTIME_ASSERT_MSG(glfwInit(), "Failed to init glfw\n");
 
@@ -19,21 +15,48 @@ void Window::create(const int WIDTH, const int HEIGHT, const char* name, bool vs
 		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	#endif
 
-	GLFW_WindowContext* context = (GLFW_WindowContext*)ret.ctx; 
-	context->window = glfwCreateWindow(WIDTH, HEIGHT, name, nullptr, nullptr);
-	RUNTIME_ASSERT_MSG(context->window != nullptr, "Failed to create GLFW window\n");
+	ret.ctx = glfwCreateWindow(WIDTH, HEIGHT, name, nullptr, nullptr);
+	GLFWwindow* window = (GLFWwindow*)ret.ctx;
+	RUNTIME_ASSERT_MSG(window != nullptr, "Failed to create GLFW window\n");
 
-	glfwMakeContextCurrent(context->window);
+	glfwMakeContextCurrent(window);
 	RUNTIME_ASSERT_MSG(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "Failed to initialize GLAD\n");
 	glfwSwapInterval(vsync);
+
+	return ret;
 }
 
+bool Window::should_close() {
+	GLFWwindow* window = (GLFWwindow*)this->ctx;
+	return this->close || glfwWindowShouldClose(window);
+}
+
+void Window::pump_messages() {
+	GLFWwindow* window = (GLFWwindow*)this->ctx;
+
+	glfwPollEvents();
+	glfwSwapBuffers(window);
+}
+
+/*
 bool Window::should_close() {
 	GLFW_WindowContext* context = (GLFW_WindowContext*)this->ctx; 
 	return glfwWindowShouldClose(context->window);
 }
+*/
 
-void Window::close() {
-	GLFW_WindowContext* context = (GLFW_WindowContext*)this->ctx; 
-	return glfwSetWindowShouldClose(context->window, true);
+/*
+void framebuffer_size_callback(GLFWwindow* window, int frame_buffer_width, int frame_buffer_height) {
+	engine->renderer.FRAME_BUFFER_WIDTH  = frame_buffer_width;
+	engine->renderer.FRAME_BUFFER_HEIGHT = frame_buffer_height;
+	gl_error_check(glViewport(0, 0, frame_buffer_width, frame_buffer_height));
+
+	// seems like this will be a constant battle might just be worth making renderer and engine a singleton...
+	// Renderer::CreatePickingFrameBuffer(Renderer::FRAME_BUFFER_WIDTH, Renderer::FRAME_BUFFER_HEIGHT);
 }
+
+void window_size_callback(GLFWwindow* window, int window_width, int window_height) {
+	engine->renderer.WINDOW_WIDTH = window_width;
+	engine->renderer.WINDOW_HEIGHT = window_height;
+}
+*/

@@ -1,4 +1,3 @@
-#include <sfe.hpp>
 #include "game.hpp"
 
 // engine->set_main_camera(app->camera);
@@ -31,7 +30,7 @@ renderer.end_frame(cmd)
 */
 
 EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_intern_map) {
-	engine->application_state = engine->permenant_allocator.malloc(sizeof(AppState), alignof(AppState));
+	engine->application_state = engine->memory.permanent_allocator.malloc(sizeof(AppState), alignof(AppState));
 	AppState* app = (AppState*)engine->application_state;
 	*app = {};
 
@@ -62,17 +61,17 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 	};
 
 	TextureDescription desc = {};
-	app->container_texture = engine->renderer.create_texture(0, STR_INTERN("../../../Game/Assets/Textures/container.jpg"), desc);
-	app->face_texture = engine->renderer.create_texture(1, STR_INTERN("../../../Game/Assets/Textures/awesomeface.png"), desc);
+	// app->container_texture = engine->renderer.create_texture(0, STR_INTERN("../../../Game/Assets/Textures/container.jpg"), desc);
+	// app->face_texture = engine->renderer.create_texture(1, STR_INTERN("../../../Game/Assets/Textures/awesomeface.png"), desc);
 
-	app->cube_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/cube.vert"), STR_INTERN("../../../Game/Assets/Shaders/cube.frag")});
-	app->material = engine->renderer.create_material(app->cube_shader);
-	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
+	// app->cube_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/cube.vert"), STR_INTERN("../../../Game/Assets/Shaders/cube.frag")});
+	// app->material = engine->renderer.create_material(app->cube_shader);
+	// app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
 
-	app->backpack_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/model.vert"), STR_INTERN("../../../Game/Assets/Shaders/model.frag")});
-	app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
+	// app->backpack_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/model.vert"), STR_INTERN("../../../Game/Assets/Shaders/model.frag")});
+	// app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
 
-	app->cube_translations = Vector<Mat4>(engine->permenant_allocator);
+	// app->cube_translations = Vector<Mat4>(engine->memory.permanant_allocator);
 	int index = 0;
 	float offset = 0.1f;
 	for (int y = -10; y < 10; y += 2) {
@@ -87,9 +86,9 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 
 	VertexLayout layout = VertexLayout({{
 		VertexAttribute{4, 0, BufferStrideTypeInfo::MAT4, true},
-	}, engine->frame_allocator});
+	}, engine->memory.frame_allocator});
 
-	app->instance_cube_vbo = engine->renderer.create_vertex_buffer(app->cube_mesh, layout, app->cube_translations, true);
+	// app->instance_cube_vbo = engine->renderer.create_vertex_buffer(app->cube_mesh, layout, app->cube_translations, true);
 	app->timer.start(5.0f);
 }
 
@@ -100,14 +99,18 @@ EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* strin
 
 	// active_scene.update(dt);
 	if (engine->input.get_key_pressed(KEY_ESCAPE)) {
-		glfwSetWindowShouldClose(engine->window, true);
+		engine->window.close = true;
 	}
 
+	// make this an engine thing internally?
+	/*
 	if (engine->input.get_key_pressed(KEY_C)) {
 		engine->mouse_captured = !engine->mouse_captured;
 		glfwSetInputMode(engine->window, GLFW_CURSOR, engine->mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 	}
+	*/
 
+	/*
 	if (engine->input.get_key_pressed(KEY_R)) {
 		engine->renderer.shader_recompile(app->cube_shader);
 		engine->renderer.shader_recompile(app->backpack_shader);
@@ -136,6 +139,7 @@ EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* strin
 	if (engine->input.get_key(KEY_D, PRESSED|DOWN)) {
 		engine->camera.process_keyboard(CameraDirection::RIGHT, dt); 
 	}
+	*/
 }
 
 EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* string_intern_map, float dt) {
@@ -146,6 +150,7 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 		app->timer.reset();
 	}
 
+	/*
 	Mat4 model = Mat4::rotate(Mat4::identity(), Quat::from_euler(app->accumulator, app->accumulator, 0));
 	Mat4 view = engine->get_view_matrix();
 	Mat4 projection = engine->get_projection_matrix();
@@ -162,6 +167,7 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	model = Mat4::translate(model, 0, 5, 0);
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
+	*/
 }
 
 // https://www.youtube.com/watch?v=9R2rRLbBkHU

@@ -15,7 +15,7 @@ void initalize_imgui(GLFWwindow* window) {
 
 void Editor::init(Engine* engine) {
 	AppState* app = (AppState*)engine->application_state;
-	initalize_imgui(engine->window);
+	initalize_imgui((GLFWwindow*)engine->window.ctx);
 }
 
 void Editor::render(Engine* engine) {
@@ -35,6 +35,7 @@ void Editor::render(Engine* engine) {
 				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBackground
 			);
 
+			/*
 			Vector<Handle> texture_handles = engine->renderer.backend.textures.handle_list(engine->frame_allocator);
 			for (Handle texture_handle : texture_handles) {
 				OpenGL::Texture texture = engine->renderer.backend.textures.get(texture_handle);
@@ -44,6 +45,7 @@ void Editor::render(Engine* engine) {
 				}
 				ImGui::SameLine();
 			}
+			*/
 
             if (app->show_demo_window) {
                 ImGui::ShowDemoWindow(&app->show_demo_window);

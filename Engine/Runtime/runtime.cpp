@@ -1,4 +1,5 @@
 #include "../Core/core.hpp"
+#include "../API/api.hpp"
 #include "Editor/editor.hpp"
 
 extern Hashmap<String, String>* string_intern_map;
@@ -8,36 +9,25 @@ constexpr int PROGRAM_MEMORY_CAPACITY = MB(50);
 constexpr int PERMANENT_MEMORY_CAPACITY = MB(10);
 constexpr int FRAME_MEMORY_CAPACITY = MB(10);
 
-struct MemoryContext {
-	Arena permanent_arena;
-	// Arena transient_arena;
-	Arena frame_arena;
-
-	Allocator permanent_allocator;
-	// Allocator transient_allocator;
-	Allocator frame_arena_allocator;
-};
-
-void memory_init(MemoryContext ctx) {
-	string_intern_map = (Hashmap<String, String>*)ctx.permanent_allocator.malloc(sizeof(Hashmap<String, String>), alignof(Hashmap<String, String>));
-	*string_intern_map = Hashmap<String, String>(ctx.permanent_allocator);
-
-	editor = (Editor*)ctx.permanent_allocator.malloc(sizeof(Editor), alignof(Editor));
-	*editor = {};
-}
-
-struct Engine {
-	MemoryContext memory;
-	// InputState input;
-	// RendererAPI renderer;
-	// Window window;
-	bool reloaded_dll = false;
-};
+INTERNAL_LINKAGE Platform::DLL* dll = nullptr;
+INTERNAL_LINKAGE const char* dll_name = "game.dll";
+INTERNAL_LINKAGE const char* temp_dll_name = "application_temp.dll";
+INTERNAL_LINKAGE Platform::FileTime last_write_time = {};
 
 typedef void(ApplicationInitalizeFunc)(Engine* engine, Hashmap<String, String>* string_intern_map);
 typedef void(ApplicationUpdateFunc)(Engine* engine, Hashmap<String, String>* string_intern_map, float dt);
 typedef void(ApplicationRenderFunc)(Engine* engine, Hashmap<String, String>* string_intern_map, float dt);
 
+/*
+Mat4 Engine::get_view_matrix() {
+	return this->camera.get_view_matrix();
+}
+
+Mat4 Engine::get_projection_matrix() {
+	float aspect = (float)this->renderer.WINDOW_WIDTH / (float)this->renderer.WINDOW_HEIGHT;
+	return Mat4::perspective(this->camera.zoom, aspect, 0.1f, 1000.0f);
+}
+*/
 void load_application_function_pointers(ApplicationInitalizeFunc** application_init, ApplicationUpdateFunc** application_update, ApplicationRenderFunc** application_render) {
 	if (dll) {
 		Platform::free_dll(dll);
@@ -75,49 +65,58 @@ int main() {
 	memory.permanent_arena = Arena::fixed(program_arena.push(PERMANENT_MEMORY_CAPACITY, alignof(u8)), PERMANENT_MEMORY_CAPACITY);
 	memory.permanent_allocator = memory.permanent_arena.to_allocator();
 	memory.frame_arena = Arena::fixed(program_arena.push(FRAME_MEMORY_CAPACITY, alignof(u8)), FRAME_MEMORY_CAPACITY);
-	memory.permanent_allocator = memory.frame_arena.to_allocator();
+	memory.frame_allocator = memory.frame_arena.to_allocator();
 
 	Platform::init(); // I hate this inconsistency, maybe call it MemorySystem, PlatformSystem, InputSystem, WindowCreationSystem
-	// 	Input::init();
-	memory_init(memory); // I hate this inconsistency
-	// Window window = Window::create();
+	{
+		string_intern_map = (Hashmap<String, String>*)memory.permanent_allocator.malloc(sizeof(Hashmap<String, String>), alignof(Hashmap<String, String>));
+		*string_intern_map = Hashmap<String, String>(memory.permanent_allocator);
+
+		editor = (Editor*)memory.permanent_allocator.malloc(sizeof(Editor), alignof(Editor));
+		*editor = {};
+	}
 	// RendererAPI renderer = OpenGL::API();
 	// RendererAPI renderer = Vulkan::API();
 	// RendererAPI renderer = Dx12::API();
 
-	/*
 	Engine engine = {};
-	engine.memory = memory 
-	engine.window = window;
-	engine.renderer = renderer;
-	egnine.input = input;
+	engine.memory = memory;
+	engine.window = Window::create(800, 600, "HelloWorld");
+	// engine.renderer = renderer;
+	// egnine.input = input;
+
+	INTERNAL_LINKAGE ApplicationInitalizeFunc* application_init = nullptr;
+	INTERNAL_LINKAGE ApplicationUpdateFunc*    application_update = nullptr;
+	INTERNAL_LINKAGE ApplicationRenderFunc*    application_render = nullptr;
+
+	editor->init(&engine);
+	load_application_function_pointers(&application_init, &application_update, &application_render);
+	application_init(&engine, string_intern_map);
 
 	float dt = 0.0f;
 	float previous_time = Platform::get_seconds_elapsed();
-	while (!window.should_close()) {
+	while (!engine.window.should_close()) {
 		float current_time = Platform::get_seconds_elapsed();
 		dt = current_time - previous_time;
 		previous_time = current_time;
 			
-		input.poll();
+		// input.poll();
 
 		Platform::FileTime new_time = Platform::get_file_modification_time(dll_name);
 		if (Platform::compare_file_modification_time(new_time, last_write_time) == false) {
 			load_application_function_pointers(nullptr, &application_update, &application_render);
-			egnine.reloaded_dll = true;
+			engine.reloaded_dll = true;
 		}
 
-		if (application_update) application_update(this, string_intern_map, dt);
-		if (this->application_update) application_update(this, string_intern_map, dt);
-		
-		if (this->application_render) application_render(this, string_intern_map, dt);
-		this->renderer.backend.resolve_requests(this->renderer.requests, this->frame_allocator);
-		if (editor) editor->render(this);
+		if (application_update) application_update(&engine, string_intern_map, dt);
+		if (application_render) application_render(&engine, string_intern_map, dt);
+		if (editor) editor->render(&engine);
 
-		engine.renderer.execute_requests(api);
+		// engine.renderer.execute_requests();
 		engine.reloaded_dll = false;
+
+		engine.window.pump_messages();
 	}
-	*/
 	
 	platform_allocator.free(program_memory);
 

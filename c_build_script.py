@@ -80,9 +80,7 @@ RELATIVE_NFD_ROOT = f"{RELATIVE_ENGINE_VENDOR}/nativefiledialog"
 RELATIVE_GAME_ROOT = "../../../Game"
 
 inject = []
-libs = [
-    f"{RELATIVE_ENGINE_ROOT}/{BUILD_APPEND}/sfe.lib"
-]
+libs = []
 
 # -------------------------------- PLATFORM LIBS ---------------------------------------
 
@@ -126,6 +124,7 @@ INCLUDES = [
     f"{RELATIVE_IMGUI_ROOT}",
     f"{RELATIVE_GLAD_ROOT}/include",
     f"{RELATIVE_ASSIMP_ROOT}/include",
+    f"{RELATIVE_NFD_ROOT}/src",
 ]
 
 nfd = []
@@ -179,14 +178,26 @@ procedures_config = {
         include_paths = INCLUDES,
         compiler_inject_into_args=[]
     ),
+   
+   	"Editor": ProcedureConfig(
+        build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
+        output_name = "editor.lib",
+        source_files = [
+            f"{RELATIVE_ENGINE_ROOT}/Editor/editor.cpp",
+        ],
+        additional_libs = [],
+        include_paths = INCLUDES,
+        compiler_inject_into_args=[]
+    ),
  
- 	"Entrypoint": ProcedureConfig(
+ 	"Engine Runtime": ProcedureConfig(
         build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
         output_name = "sfe_runtime.exe",
         source_files = [
+            f"{RELATIVE_ENGINE_ROOT}/Runtime/WindowCreation/window_creation.cpp",
             f"{RELATIVE_ENGINE_ROOT}/Runtime/runtime.cpp",
         ],
-        additional_libs = ["vendor.lib"],
+        additional_libs = libs + ["core.lib", "editor.lib", "vendor.lib"],
         include_paths = INCLUDES,
         compiler_inject_into_args=[]
     ),
@@ -197,22 +208,11 @@ procedures_config = {
         source_files = [
             f"{RELATIVE_GAME_ROOT}/game.cpp",
         ],
-        additional_libs = [],
+        additional_libs = libs + ["core.lib"],
         include_paths = INCLUDES,
         compiler_inject_into_args=[],
         on_source_change_recompile=recompile #doesn't work on mac because of codesign (BS)
     ),
-    
-    "SFE EntryPoint": ProcedureConfig(
-        build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
-        output_name = "sfe_runtime.exe",
-        source_files = [
-            f"{RELATIVE_ENGINE_ROOT}/entrypoint.cpp"
-        ],
-        additional_libs = libs,
-        include_paths = INCLUDES,
-        compiler_inject_into_args=inject
-    )
 }
 
 manager: Manager = Manager(cc, pc, procedures_config)

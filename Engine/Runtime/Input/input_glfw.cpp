@@ -1,7 +1,5 @@
 #include "input.hpp"
-#undef GLFW_INCLUDE_NONE 
-#define GLFW_INCLUDE_NONE 
-#include <GLFW/glfw3.h>
+#include "../../Vendor/vendor.hpp"
 
 struct GLFW_Context {
 	int glfw_key_map[KEY_CODE_COUNT] = {-1};
@@ -116,3 +114,37 @@ void InputSystem::poll() {
 		this->input_state.keys[key_code] = updated_key_state(key_state, glfw_state != GLFW_RELEASE);
 	}
 }
+
+/*
+void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
+	static bool first = true;
+	static float last_mouse_x;
+	static float last_mouse_y;
+
+	if (first) {
+		last_mouse_x = mouse_x;
+		last_mouse_y = mouse_y;
+		first = false;
+		return;
+	}
+
+	float xoffset = mouse_x - last_mouse_x;
+	float yoffset = last_mouse_y - mouse_y;
+
+	last_mouse_x = mouse_x;
+	last_mouse_y = mouse_y;
+
+	if (engine->mouse_captured) {
+		engine->camera.process_mouse_movement(xoffset, yoffset);
+	}
+}
+
+void window_size_callback(GLFWwindow* window, int window_width, int window_height) {
+	engine->renderer.WINDOW_WIDTH = window_width;
+	engine->renderer.WINDOW_HEIGHT = window_height;
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+	engine->camera.process_mouse_scroll((float)yoffset);
+}
+*/

@@ -77,6 +77,7 @@ struct MaterialHandle {
 
 struct ShaderHandle {
 	Handle handle = Handle::invalid();
+	ShaderHandle() = default;
 	ShaderHandle(Handle handle) {
 		this->handle = handle;
 	}
@@ -517,24 +518,24 @@ struct RenderAPI {
 	}
 
 	MeshHandle create_mesh(ShaderHandle shader, String path) {
-		MeshHandle mesh = this->acquire_mesh_handle();
-		Request request = Request::create_mesh(mesh, shader, path);
-		this->requests.append(request);
-		return mesh;
+		// MeshHandle mesh = this->acquire_mesh_handle();
+		// Request request = Request::create_mesh(mesh, shader, path);
+		// this->requests.append(request);
+		// return mesh;
 	}
 
 	MeshHandle create_mesh_cube(MaterialHandle material) {
-		MeshHandle mesh = this->acquire_mesh_handle();
-		Request request = Request::create_mesh_cube(mesh, material);
-		this->requests.append(request);
-		return mesh;
+		// MeshHandle mesh = this->acquire_mesh_handle();
+		// Request request = Request::create_mesh_cube(mesh, material);
+		// this->requests.append(request);
+		// return mesh;
 	}
 
 	ShaderHandle create_shader(std::initializer_list<String> shader_paths) {
-		ShaderHandle shader = this->acquire_shader_handle();
-		Request request = Request::create_shader(shader, Vector<String>(shader_paths, this->permanent_allocator));
-		this->requests.append(request);
-		return shader;
+		// ShaderHandle shader = this->acquire_shader_handle();
+		// Request request = Request::create_shader(shader, Vector<String>(shader_paths, this->permanent_allocator));
+		// this->requests.append(request);
+		// return shader;
 	}
 
 	MaterialHandle create_material(ShaderHandle shader) {

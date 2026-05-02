@@ -134,9 +134,23 @@ struct InputState {
 	Vec2 current_mouse = Vec2(0);
 	Vec2 previous_mouse = Vec2(0);
 
-	bool get_key(KeyCode code, KeyState state);
-	bool get_key_up(KeyCode code);
-	bool get_key_pressed(KeyCode code);
-	bool get_key_down(KeyCode code);
-	bool get_key_released(KeyCode code);
+	bool get_key(KeyCode code, KeyState state) {
+		return (this->keys[code] & state) != 0;
+	}
+
+	bool get_key_up(KeyCode code) {
+		return (this->keys[code] & UP) != 0;
+	}
+
+	bool get_key_pressed(KeyCode code) {
+		return (this->keys[code] & PRESSED) != 0;
+	}
+
+	bool get_key_down(KeyCode code) {
+		return (this->keys[code] & DOWN) != 0;
+	}
+
+	bool get_key_released(KeyCode code) {
+		return (this->keys[code] & RELEASED) != 0;
+	}
 };
