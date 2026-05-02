@@ -71,7 +71,6 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 	app->backpack_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/model.vert"), STR_INTERN("../../../Game/Assets/Shaders/model.frag")});
 	app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
 
-	/*
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
 	int index = 0;
 	float offset = 0.1f;
@@ -88,9 +87,8 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 	VertexLayout layout = VertexLayout({{
 		VertexAttribute{4, 0, BufferStrideTypeInfo::MAT4, true},
 	}, engine->memory.frame_allocator});
-	*/
 
-	// app->instance_cube_vbo = engine->renderer.create_vertex_buffer(app->cube_mesh, layout, app->cube_translations, true);
+	app->instance_cube_vbo = engine->renderer.create_vbo(app->cube_mesh, layout, app->cube_translations, true);
 	app->timer.start(5.0f);
 }
 
@@ -110,8 +108,8 @@ EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* strin
 	}
 
 	if (engine->input.get_key_pressed(KEY_R)) {
-		// engine->renderer.shader_recompile(app->cube_shader);
-		// engine->renderer.shader_recompile(app->backpack_shader);
+		engine->renderer.shader_recompile(app->cube_shader);
+		engine->renderer.shader_recompile(app->backpack_shader);
 	}
 
 	if (engine->input.get_key(KEY_SPACE, PRESSED|DOWN)) {
@@ -163,13 +161,12 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	}
 
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	// engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
+	engine->renderer.bind_vbo(app->instance_cube_vbo, app->cube_mesh);
 
-	
 	if (engine->reloaded_dll) {
 		LOG_DEBUG("Before draw 1\n");
 	}
-	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection); // , app->cube_translations.count);
+	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
 	
 	if (engine->reloaded_dll) {
 		LOG_DEBUG("After draw 1\n");
@@ -177,7 +174,7 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 
 	model = Mat4::translate(model, 0, 5, 0);
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
+	// engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
 
 	if (engine->reloaded_dll) {
 		LOG_DEBUG("After draw 2\n");
@@ -192,6 +189,7 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 - [] Remove all constructors except for containers and other places it makes sense, in those places make sure you have a default constructor
 - [] Make sure you have as close to general allocation. I'm very very concerned about allocations across dll boundaries
 - [] AABB renderer
+- [] inside hte shader directory I should have a manifest that keep track of the last modified stat
 - [] Shader Header is a really interesting idea
 	u8* shader_header_data = Platform::read_entire_file("shader_header.h")
 	u8* shader_vert_source = Platform::read_entire_file("shader.vert")

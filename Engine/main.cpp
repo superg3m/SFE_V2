@@ -99,26 +99,28 @@ int main() {
 	float dt = 0.0f;
 	float previous_time = Platform::get_seconds_elapsed();
 	while (!engine->window.should_close()) {
-		float current_time = Platform::get_seconds_elapsed();
-		dt = current_time - previous_time;
-		previous_time = current_time;
+		Temp temp = Temp::begin(&memory.frame_arena);
+			float current_time = Platform::get_seconds_elapsed();
+			dt = current_time - previous_time;
+			previous_time = current_time;
+				
+			input.poll();
+			engine->input = input.input_state;
+
+			Platform::FileTime new_time = Platform::get_file_modification_time(dll_name);
+			if (Platform::compare_file_modification_time(new_time, last_write_time) == false) {
+				load_application_function_pointers(nullptr, &application_update, &application_render);
+				engine->reloaded_dll = true;
+			}
+
+			if (application_update) application_update(engine, string_intern_map, dt);
+			if (application_render) application_render(engine, string_intern_map, dt);
+			engine->renderer.execute_request();
+			editor.render(engine, &renderer);
 			
-		input.poll();
-		engine->input = input.input_state;
-
-		Platform::FileTime new_time = Platform::get_file_modification_time(dll_name);
-		if (Platform::compare_file_modification_time(new_time, last_write_time) == false) {
-			load_application_function_pointers(nullptr, &application_update, &application_render);
-			engine->reloaded_dll = true;
-		}
-
-		if (application_update) application_update(engine, string_intern_map, dt);
-		if (application_render) application_render(engine, string_intern_map, dt);
-		engine->renderer.execute_request();
-		editor.render(engine, &renderer);
-		
-		engine->reloaded_dll = false;
-		engine->window.pump_messages();
+			engine->reloaded_dll = false;
+			engine->window.pump_messages();
+		temp.end();
 	}
 	
 	platform_allocator.free(program_memory);

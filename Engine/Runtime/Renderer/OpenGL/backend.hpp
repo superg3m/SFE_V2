@@ -269,6 +269,11 @@ struct OpenGL {
 					mesh = Mesh::cube(request.mesh.material);
 				} break;
 
+				case RequestType::MATERIAL_SET_UNIFORM: {
+					Material& material_slot = this->materials.get(request.material.user.handle);
+					material_slot.set_uniform(request.material.name, request.material.value);
+				} break;
+
 				case RequestType::DRAW_CALL: {
 					if (draw_calls_map.has(request.draw_call.pipeline)) { 
 						draw_calls_map[request.draw_call.pipeline].append(request.draw_call);
