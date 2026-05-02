@@ -77,9 +77,9 @@ int main() {
 	memory.frame_arena = Arena::fixed(program_arena.push(FRAME_MEMORY_CAPACITY, alignof(u8)), FRAME_MEMORY_CAPACITY);
 	memory.permanent_allocator = memory.frame_arena.to_allocator();
 
-	Platform::init();
+	Platform::init(); // I hate this inconsistency, maybe call it MemorySystem, PlatformSystem, InputSystem, WindowCreationSystem
 	// 	Input::init();
-	memory_init(memory);
+	memory_init(memory); // I hate this inconsistency
 	// Window window = Window::create();
 	// RendererAPI renderer = OpenGL::API();
 	// RendererAPI renderer = Vulkan::API();
