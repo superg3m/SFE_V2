@@ -501,6 +501,7 @@ typedef MeshHandle(AcquireMeshFunc)(void* b);
 typedef ShaderHandle(AcquireShaderFunc)(void* b);
 typedef MaterialHandle(AcquireMaterialFunc)(void* b, ShaderHandle shader);
 typedef TextureHandle(AcquireTextureFunc)(void* b);
+typedef void(MaterialSetUniformFunc)(void* b, MaterialHandle material, String name, BindingValue value);
 typedef void(ExecuteRequests)(void* b, Vector<Request>& requests, MemoryContext memory);
 
 struct RenderAPI {
@@ -514,6 +515,7 @@ struct RenderAPI {
     AcquireMaterialFunc*     _private_acquire_material_handle = nullptr;
     AcquireTextureFunc*      _private_acquire_texture_handle = nullptr;
 	ExecuteRequests* 		 _private_execute_requests = nullptr;
+	MaterialSetUniformFunc*  _private_material_set_uniform = nullptr;
 
 	template<typename T>
 	VertexBufferHandle create_vbo(MeshHandle mesh, VertexLayout layout, Vector<T>& buffer, bool dynamic = false) {
@@ -562,7 +564,9 @@ struct RenderAPI {
 		this->requests.clear();
 	}
 
-	// material_set_uniforms
+	void material_set_uniform(MaterialHandle material, String name, BindingValue value) {
+		this->_private_material_set_uniform(this->b, material, name, value);
+	}
 
 	void draw_mesh(Pipeline pipeline, MeshHandle mesh, Mat4 model, Mat4 view, Mat4 projection, u32 instance_count = 1) {
 		Request request = Request::create_draw_call(pipeline, mesh, model, view, projection, instance_count);

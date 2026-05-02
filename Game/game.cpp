@@ -85,7 +85,6 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 		}
 	}
 	
-
 	VertexLayout layout = VertexLayout({{
 		VertexAttribute{4, 0, BufferStrideTypeInfo::MAT4, true},
 	}, engine->memory.frame_allocator});
@@ -152,12 +151,8 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	Mat4 view = engine->get_view_matrix();
 	Mat4 projection = engine->get_projection_matrix();
 
-	/*
-	engine->renderer.material_set_uniforms(app->material, {
-		{STR_INTERN("uContainer"), app->container_texture},
-		{STR_INTERN("uFace"), app->face_texture},
-	});
-	*/
+	engine->renderer.material_set_uniform(app->material, STR_INTERN("uContainer"), app->container_texture); 
+	engine->renderer.material_set_uniform(app->material, STR_INTERN("uFace"), app->face_texture); 
 
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	// engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);

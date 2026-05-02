@@ -36,6 +36,12 @@ struct Renderer {
 		return backend->textures.acquire();
 	}
 
+	static void material_set_uniform(void* b, MaterialHandle material, String name, BindingValue value) {
+		B* backend = (B*)b; 
+		Material& material_slot = backend->materials.get(material.handle);
+		material_slot.set_uniform(name, value);
+	}
+
 	static void execute_requests(void* b, Vector<Request>& requests, MemoryContext memory) {
 		B* backend = (B*)b; 
 		backend->execute_requests(requests, memory);
@@ -50,6 +56,7 @@ struct Renderer {
 		api._private_acquire_shader_handle = &acquire_shader_handle;
 		api._private_acquire_material_handle = &acquire_material_handle;
 		api._private_acquire_texture_handle = &acquire_texture_handle;
+		api._private_material_set_uniform = &material_set_uniform;
 		api._private_execute_requests = &execute_requests;
 
 		return api;
