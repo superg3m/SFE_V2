@@ -98,7 +98,7 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* string_intern_map, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
-	app->accumulator += dt * 10;
+	app->accumulator += dt * 100;
 
 	// active_scene.update(dt);
 	if (engine->input.get_key_pressed(KEY_ESCAPE)) {
@@ -163,9 +163,9 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	// engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
 	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection); // , app->cube_translations.count);
 
-	// model = Mat4::translate(model, 0, 5, 0);
-	// pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	// engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
+	model = Mat4::translate(model, 0, 5, 0);
+	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
+	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
 }
 
 // https://www.youtube.com/watch?v=9R2rRLbBkHU
