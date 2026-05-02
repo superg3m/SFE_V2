@@ -15,6 +15,10 @@ namespace Platform {
 		LOG_DEBUG("Platform Shutdown!\n");
 	}
 
+	void sleep(u32 ms) {
+		Sleep((DWORD)ms);
+	}
+
 	double get_seconds_elapsed() {
 		std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 		return (double)(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count()) / 1000.0;
@@ -34,10 +38,6 @@ namespace Platform {
 		} 
 
 		return CopyFileA(source_path, dest_path, FALSE) == 0;
-	}
-
-	void sleep(u32 ms) {
-		Sleep((DWORD)ms);
 	}
 
 	u8* read_entire_file(Allocator a, const char* file_path, size_t& out_file_size, Error& error) {

@@ -19,16 +19,16 @@ namespace Platform {
 		LOG_DEBUG("Platform Shutdown!\n");
 	}
 
-	double get_seconds_elapsed() {
-		std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
-		return (double)(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count()) / 1000.0;
-	}
-
 	void sleep(u32 ms) {
 		struct timespec ts;
 		ts.tv_sec = 0;           // seconds
 		ts.tv_nsec = ms * 1000000L; // 1 million nanoseconds = 1ms
 		nanosleep(&ts, NULL);
+	}
+
+	double get_seconds_elapsed() {
+		std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
+		return (double)(std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count()) / 1000.0;
 	}
 
 	bool file_exists(const char* path) {
