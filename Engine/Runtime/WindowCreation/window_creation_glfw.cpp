@@ -1,6 +1,31 @@
-#include "../Core/core.hpp"
 #include "window_creation.hpp"
+#include "../Core/core.hpp"
 #include "../../Vendor/vendor.hpp"
+#include "../../API/api.hpp"
+#include "../Renderer/OpenGL/backend.hpp"
+
+extern Engine* engine;
+
+void framebuffer_size_callback(GLFWwindow* window, int frame_buffer_width, int frame_buffer_height) {
+	engine->window.FRAMEBUFFER_WIDTH  = frame_buffer_width;
+	engine->window.FRAMEBUFFER_HEIGHT = frame_buffer_height;
+	
+	// TODO(Jovanni): This sucks it should be abstracted away but for right now who cares
+	// realistically an event system would be nice, I should build one...
+	// EVENT_FIRE(FRAMEBUFFER_RESIZE, {
+	// 		.framebuffer_width = frame_buffer_width, 
+	// 		.framebuffer_height = frame_buffer_height, 
+	// })
+	gl_error_check(glViewport(0, 0, frame_buffer_width, frame_buffer_height)); 
+
+	// seems like this will be a constant battle might just be worth making renderer and engine a singleton...
+	// Renderer::CreatePickingFrameBuffer(Renderer::FRAME_BUFFER_WIDTH, Renderer::FRAME_BUFFER_HEIGHT);
+}
+
+void window_size_callback(GLFWwindow* window, int window_width, int window_height) {
+	engine->window.WINDOW_WIDTH = window_width;
+	engine->window.WINDOW_HEIGHT = window_height;
+}
 
 Window Window::create(const int WIDTH, const int HEIGHT, const char* name, bool vsync) {
 	Window ret = {};
@@ -26,6 +51,8 @@ Window Window::create(const int WIDTH, const int HEIGHT, const char* name, bool 
 	glfwSwapInterval(vsync);
 
 	glfwSetInputMode(window, GLFW_CURSOR, ret.capture_mouse ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetWindowSizeCallback(window, window_size_callback);
 
 	return ret;
 }
@@ -41,26 +68,3 @@ void Window::pump_messages() {
 	glfwPollEvents();
 	glfwSwapBuffers(window);
 }
-
-/*
-bool Window::should_close() {
-	GLFW_WindowContext* context = (GLFW_WindowContext*)this->ctx; 
-	return glfwWindowShouldClose(context->window);
-}
-*/
-
-/*
-void framebuffer_size_callback(GLFWwindow* window, int frame_buffer_width, int frame_buffer_height) {
-	engine->renderer.FRAME_BUFFER_WIDTH  = frame_buffer_width;
-	engine->renderer.FRAME_BUFFER_HEIGHT = frame_buffer_height;
-	gl_error_check(glViewport(0, 0, frame_buffer_width, frame_buffer_height));
-
-	// seems like this will be a constant battle might just be worth making renderer and engine a singleton...
-	// Renderer::CreatePickingFrameBuffer(Renderer::FRAME_BUFFER_WIDTH, Renderer::FRAME_BUFFER_HEIGHT);
-}
-
-void window_size_callback(GLFWwindow* window, int window_width, int window_height) {
-	engine->renderer.WINDOW_WIDTH = window_width;
-	engine->renderer.WINDOW_HEIGHT = window_height;
-}
-*/

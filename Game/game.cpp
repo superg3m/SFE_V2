@@ -151,16 +151,37 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	Mat4 view = engine->get_view_matrix();
 	Mat4 projection = engine->get_projection_matrix();
 
+	if (engine->reloaded_dll) {
+		LOG_DEBUG("Before material_set\n");
+	}
+
 	engine->renderer.material_set_uniform(app->material, STR_INTERN("uContainer"), app->container_texture); 
 	engine->renderer.material_set_uniform(app->material, STR_INTERN("uFace"), app->face_texture); 
 
+	if (engine->reloaded_dll) {
+		LOG_DEBUG("After material_set\n");
+	}
+
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	// engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
+
+	
+	if (engine->reloaded_dll) {
+		LOG_DEBUG("Before draw 1\n");
+	}
 	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection); // , app->cube_translations.count);
+	
+	if (engine->reloaded_dll) {
+		LOG_DEBUG("After draw 1\n");
+	}
 
 	model = Mat4::translate(model, 0, 5, 0);
 	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
 	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
+
+	if (engine->reloaded_dll) {
+		LOG_DEBUG("After draw 2\n");
+	}
 }
 
 // https://www.youtube.com/watch?v=9R2rRLbBkHU
