@@ -368,6 +368,15 @@ struct DrawCallRequest {
 	Mat4 view = Mat4::identity();
 	Mat4 projection = Mat4::identity();
 	int instance_count = 1;
+
+	DrawCallRequest(Pipeline pipeline, MeshHandle mesh, Mat4 model, Mat4 view, Mat4 projection, int instance_count = 1) {
+		this->pipeline = pipeline;
+		this->mesh = mesh;
+		this->model = model;
+		this->view = view;
+		this->projection = projection;
+		this->instance_count =instance_count ;
+	}
 };
 
 struct MeshRequest {
@@ -456,7 +465,7 @@ struct Request {
 	static Request create_mesh_cube(MeshHandle user, MaterialHandle material) {
 		Request ret = {};
 		ret.type = RequestType::MESH_CUBE_CREATE;
-		ret.mesh = ret.mesh = MeshRequest(user, material);
+		ret.mesh = MeshRequest(user, material);
 
 		return ret;
 	}
@@ -477,6 +486,14 @@ struct Request {
 
 		return ret;
 	}
+
+	static Request create_draw_call(Pipeline pipeline, MeshHandle mesh, Mat4 model, Mat4 view, Mat4 projection, u32 instance_count = 1) {
+		Request ret = {};
+		ret.type = RequestType::DRAW_CALL;
+		ret.draw_call = DrawCallRequest(pipeline, mesh, model, view, projection, instance_count);
+
+		return ret;
+	}
 };
 
 typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
@@ -485,29 +502,28 @@ typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
 // typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
 // typedef void(SubmitMeshFunc)(/*MeshHandle, /*MaterialHandle, Mat4*/);
 
-typedef Handle(AcquireVertexBufferFunc)(void* b);
-typedef Handle(AcquireMeshFunc)(void* b);
-typedef Handle(AcquireShaderFunc)(void* b);
-typedef Handle(AcquireMaterialFunc)(void* b);
-typedef Handle(AcquireTextureFunc)(void* b);
+typedef VertexBufferHandle(AcquireVertexBufferFunc)(void* b);
+typedef MeshHandle(AcquireMeshFunc)(void* b);
+typedef ShaderHandle(AcquireShaderFunc)(void* b);
+typedef MaterialHandle(AcquireMaterialFunc)(void* b);
+typedef TextureHandle(AcquireTextureFunc)(void* b);
+typedef void(ExecuteRequests)(void* b, Vector<Request>& requests, MemoryContext memory);
 
 struct RenderAPI {
 	void* b = nullptr;
 	Vector<Request> requests = {};
-	
-	// AquireTextureHandleFunc* acquire_texture_handle = nullptr;
-	// Acquire functions (runtime-owned)
-    AcquireVertexBufferFunc* acquire_vbo_handle = nullptr;
-    AcquireMeshFunc*         acquire_mesh_handle = nullptr;
-    AcquireShaderFunc*       acquire_shader_handle = nullptr;
-    AcquireMaterialFunc*     acquire_material_handle = nullptr;
-    AcquireTextureFunc*      acquire_texture_handle = nullptr;
-	
-	// SubmitMeshFunc* execute_requests; void execute_requests(Vector<Requet>& request);
+	MemoryContext memory = {};
+
+	AcquireVertexBufferFunc* _private_acquire_vbo_handle = nullptr;
+    AcquireMeshFunc*         _private_acquire_mesh_handle = nullptr;
+    AcquireShaderFunc*       _private_acquire_shader_handle = nullptr;
+    AcquireMaterialFunc*     _private_acquire_material_handle = nullptr;
+    AcquireTextureFunc*      _private_acquire_texture_handle = nullptr;
+	ExecuteRequests* 		 _private_execute_requests = nullptr;
 
 	template<typename T>
 	VertexBufferHandle create_vbo(MeshHandle mesh, VertexLayout layout, Vector<T>& buffer, bool dynamic = false) {
-		VertexBufferHandle vbo = this->acquire_texture_handle();
+		VertexBufferHandle vbo = this->_private_acquire_texture_handle(this->b);
 		Request request = Request::create_vertex_buffer(vbo, mesh, layout, buffer, dynamic);
 		this->requests.append(request);
 
@@ -515,50 +531,52 @@ struct RenderAPI {
 	}
 
 	MeshHandle create_mesh(ShaderHandle shader, String path) {
-		// MeshHandle mesh = this->acquire_mesh_handle();
-		// Request request = Request::create_mesh(mesh, shader, path);
-		// this->requests.append(request);
-		// return mesh;
+		MeshHandle mesh = this->_private_acquire_mesh_handle(this->b);
+		Request request = Request::create_mesh(mesh, shader, path);
+		this->requests.append(request);
+		return mesh;
 	}
 
 	MeshHandle create_mesh_cube(MaterialHandle material) {
-		// MeshHandle mesh = this->acquire_mesh_handle();
-		// Request request = Request::create_mesh_cube(mesh, material);
-		// this->requests.append(request);
-		// return mesh;
+		MeshHandle mesh = this->_private_acquire_mesh_handle(this->b);
+		Request request = Request::create_mesh_cube(mesh, material);
+		this->requests.append(request);
+		return mesh;
 	}
 
 	ShaderHandle create_shader(std::initializer_list<String> shader_paths) {
-		// ShaderHandle shader = this->acquire_shader_handle();
-		// Request request = Request::create_shader(shader, Vector<String>(shader_paths, this->permanent_allocator));
-		// this->requests.append(request);
-		// return shader;
+		ShaderHandle shader = this->_private_acquire_shader_handle(this->b);
+		Request request = Request::create_shader(shader, Vector<String>(shader_paths, this->memory.permanent_allocator));
+		this->requests.append(request);
+		return shader;
+	}
+
+	TextureHandle create_texture(u32 texture_unit, String path, TextureDescription description) {
+		TextureHandle texture = this->_private_acquire_texture_handle(this->b);
+		Request request = Request::create_texture(texture, texture_unit, path, description);
+		this->requests.append(request);
+		return texture;
 	}
 
 	MaterialHandle create_material(ShaderHandle shader) {
-		// MaterialHandle material = this->acquire_material_handle();
+		MaterialHandle material = this->_private_acquire_material_handle(this->b);
 		// Material& material_slot = this->backend.materials.get(material.handle);
 		// material_slot = Material(this->permanent_allocator, shader);
 
-		// return material;
+		return material;
 	}
 
-	/*
-	void draw_mesh(Pipeline pipeline, MeshHandle mesh, Mat4 model, Mat4 view, Mat4 projection, u32 instance_count = 1) {
-		DrawCallRequest draw_request = {};
-		draw_request.pipeline = pipeline;
-		draw_request.mesh = mesh;
-		draw_request.model = model;
-		draw_request.view = view;
-		draw_request.projection = projection;
-		draw_request.instance_count = instance_count;
+	void execute_request() {
+		this->_private_execute_requests(this->b, this->requests, this->memory);
+		this->requests.clear();
+	}
 
-		Request request = {};
-		request.type = RequestType::DRAW_CALL;
-		request.draw_call = draw_request;
+	void draw_mesh(Pipeline pipeline, MeshHandle mesh, Mat4 model, Mat4 view, Mat4 projection, u32 instance_count = 1) {
+		Request request = Request::create_draw_call(pipeline, mesh, model, view, projection, instance_count);
 		this->requests.append(request);
 	}
 
+	/*
 	void material_set_uniforms(MaterialHandle material, std::initializer_list<KeyValuePair<String, BindingValue>> uniforms) {
 		Material& material_slot = this->backend.materials.get(material.handle);
 		for (auto& entry : uniforms) {

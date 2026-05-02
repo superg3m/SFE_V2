@@ -211,8 +211,8 @@ struct OpenGL {
 		void setup();
 	};
 
-	void resolve_requests(Vector<Request>& requests, Allocator frame_allocator) {
-		Hashmap<Pipeline, Vector<DrawCallRequest>> draw_calls_map = Hashmap<Pipeline, Vector<DrawCallRequest>>(frame_allocator);
+	void execute_requests(Vector<Request>& requests, MemoryContext memory) {
+		Hashmap<Pipeline, Vector<DrawCallRequest>> draw_calls_map = Hashmap<Pipeline, Vector<DrawCallRequest>>(memory.frame_allocator);
 		for (Request& request : requests) {
 			switch (request.type) {
 				case RequestType::TEXTURE2D_LOAD: {
@@ -273,7 +273,7 @@ struct OpenGL {
 					if (draw_calls_map.has(request.draw_call.pipeline)) { 
 						draw_calls_map[request.draw_call.pipeline].append(request.draw_call);
 					} else {
-						Vector<DrawCallRequest> vector = Vector<DrawCallRequest>({request.draw_call}, frame_allocator);
+						Vector<DrawCallRequest> vector = Vector<DrawCallRequest>({request.draw_call}, memory.frame_allocator);
 						draw_calls_map.put(request.draw_call.pipeline, vector);
 					}
 				} break;

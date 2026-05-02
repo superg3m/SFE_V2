@@ -7,39 +7,45 @@ template<typename B>
 struct Renderer {
 	B backend = {};
 
-	static Handle acquire_vbo_handle(void* b) {
-		B* backend = (B*)b; 
-		return backend->vbos.acquire();
+	static VertexBufferHandle acquire_vbo_handle(void* b) {
+		B* backend = (B*)b;
+		return VertexBufferHandle(backend->vbos.acquire());
 	}
 
-	static Handle acquire_mesh_handle(void* b) {
+	static MeshHandle acquire_mesh_handle(void* b) {
 		B* backend = (B*)b; 
-		return backend->meshes.acquire();
+		return MeshHandle(backend->meshes.acquire());
 	}
 
-	static Handle acquire_shader_handle(void* b) {
+	static ShaderHandle acquire_shader_handle(void* b) {
 		B* backend = (B*)b; 
-		return backend->shaders.acquire();
+		return ShaderHandle(backend->shaders.acquire());
 	}
 
-	static Handle acquire_material_handle(void* b) {
+	static MaterialHandle acquire_material_handle(void* b) {
 		B* backend = (B*)b; 
-		return backend->materials.acquire();
+		return MaterialHandle(backend->materials.acquire());
 	}
 
-	static Handle acquire_texture_handle(void* b) {
+	static TextureHandle acquire_texture_handle(void* b) {
 		B* backend = (B*)b; 
-		return backend->textures.acquire();
+		return TextureHandle(backend->textures.acquire());
+	}
+
+	static void execute_requests(void* b, Vector<Request>& requests, MemoryContext memory) {
+		B* backend = (B*)b; 
+		backend->execute_requests(requests, memory);
 	}
 
 	RenderAPI API() {
 		RenderAPI api = {};
 		api.b = &this->backend;
-		api.acquire_vbo_handle = &acquire_vbo_handle;
-		api.acquire_mesh_handle = &acquire_mesh_handle;
-		api.acquire_shader_handle = &acquire_shader_handle;
-		api.acquire_material_handle = &acquire_material_handle;
-		api.acquire_texture_handle = &acquire_texture_handle;
+		api._private_acquire_vbo_handle = &acquire_vbo_handle;
+		api._private_acquire_mesh_handle = &acquire_mesh_handle;
+		api._private_acquire_shader_handle = &acquire_shader_handle;
+		api._private_acquire_material_handle = &acquire_material_handle;
+		api._private_acquire_texture_handle = &acquire_texture_handle;
+		api._private_execute_requests = &execute_requests;
 
 		return api;
 	}

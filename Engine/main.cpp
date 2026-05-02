@@ -110,11 +110,10 @@ int main() {
 
 		if (application_update) application_update(&engine, string_intern_map, dt);
 		if (application_render) application_render(&engine, string_intern_map, dt);
+		engine.renderer.execute_request();
 		if (editor) editor->render(&engine);
-
-		// engine.renderer.execute_requests();
+		
 		engine.reloaded_dll = false;
-
 		engine.window.pump_messages();
 	}
 	

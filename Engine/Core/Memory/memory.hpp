@@ -79,3 +79,13 @@ struct Temp {
 		this->arena = nullptr;
 	}
 };
+
+struct MemoryContext {
+	Arena permanent_arena;
+	Arena frame_arena;
+	// Arena transient_arena;
+
+	Allocator permanent_allocator;
+	Allocator frame_allocator;
+	// Allocator transient_allocator;
+};

@@ -61,17 +61,17 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 	};
 
 	TextureDescription desc = {};
-	// app->container_texture = engine->renderer.create_texture(0, STR_INTERN("../../../Game/Assets/Textures/container.jpg"), desc);
-	// app->face_texture = engine->renderer.create_texture(1, STR_INTERN("../../../Game/Assets/Textures/awesomeface.png"), desc);
+	app->container_texture = engine->renderer.create_texture(0, STR_INTERN("../../../Game/Assets/Textures/container.jpg"), desc);
+	app->face_texture = engine->renderer.create_texture(1, STR_INTERN("../../../Game/Assets/Textures/awesomeface.png"), desc);
 
-	// app->cube_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/cube.vert"), STR_INTERN("../../../Game/Assets/Shaders/cube.frag")});
-	// app->material = engine->renderer.create_material(app->cube_shader);
-	// app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
+	app->cube_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/cube.vert"), STR_INTERN("../../../Game/Assets/Shaders/cube.frag")});
+	app->material = engine->renderer.create_material(app->cube_shader);
+	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
 
-	// app->backpack_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/model.vert"), STR_INTERN("../../../Game/Assets/Shaders/model.frag")});
-	// app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
+	app->backpack_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/model.vert"), STR_INTERN("../../../Game/Assets/Shaders/model.frag")});
+	app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
 
-	// app->cube_translations = Vector<Mat4>(engine->memory.permanant_allocator);
+	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
 	int index = 0;
 	float offset = 0.1f;
 	for (int y = -10; y < 10; y += 2) {
@@ -150,24 +150,24 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 		app->timer.reset();
 	}
 
-	/*
 	Mat4 model = Mat4::rotate(Mat4::identity(), Quat::from_euler(app->accumulator, app->accumulator, 0));
-	Mat4 view = engine->get_view_matrix();
-	Mat4 projection = engine->get_projection_matrix();
+	// Mat4 view = engine->get_view_matrix();
+	// Mat4 projection = engine->get_projection_matrix();
 
+	/*
 	engine->renderer.material_set_uniforms(app->material, {
 		{STR_INTERN("uContainer"), app->container_texture},
 		{STR_INTERN("uFace"), app->face_texture},
 	});
+	*/
 
 	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
-	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
+	// engine->renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
+	// engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
 
 	model = Mat4::translate(model, 0, 5, 0);
-	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
-	*/
+	// pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
+	// engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
 }
 
 // https://www.youtube.com/watch?v=9R2rRLbBkHU
