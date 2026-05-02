@@ -1,5 +1,4 @@
 #include "backend.hpp"
-#include "../../Platform/platform.hpp"
 
 Vector<String> OpenGL::Shader::fallback_paths = Vector<String>({
 	STR("../../../Game/Assets/Shaders/fallback.vert"),

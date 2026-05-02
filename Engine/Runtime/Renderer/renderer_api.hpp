@@ -176,8 +176,6 @@ struct BindingValue {
 	}
 };
 
-
-
 struct Material {
 	static constexpr String DIFFUSE_TEXTURE = STR("uDiffuseTexture"); // texture unit = aiTextureType_DIFFUSE
 	ShaderHandle shader = ShaderHandle::invalid();

@@ -25,7 +25,7 @@ pc: ProjectConfig = ProjectConfig(
     project_name = "SFE",
     project_dependencies = [],
     project_debug_with_visual_studio = False,
-    project_executable_names = ["sfe_runtime.exe"]
+    project_executable_names = ["main.exe"]
 )
 
 # ---------------------------- COMPILER SELECTION --------------------------------------
@@ -190,14 +190,24 @@ procedures_config = {
         compiler_inject_into_args=[]
     ),
  
- 	"Engine Runtime": ProcedureConfig(
+ 	"Runtime": ProcedureConfig(
         build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
-        output_name = "sfe_runtime.exe",
+        output_name = "runtime.lib",
         source_files = [
-            f"{RELATIVE_ENGINE_ROOT}/Runtime/WindowCreation/window_creation.cpp",
             f"{RELATIVE_ENGINE_ROOT}/Runtime/runtime.cpp",
         ],
-        additional_libs = libs + ["core.lib", "editor.lib", "vendor.lib"],
+        additional_libs = [],
+        include_paths = INCLUDES,
+        compiler_inject_into_args=[]
+    ),
+  
+   	"Main": ProcedureConfig(
+        build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
+        output_name = "main.exe",
+        source_files = [
+            f"{RELATIVE_ENGINE_ROOT}/main.cpp",
+        ],
+        additional_libs = libs + ["core.lib", "runtime.lib", "editor.lib", "vendor.lib"],
         include_paths = INCLUDES,
         compiler_inject_into_args=[]
     ),

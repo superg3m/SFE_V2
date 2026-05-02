@@ -1,12 +1,9 @@
 #pragma once
 
-#include "../Common/common.hpp"
-#include <glad/glad.h>
+#include "../../Core/core.hpp"
+#include "../renderer_api.hpp"
 #include <concepts>
-
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#include <vendor.hpp>
 
 void _GL_ERROR_CHECK(const char* file, int line);
 #define ENABLE_GL_ERROR_CHECK

@@ -1,6 +1,4 @@
 #include "backend.hpp"
-#include <stb_image.h>
-#include "../../Platform/platform.hpp"
 
 void OpenGL::Texture::flip_vertically_in_place(u8* data, int width, int height) {
 	for (int y = 0; y < height / 2; y++) {

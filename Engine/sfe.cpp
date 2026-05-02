@@ -1,8 +1,0 @@
-#include "Core/core.cpp"
-#include "Platform/platform.cpp"
-#include "Input/input.cpp"
-#include "Renderer/renderer.cpp"
-#include "Renderer/OpenGL/backend.cpp"
-#include "Camera/camera.cpp"
-#include "Editor/editor.cpp"
-#include "engine.cpp"
