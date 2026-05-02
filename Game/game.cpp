@@ -106,12 +106,9 @@ EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* strin
 	}
 
 	// make this an engine thing internally?
-	/*
 	if (engine->input.get_key_pressed(KEY_C)) {
-		engine->mouse_captured = !engine->mouse_captured;
-		glfwSetInputMode(engine->window, GLFW_CURSOR, engine->mouse_captured ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+		engine->window.capture_mouse = !engine->window.capture_mouse;
 	}
-	*/
 
 	if (engine->input.get_key_pressed(KEY_R)) {
 		// engine->renderer.shader_recompile(app->cube_shader);

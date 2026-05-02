@@ -25,6 +25,8 @@ Window Window::create(const int WIDTH, const int HEIGHT, const char* name, bool 
 	RUNTIME_ASSERT_MSG(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "Failed to initialize GLAD\n");
 	glfwSwapInterval(vsync);
 
+	glfwSetInputMode(window, GLFW_CURSOR, ret.capture_mouse ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+
 	return ret;
 }
 

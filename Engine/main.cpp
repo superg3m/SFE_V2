@@ -3,6 +3,7 @@
 #include "Editor/editor.hpp"
 #include "Runtime/runtime.hpp"
 
+Engine* engine = nullptr;
 extern Hashmap<String, String>* string_intern_map;
 extern Editor* editor;
 
@@ -70,6 +71,9 @@ int main() {
 
 	Platform::init(); // I hate this inconsistency, maybe call it MemorySystem, PlatformSystem, InputSystem, WindowCreationSystem
 	{
+		engine = (Engine*)memory.permanent_allocator.malloc(sizeof(Engine), alignof(Engine));
+		*engine = {};
+
 		string_intern_map = (Hashmap<String, String>*)memory.permanent_allocator.malloc(sizeof(Hashmap<String, String>), alignof(Hashmap<String, String>));
 		*string_intern_map = Hashmap<String, String>(memory.permanent_allocator);
 
@@ -80,45 +84,45 @@ int main() {
 	InputSystem input = {};
 	Renderer<OpenGL> renderer = {};
 
-	Engine engine = {};
-	engine.memory = memory;
-	engine.window = Window::create(800, 600, "HelloWorld");
-	engine.renderer = renderer.API(memory);
-	engine.camera = Camera::create(0, 0, 10);
+	
+	engine->memory = memory;
+	engine->window = Window::create(800, 600, "HelloWorld");
+	engine->renderer = renderer.API(memory);
+	engine->camera = Camera::create(0, 0, 10);
 
-	input.init(engine.window.ctx);
+	input.init(engine->window.ctx);
 
 	INTERNAL_LINKAGE ApplicationInitalizeFunc* application_init = nullptr;
 	INTERNAL_LINKAGE ApplicationUpdateFunc*    application_update = nullptr;
 	INTERNAL_LINKAGE ApplicationRenderFunc*    application_render = nullptr;
 
-	editor->init(&engine);
+	editor->init(engine);
 	load_application_function_pointers(&application_init, &application_update, &application_render);
-	application_init(&engine, string_intern_map);
+	application_init(engine, string_intern_map);
 
 	float dt = 0.0f;
 	float previous_time = Platform::get_seconds_elapsed();
-	while (!engine.window.should_close()) {
+	while (!engine->window.should_close()) {
 		float current_time = Platform::get_seconds_elapsed();
 		dt = current_time - previous_time;
 		previous_time = current_time;
 			
 		input.poll();
-		engine.input = input.input_state;
+		engine->input = input.input_state;
 
 		Platform::FileTime new_time = Platform::get_file_modification_time(dll_name);
 		if (Platform::compare_file_modification_time(new_time, last_write_time) == false) {
 			load_application_function_pointers(nullptr, &application_update, &application_render);
-			engine.reloaded_dll = true;
+			engine->reloaded_dll = true;
 		}
 
-		if (application_update) application_update(&engine, string_intern_map, dt);
-		if (application_render) application_render(&engine, string_intern_map, dt);
-		engine.renderer.execute_request();
-		if (editor) editor->render(&engine);
+		if (application_update) application_update(engine, string_intern_map, dt);
+		if (application_render) application_render(engine, string_intern_map, dt);
+		engine->renderer.execute_request();
+		if (editor) editor->render(engine);
 		
-		engine.reloaded_dll = false;
-		engine.window.pump_messages();
+		engine->reloaded_dll = false;
+		engine->window.pump_messages();
 	}
 	
 	platform_allocator.free(program_memory);

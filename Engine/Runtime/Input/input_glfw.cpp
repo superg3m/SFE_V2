@@ -1,12 +1,14 @@
 #include "input.hpp"
 #include "../../Vendor/vendor.hpp"
+#include "../../API/api.hpp"
 
 struct GLFW_Context {
 	int glfw_key_map[KEY_CODE_COUNT] = {-1};
 	GLFWwindow* window = nullptr;
 };
 
-GLFW_Context ctx; 
+extern Engine* engine;
+GLFW_Context ctx;
 
 INTERNAL_LINKAGE KeyState updated_key_state(KeyState state, bool down) {
 	if (down) {
@@ -16,6 +18,34 @@ INTERNAL_LINKAGE KeyState updated_key_state(KeyState state, bool down) {
 		KeyState new_state = (state == KeyState::DOWN || state == KeyState::PRESSED) ? KeyState::RELEASED : KeyState::UP;
 		return new_state;
 	}
+}
+
+void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
+	static bool first = true;
+	static float last_mouse_x;
+	static float last_mouse_y;
+
+	if (first) {
+		last_mouse_x = mouse_x;
+		last_mouse_y = mouse_y;
+		first = false;
+		return;
+	}
+
+	float xoffset = mouse_x - last_mouse_x;
+	float yoffset = last_mouse_y - mouse_y;
+
+	last_mouse_x = mouse_x;
+	last_mouse_y = mouse_y;
+
+	if (engine->window.capture_mouse) {
+		engine->camera.process_mouse_movement(xoffset, yoffset);
+	}
+}
+
+
+void scroll(GLFWwindow* window, double xoffset, double yoffset) {
+	engine->camera.process_mouse_scroll((float)yoffset);
 }
 
 void InputSystem::init(void* window) {
@@ -91,12 +121,22 @@ void InputSystem::init(void* window) {
 	ctx.glfw_key_map[KEY_F11] = GLFW_KEY_F11;
 	ctx.glfw_key_map[KEY_F12] = GLFW_KEY_F12;
 
-	ctx.glfw_key_map[MOUSE_BUTTON_LEFT] = GLFW_MOUSE_BUTTON_LEFT;   
-	ctx.glfw_key_map[MOUSE_BUTTON_RIGHT] = GLFW_MOUSE_BUTTON_RIGHT;  
-	ctx.glfw_key_map[MOUSE_BUTTON_MIDDLE] = GLFW_MOUSE_BUTTON_MIDDLE; 
+	ctx.glfw_key_map[MOUSE_BUTTON_LEFT] = GLFW_MOUSE_BUTTON_LEFT;
+	ctx.glfw_key_map[MOUSE_BUTTON_RIGHT] = GLFW_MOUSE_BUTTON_RIGHT;
+	ctx.glfw_key_map[MOUSE_BUTTON_MIDDLE] = GLFW_MOUSE_BUTTON_MIDDLE;
+
+	glfwSetCursorPosCallback((GLFWwindow*)window, mouse);
+	glfwSetScrollCallback((GLFWwindow*)window, scroll);
 }
 
 void InputSystem::poll() {
+	static bool previous_captured_mouse = engine->window.capture_mouse;
+
+	if (previous_captured_mouse != engine->window.capture_mouse) {
+		previous_captured_mouse = engine->window.capture_mouse;
+		glfwSetInputMode((GLFWwindow*)engine->window.ctx, GLFW_CURSOR, engine->window.capture_mouse ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+	}
+
 	for (int key_code = 0 ; key_code < KEY_CODE_COUNT; key_code++) {
 		KeyState key_state = this->input_state.keys[key_code];
 		if (key_state == KeyState::PRESSED) {
@@ -116,37 +156,3 @@ void InputSystem::poll() {
 		this->input_state.keys[key_code] = updated_key_state(key_state, glfw_state != GLFW_RELEASE);
 	}
 }
-
-/*
-void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
-	static bool first = true;
-	static float last_mouse_x;
-	static float last_mouse_y;
-
-	if (first) {
-		last_mouse_x = mouse_x;
-		last_mouse_y = mouse_y;
-		first = false;
-		return;
-	}
-
-	float xoffset = mouse_x - last_mouse_x;
-	float yoffset = last_mouse_y - mouse_y;
-
-	last_mouse_x = mouse_x;
-	last_mouse_y = mouse_y;
-
-	if (engine->mouse_captured) {
-		engine->camera.process_mouse_movement(xoffset, yoffset);
-	}
-}
-
-void window_size_callback(GLFWwindow* window, int window_width, int window_height) {
-	engine->renderer.WINDOW_WIDTH = window_width;
-	engine->renderer.WINDOW_HEIGHT = window_height;
-}
-
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-	engine->camera.process_mouse_scroll((float)yoffset);
-}
-*/
