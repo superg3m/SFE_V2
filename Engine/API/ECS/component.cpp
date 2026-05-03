@@ -1,7 +1,7 @@
 #include "component.hpp"
 #include "entity.hpp"
-#include "../Renderer/renderer_api.hpp"
 
+/*
 void PlayerControllerComponent::update(float dt) {
 	StatusComponent* status = this->owner->GetComponent<StatusComponent>();
 	HealthComponent* health = this->owner->GetComponent<HealthComponent>();
@@ -9,13 +9,12 @@ void PlayerControllerComponent::update(float dt) {
 	if (status && status->stunned)  {
 		return;
 	}
-
-	/*
+	
 	if (Input::GetKeyDown(KEY_A)) {
 		this->owner.position.x -= 1.0f;
 	}
-	*/
 }
+*/
 
 /*
 void MeshComponent::update(float dt) {

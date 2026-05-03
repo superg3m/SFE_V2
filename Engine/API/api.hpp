@@ -1,10 +1,10 @@
 #pragma once
 
+#include "ECS/ecs.hpp"
 #include "../Core/core.hpp"
 #include "../Runtime/Input/input_api.hpp"
 #include "../Runtime/WindowCreation/window_creation.hpp"
 #include "../Runtime/Renderer/renderer_api.hpp"
-#include "../Runtime/ECS/ecs.hpp"
 
 struct Engine {
 	MemoryContext memory = {};

@@ -53,8 +53,8 @@ struct Entity {
 	bool active = true;
 
 	Entity() = default;
+	
 	void reparent(Scene* scene);
-
 	EntityHandle find_by_name(Scene* scene, String name);
 
 	void update(float dt) {

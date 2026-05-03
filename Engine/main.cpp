@@ -89,6 +89,7 @@ int main() {
 	Editor editor = {};
 	editor.init(engine);
 
+	RUNTIME_ASSERT(Platform::file_exists(dll_name));
 	load_application_function_pointers(&application_init, &application_update, &application_render);
 	application_init(engine, string_intern_map);
 

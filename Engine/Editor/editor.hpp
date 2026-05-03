@@ -1,9 +1,7 @@
 #pragma once
 
-
 #include "../../Game/game.hpp"
 #include "../Runtime/Renderer/renderer.hpp"
-#include "../Runtime/ECS/ecs.hpp"
 #include "../../Vendor/vendor.hpp"
 
 // https://www.reddit.com/r/cpp_questions/comments/x0ypqt/imgui_tree_view_implementation/

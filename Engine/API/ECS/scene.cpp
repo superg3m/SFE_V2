@@ -32,9 +32,22 @@ bool Scene::set_parent(EntityHandle entity, EntityHandle new_parent) {
 	// 3. A parent my not have a parent of a child or decendent
 	Entity& root_slot = this->entities.get(this->root.handle);
 	Entity& entity_slot = this->entities.get(entity.handle);
-	Entity& current_parent_slot = this->entities.get(entity_slot.parent.handle);
 	Entity& new_parent_slot = this->entities.get(new_parent.handle);
+	if (entity_slot.parent == EntityHandle::invalid()) {
+		new_parent_slot.children.append(entity);
+		entity_slot.parent = new_parent;
+		return true;
+	}
 
+	Entity& current_parent_slot = this->entities.get(entity_slot.parent.handle);
+	bool self_parent = entity_slot.self == new_parent_slot.self;
+	bool same_parent = current_parent_slot.self == new_parent_slot.self;
+	if (self_parent || same_parent) return false;
+
+	bool current_parent_root = root_slot.self == current_parent_slot.self;
+	bool new_parent_root = root_slot.self == new_parent_slot.self;
+
+	/*
 	bool current_parent_root = root_slot.self == current_parent_slot.self;
 	bool new_parent_root = root_slot.self == new_parent_slot.self;
 	if (current_parent_root && new_parent_root) {
@@ -46,10 +59,7 @@ bool Scene::set_parent(EntityHandle entity, EntityHandle new_parent) {
 
 		return false;
 	}
-
-	bool self_parent = entity_slot.self == new_parent_slot.self;
-	bool same_parent = current_parent_slot.self == new_parent_slot.self;
-	if (self_parent || same_parent) return false;
+	*/
 
 	if (new_parent_root) {
 		if (!current_parent_root) {
