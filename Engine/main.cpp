@@ -71,18 +71,13 @@ int main() {
 	Platform::init(); // I hate this inconsistency, maybe call it MemorySystem, PlatformSystem, InputSystem, WindowCreationSystem
 	{
 		engine = (Engine*)memory.permanent_allocator.malloc(sizeof(Engine), alignof(Engine));
-		*engine = {};
-
 		string_intern_map = (Hashmap<String, String>*)memory.permanent_allocator.malloc(sizeof(Hashmap<String, String>), alignof(Hashmap<String, String>));
-		*string_intern_map = Hashmap<String, String>(memory.permanent_allocator);
 	}
 
 	InputSystem input = {};
 	Renderer<OpenGL> renderer = {};
-
-	engine->memory = memory;
-	engine->window = Window::create(800, 600, "HelloWorld");
-	engine->renderer = renderer.API(memory);
+	*engine = Engine::create(memory, input.input_state, renderer.API(memory), Window::create(800, 600, "HelloWorld"));
+	*string_intern_map = Hashmap<String, String>(memory.permanent_allocator);
 	engine->camera = Camera::create(0, 0, 10);
 
 	input.init(engine->window.ctx);
@@ -93,6 +88,7 @@ int main() {
 
 	Editor editor = {};
 	editor.init(engine);
+
 	load_application_function_pointers(&application_init, &application_update, &application_render);
 	application_init(engine, string_intern_map);
 

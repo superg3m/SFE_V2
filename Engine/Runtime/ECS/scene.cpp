@@ -4,7 +4,10 @@
 Scene Scene::create(MemoryContext memory) {
 	Scene ret = {};
 	ret.memory = memory = memory;
-	ret.root = ret.create_entity(STR("ROOT"), EntityHandle::invalid());
+	ret.root = ret.entities.acquire();
+	Entity& root_slot = ret.entities.get(ret.root.handle);
+	root_slot.name = STR("ROOT");
+	root_slot.parent = EntityHandle::invalid();
 
 	return ret;
 }
@@ -27,7 +30,6 @@ bool Scene::set_parent(EntityHandle entity, EntityHandle new_parent) {
 	// 1. You may not reparent to yourself
 	// 2. You may not reparent to to your current parent
 	// 3. A parent my not have a parent of a child or decendent
-
 	Entity& root_slot = this->entities.get(this->root.handle);
 	Entity& entity_slot = this->entities.get(entity.handle);
 	Entity& current_parent_slot = this->entities.get(entity_slot.parent.handle);

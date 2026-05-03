@@ -4,7 +4,7 @@
 #include "../Runtime/Input/input_api.hpp"
 #include "../Runtime/WindowCreation/window_creation.hpp"
 #include "../Runtime/Renderer/renderer_api.hpp"
-// #include "../Runtime/ECS/entity.hpp"
+#include "../Runtime/ECS/ecs.hpp"
 
 struct Engine {
 	MemoryContext memory = {};
@@ -12,8 +12,21 @@ struct Engine {
 	RenderAPI renderer = {};
 	Window window = {};
 	Camera camera = {};
+	Scene scene = {};
 	bool reloaded_dll = false;
 	void* application_state = nullptr;
+
+	static Engine create(MemoryContext memory, InputState input, RenderAPI renderer, Window window) {
+		Engine ret = {};
+		ret.memory = memory;
+		ret.input = input;
+		ret.renderer = renderer;
+		ret.window = window;
+
+		ret.scene = Scene::create(memory);
+
+		return ret;
+	}
 
 	Mat4 get_view_matrix() {
 		return this->camera.get_view_matrix();

@@ -6,7 +6,8 @@
 #include "../Runtime/ECS/ecs.hpp"
 #include "../../Vendor/vendor.hpp"
 
-inline void draw_entity_node(Scene* scene, EntityHandle entity, EntityHandle& selected) {
+// https://www.reddit.com/r/cpp_questions/comments/x0ypqt/imgui_tree_view_implementation/
+inline void render_tree_hierarchy(Scene* scene, EntityHandle entity, EntityHandle& selected) {
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
 	Entity& entity_slot = scene->entities.get(entity.handle); 
 
@@ -26,7 +27,7 @@ inline void draw_entity_node(Scene* scene, EntityHandle entity, EntityHandle& se
 
     if (open) {
         for (EntityHandle child : entity_slot.children) {
-            draw_entity_node(scene, child, selected);
+            render_tree_hierarchy(scene, child, selected);
         }
         ImGui::TreePop();
     }
@@ -63,7 +64,6 @@ struct Editor {
 			ImGui::SetNextWindowSize(viewport->Size);
 			ImGui::SetNextWindowViewport(viewport->ID);
 
-			// THIS is what actually removes the background
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
@@ -96,42 +96,11 @@ struct Editor {
 		}
 		*/
 
-		/*
 		{
 			ImGui::Begin("Hierarchy");
-				auto draw_entity_node = [&](auto&& self, Entity* e) -> void {
-					ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
-
-					if (e->children.count == 0)
-						flags |= ImGuiTreeNodeFlags_Leaf;
-
-					if (app->selected_entity == e->handle)
-						flags |= ImGuiTreeNodeFlags_Selected;
-
-					bool open = ImGui::TreeNodeEx(
-						(void*)(uintptr_t)e->handle.id,
-						flags,
-						"%s",
-						e->name
-					);
-
-					if (ImGui::IsItemClicked())
-						app->selected_entity = e->handle;
-
-					if (open) {
-						for (Entity* child : e->children)
-							self(self, child);
-
-						ImGui::TreePop();
-					}
-				};
-
-				for (Entity* root : app->scene->roots) {
-					draw_entity_node(draw_entity_node, root);
-				}
+				render_tree_hierarchy(&engine->scene, engine->scene.root, this->selected);
 			ImGui::End();
 		}
-		*/
 
 		/*
 		{
