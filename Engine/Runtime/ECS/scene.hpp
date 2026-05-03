@@ -12,7 +12,7 @@ struct Scene {
 
 	static Scene create(MemoryContext memory);
 	void update(float dt);
-	EntityHandle create_entity(String name, EntityHandle parent = EntityHandle::invalid());
+	EntityHandle create_entity(String name, EntityHandle parent);
 	bool set_parent(EntityHandle entity, EntityHandle parent);
 
 	template<typename T>

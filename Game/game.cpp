@@ -5,6 +5,32 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 	AppState* app = (AppState*)engine->application_state;
 	*app = {};
 
+	/*
+	EntityHandle cube = Engine->scene->create_entity(STR_INTERN("cube"), engine->scene->root);
+	Entity& cube_slot = Engine->scene->entities.get(cube);
+
+	app->cube_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/cube.vert"), STR_INTERN("../../../Game/Assets/Shaders/cube.frag")});
+	app->material = engine->renderer.create_material(app->cube_shader);
+	MeshHandle mesh = engine->renderer.create_mesh_cube(app->material);
+	cube_slot.add_component<MeshComponent>(mesh);
+	*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	app->opaque_pipeline = Pipeline{
 		.rasterizer = {
 			.fill = true

@@ -4,7 +4,7 @@
 Scene Scene::create(MemoryContext memory) {
 	Scene ret = {};
 	ret.memory = memory = memory;
-	ret.root = ret.create_entity(STR("ROOT"));
+	ret.root = ret.create_entity(STR("ROOT"), EntityHandle::invalid());
 
 	return ret;
 }

@@ -55,6 +55,8 @@ struct Entity {
 	Entity() = default;
 	void reparent(Scene* scene);
 
+	EntityHandle find_by_name(Scene* scene, String name);
+
 	void update(float dt) {
 		for (const auto& entry : this->components) {
 			Component* c = entry.value;

@@ -45,7 +45,7 @@ struct Editor {
 		ImGuizmo::BeginFrame();
 
 		{
-			ImGuiWindowFlags host_flags = (
+			ImGuiWindowFlags flags = (
 				ImGuiWindowFlags_NoTitleBar |
 				ImGuiWindowFlags_NoCollapse |
 				ImGuiWindowFlags_NoResize |
@@ -65,34 +65,30 @@ struct Editor {
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
 
-			ImGui::Begin("DockspaceRoot", nullptr, host_flags);
+			ImGui::Begin("DockspaceRoot", nullptr, flags);
+				ImGui::PopStyleColor();
+				ImGui::PopStyleVar(2);
 
-			ImGui::PopStyleColor();
-			ImGui::PopStyleVar(2);
-
-			ImGuiID dockspace_id = ImGui::GetID("Dockspace");
-			ImGui::DockSpace(dockspace_id, ImVec2(0, 0), ImGuiDockNodeFlags_PassthruCentralNode);
-
+				ImGuiID dockspace_id = ImGui::GetID("Dockspace");
+				ImGui::DockSpace(dockspace_id, ImVec2(0, 0), ImGuiDockNodeFlags_PassthruCentralNode);
 			ImGui::End();
 		}
 
 		/*
 		{
 			ImGui::Begin("Viewport");
+				ImVec2 size = ImGui::GetContentRegionAvail();
 
-			ImVec2 size = ImGui::GetContentRegionAvail();
+				if (size.x > 0 && size.y > 0) {
+					// renderer->resize_viewport((u32)size.x, (u32)size.y);
+				}
 
-			if (size.x > 0 && size.y > 0) {
-				// renderer->resize_viewport((u32)size.x, (u32)size.y);
-			}
-
-			ImGui::Image(
-				(ImTextureID)(uintptr_t)renderer->viewport_color_texture,
-				size,
-				ImVec2(0, 1),
-				ImVec2(1, 0)
-			);
-
+				ImGui::Image(
+					(ImTextureID)(uintptr_t)renderer->viewport_color_texture,
+					size,
+					ImVec2(0, 1),
+					ImVec2(1, 0)
+				);
 			ImGui::End();
 		}
 		*/
@@ -100,38 +96,36 @@ struct Editor {
 		/*
 		{
 			ImGui::Begin("Hierarchy");
+				auto draw_entity_node = [&](auto&& self, Entity* e) -> void {
+					ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
 
-			auto draw_entity_node = [&](auto&& self, Entity* e) -> void {
-				ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+					if (e->children.count == 0)
+						flags |= ImGuiTreeNodeFlags_Leaf;
 
-				if (e->children.count == 0)
-					flags |= ImGuiTreeNodeFlags_Leaf;
+					if (app->selected_entity == e->handle)
+						flags |= ImGuiTreeNodeFlags_Selected;
 
-				if (app->selected_entity == e->handle)
-					flags |= ImGuiTreeNodeFlags_Selected;
+					bool open = ImGui::TreeNodeEx(
+						(void*)(uintptr_t)e->handle.id,
+						flags,
+						"%s",
+						e->name
+					);
 
-				bool open = ImGui::TreeNodeEx(
-					(void*)(uintptr_t)e->handle.id,
-					flags,
-					"%s",
-					e->name
-				);
+					if (ImGui::IsItemClicked())
+						app->selected_entity = e->handle;
 
-				if (ImGui::IsItemClicked())
-					app->selected_entity = e->handle;
+					if (open) {
+						for (Entity* child : e->children)
+							self(self, child);
 
-				if (open) {
-					for (Entity* child : e->children)
-						self(self, child);
+						ImGui::TreePop();
+					}
+				};
 
-					ImGui::TreePop();
+				for (Entity* root : app->scene->roots) {
+					draw_entity_node(draw_entity_node, root);
 				}
-			};
-s
-			for (Entity* root : app->scene->roots) {
-				draw_entity_node(draw_entity_node, root);
-			}
-
 			ImGui::End();
 		}
 		*/
@@ -160,26 +154,22 @@ s
 
 		{
 			ImGui::Begin("Assets");
+				Vector<Handle> texture_handles = renderer->backend.textures.handle_list(engine->memory.frame_allocator);
+				for (Handle texture_handle : texture_handles) {
+					auto texture = renderer->backend.textures.get(texture_handle);
 
-			Vector<Handle> texture_handles =
-				renderer->backend.textures.handle_list(engine->memory.frame_allocator);
+					ImGui::Image(
+						(ImTextureID)(uintptr_t)texture.id,
+						ImVec2(64, 64),
+						ImVec2(0, 1), ImVec2(1, 0)
+					);
 
-			for (Handle texture_handle : texture_handles) {
-				auto texture = renderer->backend.textures.get(texture_handle);
+					if (ImGui::IsItemClicked()) {
+						app->face_texture.handle = texture_handle;
+					}
 
-				ImGui::Image(
-					(ImTextureID)(uintptr_t)texture.id,
-					ImVec2(64, 64),
-					ImVec2(0, 1), ImVec2(1, 0)
-				);
-
-				if (ImGui::IsItemClicked()) {
-					app->face_texture.handle = texture_handle;
+					ImGui::SameLine();
 				}
-
-				ImGui::SameLine();
-			}
-
 			ImGui::End();
 		}
 
