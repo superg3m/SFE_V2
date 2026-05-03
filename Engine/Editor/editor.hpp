@@ -3,36 +3,39 @@
 
 #include "../../Game/game.hpp"
 #include "../Runtime/Renderer/renderer.hpp"
+#include "../Runtime/ECS/ecs.hpp"
 #include "../../Vendor/vendor.hpp"
 
-/*
-inline void draw_entity_node(Entity* e, EntityHandle selected) {
+inline void draw_entity_node(Scene* scene, EntityHandle entity, EntityHandle& selected) {
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
+	Entity& entity_slot = scene->entities.get(entity.handle); 
 
-    if (e->children.count == 0) {
+    if (entity_slot.children.count == 0) {
         flags |= ImGuiTreeNodeFlags_Leaf;
     }
 
-    if (selected == e->handle) {
+    if (entity == selected) {
         flags |= ImGuiTreeNodeFlags_Selected;
     }
 
-    bool open = ImGui::TreeNodeEx((void*)e->handle.id, flags, "%s", e->name);
+	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(entity_slot.name);
+    bool open = ImGui::TreeNodeEx(entity_slot.name.data, flags);
     if (ImGui::IsItemClicked()) {
-        selected = e->handle;
+        selected = entity;
     }
 
     if (open) {
-        for (Entity* child : e->children) {
-            draw_entity_node(child, selected);
+        for (EntityHandle child : entity_slot.children) {
+            draw_entity_node(scene, child, selected);
         }
         ImGui::TreePop();
     }
 }
-*/
 
 struct Engine;
 struct Editor {
+	EntityHandle selected = EntityHandle::invalid();
+
 	void init(Engine* engine);
 
 	template<typename B>
