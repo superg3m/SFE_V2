@@ -1,8 +1,6 @@
-#include <component.hpp>
-#include <entity.hpp>
-#include <mesh.hpp>
-#include <render_queue.hpp>
-#include <gpu_buffers.hpp>
+#include "component.hpp"
+#include "entity.hpp"
+#include "../Renderer/renderer_api.hpp"
 
 void PlayerControllerComponent::update(float dt) {
 	StatusComponent* status = this->owner->GetComponent<StatusComponent>();
@@ -19,9 +17,10 @@ void PlayerControllerComponent::update(float dt) {
 	*/
 }
 
+/*
 void MeshComponent::update(float dt) {
-	glm::mat4 view          = glm::mat4(1.0f);
-	glm::mat4 projection    = glm::mat4(1.0f);
+	Mat4 view          = Mat4(1.0f);
+	Mat4 projection    = Mat4(1.0f);
 
 	OpenGL::RenderCommandOpaque command = {};
 	command.vao = this->vao;
@@ -35,7 +34,6 @@ void MeshComponent::update(float dt) {
 		this->queue->submit(command);
 	}
 
-	/*
 	if (this->should_render_aabb_mesh) {
 		OpenGL::RenderCommandOpaque aabb_command = {};
 		aabb_command.shader = this->shader;
@@ -46,5 +44,5 @@ void MeshComponent::update(float dt) {
 
 		this->queue->submit(aabb_command);
 	}
-	*/
 }
+*/

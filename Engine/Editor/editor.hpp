@@ -169,7 +169,8 @@ s
 
 				ImGui::Image(
 					(ImTextureID)(uintptr_t)texture.id,
-					ImVec2(64, 64)
+					ImVec2(64, 64),
+					ImVec2(0, 1), ImVec2(1, 0)
 				);
 
 				if (ImGui::IsItemClicked()) {

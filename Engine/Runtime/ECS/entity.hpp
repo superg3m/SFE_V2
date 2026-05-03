@@ -1,8 +1,10 @@
 #pragma once
 
-#include <core.hpp>
-#include <component.hpp>
+#include "../../Core/core.hpp"
 #include <typeindex>
+
+#include "entity_handle.hpp"
+#include "component.hpp"
 
 /*
 - [X] entity manager, should have like all the entities[256], should have:
@@ -31,47 +33,32 @@ T* GetMyComponent<T>() { \
 }                        \
 
 
-struct EntityHandle {
-	Handle handle;
-	static EntityHandle invalid() {
-		return Handle::invalid();
-	}
-	EntityHandle(Handle handle) {
-		this->handle = handle;
-	}
-
-	bool operator==(EntityHandle& other) const {
-		return this->handle == other.handle;
-	}
-};
-
 struct Transform {
 	Vec3 position = Vec3(0);
 	Quat rotation = Quat::identity();
 	Vec3 scale    = Vec3(0);
 };
 
+struct Scene;
+struct EntityManager;
 struct Entity {
-	EntityHandle self;
+	EntityHandle self = EntityHandle::invalid();
+	EntityHandle parent = EntityHandle::invalid();
+	Vector<EntityHandle> children = {};
+	Hashmap<std::type_index, Component*> components; // TODO(Jovanni): Test this to make sure it works
 
-	String name;
+	String name = {};
+	Transform transform = {};
 	bool alive = true; 
 	bool active = true;
-	
-	EntityHandle parent;
-	Vector<EntityHandle> children;
-	Hashmap<std::type_index, Component*> components; // TODO(Jovanni): Test this to make sure it works
-	Transform transform;
 
-	bool operator==(Entity &other) const {
-		return this->self.handle == other.self.handle;
-	} 
-
-	void reparent(); 
+	Entity() = default;
+	void reparent(Scene* scene);
 
 	void update(float dt) {
-		for (const auto [k, v] : this->components) {
-			v->update(dt);
+		for (const auto& entry : this->components) {
+			Component* c = entry.value;
+			c->update(dt);
 		}
 	}
 
@@ -93,11 +80,12 @@ struct Entity {
 	};
 
 	Mat4 get_world_transform() const {
-		if (this->parent) {
-			return this->get_world_transform() * this->get_local_transform();
+		if (this->parent == EntityHandle::invalid()) { // root
+			return this->get_local_transform();
+			
 		}
 		
-		return this->get_local_transform();
+		return this->get_world_transform() * this->get_local_transform();
 	}
 
 	static Entity* load_gltf(const char* path);

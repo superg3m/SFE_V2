@@ -29,8 +29,7 @@ struct HealthComponent : public Component {
 	int max_health = 0;
 
 	HealthComponent(Entity* owner, int max_health);
-	void update(float dt) override;
-
+	void update(float dt) override {};
 	void Damage(int dmg);
 };
 
@@ -50,7 +49,7 @@ struct StatusComponent : public Component {
 	Timer status_timer = {};
 
 	StatusComponent(Entity* owner, bool burnable, bool stunnable);
-	void update(float dt) override;
+	void update(float dt) override {};
 
 	void StartBurn(float duration, int burn_dmg_per_tick);
 	void StopBurn();
@@ -68,13 +67,14 @@ struct MeshComponent : public Component {
 
 	Pipeline pipeline;
 	MeshHandle mesh = MeshHandle::invalid();
+	Mat4 model = Mat4::identity();
 	int entry_index = 0;
 
 	bool should_render_mesh = true;
 	bool render_mesh_wireframe = false;
 
-	MeshComponent(Entity* owner, Pipeline pipeline, MeshHandle mesh, int entry_index = 0;, bool should_render_mesh = true);
-	void update(float dt) override;
+	MeshComponent(Entity* owner, Pipeline pipeline, MeshHandle mesh, int entry_index = 0, bool should_render_mesh = true);
+	void update(float dt) override {};
 };
 
 /*
