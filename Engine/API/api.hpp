@@ -4,7 +4,7 @@
 #include "../Runtime/Input/input_api.hpp"
 #include "../Runtime/WindowCreation/window_creation.hpp"
 #include "../Runtime/Renderer/renderer_api.hpp"
-#include "../Runtime/ECS/entity.hpp"
+// #include "../Runtime/ECS/entity.hpp"
 
 struct Engine {
 	MemoryContext memory = {};

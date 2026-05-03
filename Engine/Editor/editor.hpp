@@ -4,6 +4,7 @@
 #include "../Runtime/Renderer/renderer.hpp"
 #include "../../Game/game.hpp"
 
+/*
 inline void draw_entity_node(Entity* e, EntityHandle selected) {
     ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow;
 
@@ -27,6 +28,7 @@ inline void draw_entity_node(Entity* e, EntityHandle selected) {
         ImGui::TreePop();
     }
 }
+*/
 
 struct Engine;
 struct Editor {
