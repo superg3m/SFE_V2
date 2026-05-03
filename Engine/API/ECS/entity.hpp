@@ -36,7 +36,20 @@ T* GetMyComponent<T>() { \
 struct Transform {
 	Vec3 position = Vec3(0);
 	Quat rotation = Quat::identity();
-	Vec3 scale    = Vec3(0);
+	Vec3 scale    = Vec3(1);
+
+	Mat4 get_matrix() const {
+		Mat4 matrix = Mat4::identity();
+		matrix = Mat4::scale(matrix, this->scale);
+		matrix = Mat4::rotate(matrix, this->rotation);
+		matrix = Mat4::translate(matrix, this->position);
+
+		return matrix;
+	}
+
+	void set_matrix(Mat4 m) {
+		Mat4::decompose(m, &this->position, &this->rotation, &this->scale);
+	}
 };
 
 struct Scene;
@@ -73,22 +86,11 @@ struct Entity {
 	}
 
 	Mat4 get_local_transform() const {
-		Mat4 matrix = Mat4::identity();
-		matrix = Mat4::scale(matrix, this->transform.scale);
-		matrix = Mat4::rotate(matrix, this->transform.rotation);
-		matrix = Mat4::translate(matrix, this->transform.position);
-
-		return matrix;
+		return this->transform.get_matrix();
 	};
 
-	Mat4 get_world_transform() const {
-		if (this->parent == EntityHandle::invalid()) { // root
-			return this->get_local_transform();
-			
-		}
-		
-		return this->get_world_transform() * this->get_local_transform();
-	}
+	Mat4 get_world_transform(Scene* scene) const;
+	void set_world_transform(Scene* scene, Mat4 world_transform);
 
 	static Entity* load_gltf(const char* path);
 

@@ -52,6 +52,7 @@ inline void render_tree_hierarchy(Scene* scene, EntityHandle entity, EntityHandl
 struct Engine;
 struct Editor {
 	EntityHandle selected = EntityHandle::invalid();
+	ImGuizmo::OPERATION current_gizmo_operation = ImGuizmo::OPERATION::TRANSLATE;
 
 	void init(Engine* engine);
 
@@ -62,6 +63,9 @@ struct Editor {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		ImGuizmo::BeginFrame();
+
+		Mat4 view = engine->get_view_matrix();
+		Mat4 projection = engine->get_projection_matrix();
 
 		// === Full-screen dockspace host window ===
 		{
@@ -125,6 +129,61 @@ struct Editor {
 			ImGui::Begin("Hierarchy");
 			render_tree_hierarchy(&engine->scene, engine->scene.root, this->selected);
 			ImGui::End();
+		}
+
+		{
+			ImGui::Begin("Inspector");
+                if (ImGui::RadioButton("Translate", current_gizmo_operation == ImGuizmo::TRANSLATE)) {
+                    current_gizmo_operation = ImGuizmo::TRANSLATE;
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Rotate", current_gizmo_operation == ImGuizmo::ROTATE)) {
+                    current_gizmo_operation = ImGuizmo::ROTATE;
+                }
+                ImGui::SameLine();
+                if (ImGui::RadioButton("Scale", current_gizmo_operation == ImGuizmo::SCALE)) {
+                    current_gizmo_operation = ImGuizmo::SCALE;
+                }
+
+                if (this->selected != EntityHandle::invalid()) {
+                    #define BUFFER_CAPACITY 256
+                    char buffer[BUFFER_CAPACITY];
+                    int ret = snprintf(buffer, BUFFER_CAPACITY, "Picked Index: %d", this->selected.handle.index);
+                    RUNTIME_ASSERT(ret >= 0);
+                    ImGui::Text("%s", buffer);
+                    // ImGui::Checkbox("Wireframe", &picked_entity.reference->render_wireframe);
+                    // ImGui::Checkbox("Render AABB", &picked_entity.reference->render_aabb);
+                }
+                // ImGui::Checkbox("Demo Window", &show_demo_window);
+                // ImGui::Checkbox("present_picking_framebuffer", &present_picking_framebuffer);
+                // ImGui::ColorEdit4("Bg Color", bg_color);
+            ImGui::End();
+
+			ImGuiWindowFlags flags = (
+				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | 
+				ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | 
+				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBackground
+			);
+
+            ImGui::SetNextWindowPos(ImVec2(0, 0));
+            ImGui::SetNextWindowSize(ImVec2((float)engine->window.WINDOW_WIDTH, (float)engine->window.WINDOW_HEIGHT));
+            ImGui::Begin("GizmoOverlay", nullptr, flags);
+                if (this->selected != EntityHandle::invalid()) {
+					Entity& entity_slot = engine->scene.entities.get(this->selected.handle);
+					
+                    ImGuizmo::SetOrthographic(false);
+                    ImGuizmo::SetDrawlist();
+                    ImGuizmo::SetRect(0, 0, (float)engine->window.WINDOW_WIDTH, (float)engine->window.WINDOW_HEIGHT);
+                    Mat4 viewT = view.transpose();
+                    Mat4 projT = projection.transpose();
+                    Mat4 newTransformT = entity_slot.get_world_transform(&engine->scene).transpose();
+                    bool is_manipulated = ImGuizmo::Manipulate(&viewT.v[0].x, &projT.v[0].x, current_gizmo_operation, ImGuizmo::WORLD, &newTransformT.v[0].x);
+                    if (is_manipulated) {
+                        Mat4 newTransformWorld = newTransformT.transpose();
+                    	entity_slot.set_world_transform(&engine->scene, newTransformWorld);
+                    }
+                }
+            ImGui::End();
 		}
 
 		// === Assets window ===
