@@ -6,7 +6,10 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 	*app = {};
 
 	EntityHandle cube = engine->scene.create_entity(STR_INTERN("cube"), engine->scene.root);
-	Entity& cube_slot = engine->scene.entities.get(cube.handle);
+	EntityHandle cube2 = engine->scene.create_entity(STR_INTERN("cube2"), engine->scene.root);
+	EntityHandle cube3 = engine->scene.create_entity(STR_INTERN("cube3"), engine->scene.root);
+	EntityHandle cube4 = engine->scene.create_entity(STR_INTERN("cube4"), engine->scene.root);
+	// Entity& cube_slot = engine->scene.entities.get(cube.handle);
 
 	// app->cube_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/cube.vert"), STR_INTERN("../../../Game/Assets/Shaders/cube.frag")});
 	// app->material = engine->renderer.create_material(app->cube_shader);

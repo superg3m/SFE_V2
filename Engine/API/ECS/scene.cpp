@@ -6,6 +6,7 @@ Scene Scene::create(MemoryContext memory) {
 	ret.memory = memory = memory;
 	ret.root = ret.entities.acquire();
 	Entity& root_slot = ret.entities.get(ret.root.handle);
+	root_slot.self = ret.root;
 	root_slot.name = STR("ROOT");
 	root_slot.parent = EntityHandle::invalid();
 
@@ -61,45 +62,33 @@ bool Scene::set_parent(EntityHandle entity, EntityHandle new_parent) {
 	}
 	*/
 
+	EntityHandle current_entity = new_parent;
+	while (current_entity != this->root) {
+		if (current_entity == entity) {
+			// NOTE(Jovanni): new_parent is a decendent of current_parent;
+			return false;
+		}
+
+		current_entity = this->entities.get(current_entity.handle).parent;
+	}
+
 	if (new_parent_root) {
 		if (!current_parent_root) {
-			EntityHandle current_entity = new_parent;
-			while (current_entity != this->root) {
-				if (current_entity == entity) {
-					// NOTE(Jovanni): new_parent is a decendent of current_parent;
-					return false;
-				}
-
-				current_entity = this->entities.get(current_entity.handle).parent;
-			}
-
 			s32 index = current_parent_slot.children.find(entity);
 			RUNTIME_ASSERT_MSG(index != -1, "SHOULD BE GUARANTEED TO BE IN THE CHILDREN\n");
 			current_parent_slot.children.unstable_swapback_remove(index);
 		} else {
-			EntityHandle current_entity = new_parent;
-			while (current_entity != this->root) {
-				if (current_entity == entity) {
-					// NOTE(Jovanni): new_parent is a decendent of current_parent;
-					return false;
-				}
-
-				current_entity = this->entities.get(current_entity.handle).parent;
-			}
-
 			s32 index = root_slot.children.find(entity);
 			RUNTIME_ASSERT_MSG(index != -1, "SHOULD BE GUARANTEED TO BE IN THE CHILDREN\n");
 			root_slot.children.unstable_swapback_remove(index);
 		}
 
 		new_parent_slot.children.append(entity);
-	} else {    
-		RUNTIME_ASSERT_MSG(current_parent_root, "The case where its just create or already root parented should already be handled\n");
-
+	} else {   
 		s32 index = current_parent_slot.children.find(entity);
 		RUNTIME_ASSERT_MSG(index != -1,"SHOULD BE GUARANTEED TO BE IN THE CHILDREN\n");
 		current_parent_slot.children.unstable_swapback_remove(index);
-		root_slot.children.append(entity);
+		new_parent_slot.children.append(entity);
 	}
 
 	entity_slot.parent = new_parent;
@@ -110,6 +99,7 @@ bool Scene::set_parent(EntityHandle entity, EntityHandle new_parent) {
 EntityHandle Scene::create_entity(String name, EntityHandle parent) {
 	EntityHandle entity = this->entities.acquire(); 
 	Entity& entity_slot = this->entities.get(entity.handle); 
+	entity_slot.self = entity;
 	entity_slot.name = name;
 	this->set_parent(entity, parent);
 

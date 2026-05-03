@@ -25,5 +25,4 @@ struct AppState {
 	Timer timer = {};
 
 	// editor
-	bool show_demo_window = true;
 };
