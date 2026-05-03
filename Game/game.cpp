@@ -1,6 +1,6 @@
 #include "game.hpp"
 
-EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_intern_map) {
+EXPORT_FN void application_init(Engine* engine, EntityManager* entity_manager, Hashmap<String, String>* string_intern_map) {
 	engine->application_state = engine->memory.permanent_allocator.malloc(sizeof(AppState), alignof(AppState));
 	AppState* app = (AppState*)engine->application_state;
 	*app = {};

@@ -30,6 +30,21 @@ T* GetMyComponent<T>() { \
 	return &_##T;        \
 }                        \
 
+
+struct EntityHandle {
+	Handle handle;
+	static EntityHandle invalid() {
+		return Handle::invalid();
+	}
+	EntityHandle(Handle handle) {
+		this->handle = handle;
+	}
+
+	bool operator==(EntityHandle& other) const {
+		return this->handle == other.handle;
+	}
+};
+
 struct Transform {
 	Vec3 position = Vec3(0);
 	Quat rotation = Quat::identity();
@@ -37,18 +52,22 @@ struct Transform {
 };
 
 struct Entity {
-	EntityHandle handle;
+	EntityHandle self;
 
-	const char* name;
+	String name;
 	bool alive = true; 
 	bool active = true;
 	
-	Entity* parent;
-	Vector<Entity*> children;
+	EntityHandle parent;
+	Vector<EntityHandle> children;
 	Hashmap<std::type_index, Component*> components; // TODO(Jovanni): Test this to make sure it works
 	Transform transform;
 
-	void reparent(); // TODO(Jovanni): yeah gotta write this...
+	bool operator==(Entity &other) const {
+		return this->self.handle == other.self.handle;
+	} 
+
+	void reparent(); 
 
 	void update(float dt) {
 		for (const auto [k, v] : this->components) {
@@ -90,23 +109,25 @@ struct Entity {
 
 	template<typename T>
 	bool HasComponent() {
-		return this->components.count(typeid(T));
+		return this->components.has(typeid(T));
+	}
+
+	template<typename T, typename... Rest>
+	bool HasComponents() {
+		return HasComponent<T>() && HasComponents<Rest...>();
 	}
 
 	template<typename T, typename... Args>
 	void AddComponent(Args&&... args) {
 		T* c = this->GetMyComponent<T>();
 		new (c) T(this, std::forward<Args>(args)...);
-		this->components.insert(std::make_pair(typeid(T), c));
+		this->components.put(typeid(T), c);
 	}
 
 	template<typename T>
 	void RemoveComponent() {
 		T* c = this->GetMyComponent<T>();
-		auto it = this->components.find(typeid(T));
-		if (it != this->components.end()) {
-			this->components.erase(it);
-		}
+		this->components.remove(typeid(T));
 	}
 
 	template<typename T> 
@@ -115,9 +136,4 @@ struct Entity {
 	COMPONENT(HealthComponent)
 	COMPONENT(MeshComponent)
 	COMPONENT(StatusComponent)
-
-private:
-	Entity(const char* name) {
-		this->name = name;
-	}
 };

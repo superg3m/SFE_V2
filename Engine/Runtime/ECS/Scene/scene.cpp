@@ -2,6 +2,11 @@
 #include <entity.hpp>
 #include <entity_manager.hpp>
 
+Scene Scene::create(EntityManager* manager) {
+	Scene ret = {};
+	ret.root = manager->create_entity(STR("ROOT"));
+}
+ 
 void Scene::update(float dt) {
 	for (int i = 0; i < this->root.size(); i++) {
 		Entity* child = this->root[i];
@@ -13,55 +18,57 @@ void Scene::update(float dt) {
 	}
 }
 
-void Scene::clear() {
-	this->root.clear();
-}
-
-bool Scene::set_parent(Entity* entity, Entity* new_parent) {
+bool Scene::set_parent(EntityManager* manager, EntityHandle entity, EntityHandle new_parent) {
 	// NOTE(Jovanni):
 	// 1. You may not reparent to yourself
 	// 2. You may not reparent to to your current parent
 	// 3. A parent my not have a parent of a child or decendent
 
-	Entity* current_parent = entity->parent;
-	if (entity == new_parent || (current_parent && (current_parent == new_parent))) return false;
+	Entity& root_slot = manager->entities.get(this->root.handle);
+	Entity& entity_slot = manager->entities.get(entity.handle);
+	Entity& current_parent_slot = manager->entities.get(entity_slot.parent.handle);
+	Entity& new_parent_slot = manager->entities.get(new_parent.handle);
 
-	if ((current_parent == nullptr) && (new_parent == nullptr)) {
-		const auto it = std::find(this->root.begin(), this->root.end(), entity);
-		bool found = it != this->root.end();
-		if (!found) {
-			this->root.push_back(entity);
+	bool current_parent_root = root_slot == current_parent_slot;
+	bool new_parent_root = root_slot == new_parent_slot;
+	if (current_parent_root && new_parent_root) {
+		s32 index = root_slot.children.find(entity);
+		if (index == -1) {
+			root_slot.children.append(entity);
 			return true;
 		}
 
 		return false;
 	}
 
-	if (new_parent) {
-		if (current_parent) {
-			Entity* current_entity = new_parent;
-			while (current_entity) {
+	bool self_parent = entity_slot == new_parent_slot;
+	bool same_parent = current_parent_slot == new_parent_slot;
+	if (self_parent || same_parent) return false;
+
+	if (new_parent_root) {
+		if (current_parent_root) {
+			EntityHandle current_entity = new_parent;
+			while (current_entity != this->root) {
 				if (current_entity == entity) {
 					// NOTE(Jovanni): new_parent is a decendent of current_parent;
 					return false;
 				}
 
-				current_entity = current_entity->parent;
+				current_entity = manager->entities.get(current_entity.handle).parent;
 			}
 
-			const auto it = std::find(current_parent->children.begin(), current_parent->children.end(), entity);
-			bool found = it != this->root.end();
-			RUNTIME_ASSERT_MSG(found, "SHOULD BE GUARANTEED TO BE IN THE CHILDREN\n");
-			current_parent->children.erase(it);
+			s32 index = current_parent_slot.children.find(entity);
+			RUNTIME_ASSERT_MSG(index != -1, "SHOULD BE GUARANTEED TO BE IN THE CHILDREN\n");
+			current_parent_slot.children.unstable_swapback_remove(index);
 		} else {
-			Entity* current_entity = new_parent;
-			while (current_entity) {
+			EntityHandle current_entity = new_parent;
+			while (current_entity != this->root) {
 				if (current_entity == entity) {
 					// NOTE(Jovanni): new_parent is a decendent of current_parent;
 					return false;
 				}
 
-				current_entity = current_entity->parent;
+				current_entity = manager->entities.get(current_entity.handle).parent;
 			}
 
 			const auto it = std::find(this->root.begin(), this->root.begin(), entity);
@@ -86,7 +93,7 @@ bool Scene::set_parent(Entity* entity, Entity* new_parent) {
 	return true;
 }
 
-Entity* Scene::create_entity(EntityManager* manager, const char* name, Entity* parent) {
+Entity* Scene::create_entity(EntityManager* manager, String name, EntityHandle parent) {
 	Entity* entity = manager->create_entity();
 	entity->name = name;
 	this->set_parent(entity, parent);
