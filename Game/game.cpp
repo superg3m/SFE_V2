@@ -1,34 +1,5 @@
 #include "game.hpp"
 
-// engine->set_main_camera(app->camera);
-// engine->get_view_matrix();
-// engine->get_projection_matrix();
-
-/*
-renderer.material_set_uniforms(app->material, {
-	{STR_INTERN("uContainer"), app->container_texture},
-	{STR_INTERN("uFace"), app->face_texture},
-});
-
-Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-renderer.bind_vertex_buffer(app->cube_mesh, app->instance_cube_vbo);
-renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
-
-PlatformCommand()
-RenderCommand()
-
-// https://docs.unity3d.com/6000.4/Documentation/ScriptReference/Rendering.CommandBuffer.html
-
-model = Mat4::translate(model, 0, 5, 0);
-pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-
-CommandBufferHandle cmd = renderer.begin_frame()
-	cmd.bind_pipeline(pipeline);
-	cmd.draw_mesh(app->backpack_mesh, model, view, projection);
-renderer.end_frame(cmd)
-
-*/
-
 EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_intern_map) {
 	engine->application_state = engine->memory.permanent_allocator.malloc(sizeof(AppState), alignof(AppState));
 	AppState* app = (AppState*)engine->application_state;
@@ -102,7 +73,6 @@ EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* strin
 		engine->window.close = true;
 	}
 
-	// make this an engine thing internally?
 	if (engine->input.get_key_pressed(KEY_C)) {
 		engine->window.capture_mouse = !engine->window.capture_mouse;
 	}
@@ -185,11 +155,30 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 // https://www.youtube.com/watch?v=QAeRxfeFAo0
 
 /*
-- [] seperate dll from all the platform code, make platform be its own system like input (remove glfw from platform code...)
+The end goal of this project is the following:
+- [] robust rendering system (account for framebuffer objects)
+	- [] texture for depth, color, light, normals
+		- These shouldn't be in the shader, theres should just be thier own shader and i just swap out the shader
+		that way its easy and doesn't clutter up shaders.
+
+- [] Show entity heiarchy
+- [] Animations
+- [] Physics (collisions, shooting)
+- [] Multiple Cameras
+- [] pickable entities (probably ray based) (maybe frame buffer) (but also maybe just tree based?)
+- [] Hot reloading
+- [] Material system thats nice and hotswappable
+- [] Scene system with nice lighting abilities (spotlight, sunlight, pointlights)
+- [-] nice docking imgui and imguizmo
+- [] AS FEW Syscalls during a frame as possible!!!
+- [] Profile and code instrumentation in imgui
+
 - [] Remove all constructors except for containers and other places it makes sense, in those places make sure you have a default constructor
-- [] Make sure you have as close to general allocation. I'm very very concerned about allocations across dll boundaries
-- [] AABB renderer
-- [] inside hte shader directory I should have a manifest that keep track of the last modified stat
+- [] Make sure you have as few general allocation as possible I'm very very concerned about allocations across dll boundaries
+- [] AABB render (*maybe you can do this by sying draw mesh, but only this range of entries? Little bit hacky but works)
+- [] Entity stuff
+- [] 3d grid of lines (should be simple?)
+- [] inside hte shader directory I should have a manifest that keep track of the last modified time (so I can not have to recompile all shaders
 - [] Shader Header is a really interesting idea
 	u8* shader_header_data = Platform::read_entire_file("shader_header.h")
 	u8* shader_vert_source = Platform::read_entire_file("shader.vert")
@@ -287,7 +276,4 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 			return (ambient + diffuse + specular);
 		}
 	}
-
-- [] Entity stuff
-- [] 3d grid of lines (should be simple?)
 */

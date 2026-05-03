@@ -255,12 +255,10 @@
 
     /*
     TODO(Jovanni):
-    - [] Mesh should just have VAO, Entries
     - [] entity manager, should have like all the entities[256], should have:
         std::vector<Entity*> QuerySetComponentList<MeshComponent, GravityComponent...>()
     - [] Scene
     - [] active camera
-
     - [] probably you can just add a 
         ComponentFlags to an entity this will make serialization trivial.
         Theres also another reason this is nice. I can guarentee the order in which entity 
