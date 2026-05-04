@@ -19,6 +19,7 @@ struct Scene {
 	static Scene create(MemoryContext memory);
 	void update(Engine* engine, float dt);
 	EntityHandle create_entity(String name, EntityHandle parent);
+	EntityHandle create_entity_from_model(Engine* engine, String name, EntityHandle parent, MeshHandle mesh); // creates a tree from the mesh object
 	bool set_parent(EntityHandle entity, EntityHandle parent);
 
 	template<typename T>

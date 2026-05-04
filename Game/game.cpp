@@ -172,6 +172,8 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 // TODO(Jovanni): I want to reorganize the runtime.
 
 The end goal of this project is the following:
+- [] A lot of the time working wtih handles is just a pain in the ass... So what if you cna work with handles but always be abel to get the underlying compressed content
+	The idea is you have a Shader that has the similar stuff and then you have an opengl shader that has opengl specific stuff
 - [] robust rendering system (account for framebuffer objects)
 	- [] texture for depth, color, light, normals
 		- These shouldn't be in the shader, theres should just be thier own shader and i just swap out the shader
