@@ -5,16 +5,21 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 	AppState* app = (AppState*)engine->application_state;
 	*app = {};
 
+	EntityHandle backpack = engine->scene.create_entity(STR_INTERN("backpack"), engine->scene.root);
 	EntityHandle cube = engine->scene.create_entity(STR_INTERN("cube"), engine->scene.root);
-	EntityHandle cube2 = engine->scene.create_entity(STR_INTERN("cube2"), engine->scene.root);
-	EntityHandle cube3 = engine->scene.create_entity(STR_INTERN("cube3"), engine->scene.root);
-	EntityHandle cube4 = engine->scene.create_entity(STR_INTERN("cube4"), engine->scene.root);
-	// Entity& cube_slot = engine->scene.entities.get(cube.handle);
+	// EntityHandle cube3 = engine->scene.create_entity(STR_INTERN("cube3"), engine->scene.root);
+	// EntityHandle cube4 = engine->scene.create_entity(STR_INTERN("cube4"), engine->scene.root);
+	Entity& backpack_slot = engine->scene.entities.get(backpack.handle);
+	Entity& cube_slot = engine->scene.entities.get(cube.handle);
 
-	// app->cube_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/cube.vert"), STR_INTERN("../../../Game/Assets/Shaders/cube.frag")});
-	// app->material = engine->renderer.create_material(app->cube_shader);
-	// MeshHandle mesh = engine->renderer.create_mesh_cube(app->material);
-	// cube_slot.add_component<MeshComponent>(mesh);
+	app->backpack_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/model.vert"), STR_INTERN("../../../Game/Assets/Shaders/model.frag")});
+	app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
+	backpack_slot.add_component<MeshComponent>(app->backpack_mesh);
+
+	app->cube_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/cube.vert"), STR_INTERN("../../../Game/Assets/Shaders/cube.frag")});
+	app->material = engine->renderer.create_material(app->cube_shader);
+	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
+	cube_slot.add_component<MeshComponent>(app->cube_mesh);
 
 	app->opaque_pipeline = Pipeline{
 		.rasterizer = {
@@ -45,14 +50,7 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 	TextureDescription desc = {};
 	app->container_texture = engine->renderer.create_texture(0, STR_INTERN("../../../Game/Assets/Textures/container.jpg"), desc);
 	app->face_texture = engine->renderer.create_texture(1, STR_INTERN("../../../Game/Assets/Textures/awesomeface.png"), desc);
-
-	app->cube_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/cube.vert"), STR_INTERN("../../../Game/Assets/Shaders/cube.frag")});
-	app->material = engine->renderer.create_material(app->cube_shader);
-	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
-
-	app->backpack_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/model.vert"), STR_INTERN("../../../Game/Assets/Shaders/model.frag")});
-	app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
-
+	
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
 	int index = 0;
 	float offset = 0.1f;
@@ -77,6 +75,7 @@ EXPORT_FN void application_init(Engine* engine, Hashmap<String, String>* string_
 EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* string_intern_map, float dt) {
 	AppState* app = (AppState*)engine->application_state;
 
+	engine->scene.update(engine, dt);
 	app->accumulator += dt * 100;
 
 	// active_scene.update(dt);
@@ -120,7 +119,10 @@ EXPORT_FN void application_update(Engine* engine, Hashmap<String, String>* strin
 
 EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* string_intern_map, float dt) {
 	AppState* app = (AppState*)engine->application_state;
+	engine->renderer.material_set_uniform(app->material, STR_INTERN("uContainer"), app->container_texture); 
+	engine->renderer.material_set_uniform(app->material, STR_INTERN("uFace"), app->face_texture); 
 
+	/*
 	if(app->timer.tick(dt)) {
 		app->use_opaque_pipeline = !app->use_opaque_pipeline;
 		app->timer.reset();
@@ -160,6 +162,7 @@ EXPORT_FN void application_render(Engine* engine, Hashmap<String, String>* strin
 	if (engine->reloaded_dll) {
 		LOG_DEBUG("After draw 2\n");
 	}
+	*/
 }
 
 // https://www.youtube.com/watch?v=9R2rRLbBkHU

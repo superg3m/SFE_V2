@@ -13,13 +13,13 @@ Scene Scene::create(MemoryContext memory) {
 	return ret;
 }
  
-void Scene::update(float dt) {
+void Scene::update(Engine* engine, float dt) {
 	Entity& root_slot = this->entities.get(this->root.handle);
 	for (int i = 0; i < root_slot.children.count; i++) {
 		EntityHandle child = root_slot.children[i];
 		Entity& child_slot = this->entities.get(child.handle);
 		if (child_slot.alive) {
-			child_slot.update(dt);
+			child_slot.update(engine, dt);
 		} else {
 			root_slot.children.unstable_swapback_remove(i);
 		} 

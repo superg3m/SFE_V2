@@ -1,5 +1,7 @@
 #include "component.hpp"
 #include "entity.hpp"
+#include "../api.hpp"
+#include "../../Vendor/vendor.hpp"
 
 /*
 void PlayerControllerComponent::update(float dt) {
@@ -15,6 +17,17 @@ void PlayerControllerComponent::update(float dt) {
 	}
 }
 */
+
+MeshComponent::MeshComponent(Entity* owner, MeshHandle mesh, int entry_index, bool should_render_mesh) {
+	this->owner = owner;
+	this->mesh = mesh;
+	this->entry_index = entry_index;
+	this->should_render_mesh = should_render_mesh;
+}
+
+void MeshComponent::update(Engine* engine, float dt) {
+	engine->renderer.draw_mesh(this->pipeline, this->mesh, this->owner->get_world_transform(&engine->scene), engine->get_view_matrix(), engine->get_projection_matrix());
+}
 
 /*
 void MeshComponent::update(float dt) {

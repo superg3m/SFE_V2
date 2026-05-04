@@ -4,16 +4,16 @@
 #include "../../Core/core.hpp"
 #include "../../Runtime/Renderer/renderer_api.hpp"
 
+struct Engine;
 struct Entity;
-
 struct Component {
 	Entity* owner = nullptr;
 	Component(int i) {}
 
-	virtual void update(float dt) = 0;
+	virtual void update(Engine* engine, float dt) = 0;
 
 	template<typename T>
-	static int GetComponentID() {
+	static int get_component_id() {
 		static int component_id = Component::next_component_id++;
 		return component_id;
 	}
@@ -30,7 +30,7 @@ struct HealthComponent : public Component {
 	int max_health = 0;
 
 	HealthComponent(Entity* owner, int max_health);
-	void update(float dt) override {};
+	void update(Engine* engine, float dt) override {};
 	void Damage(int dmg);
 };
 
@@ -50,7 +50,7 @@ struct StatusComponent : public Component {
 	Timer status_timer = {};
 
 	StatusComponent(Entity* owner, bool burnable, bool stunnable);
-	void update(float dt) override {};
+	void update(Engine* engine, float dt) override {};
 
 	void StartBurn(float duration, int burn_dmg_per_tick);
 	void StopBurn();
@@ -60,13 +60,24 @@ struct PlayerControllerComponent : public Component {
 	using Component::Component;
 
 	PlayerControllerComponent(Entity* owner);
-	void update(float dt) override;
+	void update(Engine* engine, float dt) override;
 };
 
 struct MeshComponent : public Component {
 	using Component::Component;
 
-	Pipeline pipeline;
+	Pipeline pipeline = Pipeline{
+		.rasterizer = {
+			.fill = true
+		},
+		.depth = {
+			.depth_testing = true,
+			.depth_write = true
+		},
+		.blend = {
+			.enabled = false
+		}
+	};
 	MeshHandle mesh = MeshHandle::invalid();
 	Mat4 model = Mat4::identity();
 	int entry_index = 0;
@@ -74,12 +85,11 @@ struct MeshComponent : public Component {
 	bool should_render_mesh = true;
 	bool render_mesh_wireframe = false;
 
-	MeshComponent(Entity* owner, Pipeline pipeline, MeshHandle mesh, int entry_index = 0, bool should_render_mesh = true);
-	void update(float dt) override {};
+	MeshComponent(Entity* owner, MeshHandle mesh, int entry_index = 0, bool should_render_mesh = true);
+	void update(Engine* engine, float dt) override;
 };
 
 /*
-
 struct CameraComponent : public Component {
 	using Component::Component;
 

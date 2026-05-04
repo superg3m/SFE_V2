@@ -28,7 +28,7 @@
 #define COMPONENT(T)     \
 T _##T = T(1);           \
 template<>               \
-T* GetMyComponent<T>() { \
+T* get_my_component<T>() { \
 	return &_##T;        \
 }                        \
 
@@ -70,10 +70,10 @@ struct Entity {
 	void reparent(Scene* scene);
 	EntityHandle find_by_name(Scene* scene, String name);
 
-	void update(float dt) {
+	void update(Engine* engine, float dt) {
 		for (const auto& entry : this->components) {
 			Component* c = entry.value;
-			c->update(dt);
+			c->update(engine, dt);
 		}
 	}
 
@@ -95,35 +95,35 @@ struct Entity {
 	static Entity* load_gltf(const char* path);
 
 	template<typename T>
-	T* GetComponent() {
-		return this->HasComponent<T>() ? this->GetMyComponent<T>() : nullptr;
+	T* get_component() {
+		return this->has_component<T>() ? this->get_my_component<T>() : nullptr;
 	}
 
 	template<typename T>
-	bool HasComponent() {
+	bool has_component() {
 		return this->components.has(typeid(T));
 	}
 
 	template<typename T, typename... Rest>
-	bool HasComponents() {
-		return HasComponent<T>() && HasComponents<Rest...>();
+	bool has_components() {
+		return has_component<T>() && has_components<Rest...>();
 	}
 
 	template<typename T, typename... Args>
-	void AddComponent(Args&&... args) {
-		T* c = this->GetMyComponent<T>();
+	void add_component(Args&&... args) {
+		T* c = this->get_my_component<T>();
 		new (c) T(this, std::forward<Args>(args)...);
 		this->components.put(typeid(T), c);
 	}
 
 	template<typename T>
-	void RemoveComponent() {
-		T* c = this->GetMyComponent<T>();
+	void remove_component() {
+		T* c = this->get_my_component<T>();
 		this->components.remove(typeid(T));
 	}
 
 	template<typename T> 
-	T* GetMyComponent();
+	T* get_my_component();
 
 	COMPONENT(HealthComponent)
 	COMPONENT(MeshComponent)

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "entity_handle.hpp"
+#include "component.hpp"
+#include "entity.hpp"
 
 // TODO(Jovanni): I actually think i'm going ot breka think into a EntityManager
 // and then entity actulayy doesn't have anything aother than datat no methods so
@@ -15,7 +17,7 @@ struct Scene {
 	EntityHandle main_camera = EntityHandle::invalid();
 
 	static Scene create(MemoryContext memory);
-	void update(float dt);
+	void update(Engine* engine, float dt);
 	EntityHandle create_entity(String name, EntityHandle parent);
 	bool set_parent(EntityHandle entity, EntityHandle parent);
 
@@ -35,7 +37,7 @@ struct Scene {
 		Vector<EntityHandle> ret = this->entities.handle_list();
 		for (int i = 0; i < ret.count; i++) {
 			Entity& entity_slot = this->entities.get(ret[i]);
-			if (!entity_slot.HasComponent<T>()) {
+			if (!entity_slot.has_component<T>()) {
 				ret.unstable_swapback_remove(i);
 			}
 		}
@@ -49,7 +51,7 @@ struct Scene {
 		Vector<EntityHandle> ret = this->entities.handle_list();
 		for (int i = 0; i < ret.count; i++) {
 			Entity& entity_slot = this->entities.get(ret[i]);
-			if (!entity_slot.HasComponents<Components...>()) {
+			if (!entity_slot.has_components<Components...>()) {
 				ret.unstable_swapback_remove(i);
 			}
 		}

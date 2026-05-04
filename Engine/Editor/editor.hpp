@@ -6,47 +6,47 @@
 
 // https://www.reddit.com/r/cpp_questions/comments/x0ypqt/imgui_tree_view_implementation/
 inline void render_tree_hierarchy(Scene* scene, EntityHandle entity, EntityHandle& selected) {
-    Entity& entity_slot = scene->entities.get(entity.handle); 
+	Entity& entity_slot = scene->entities.get(entity.handle); 
 
-    ImGuiTreeNodeFlags flags = (
-        ImGuiTreeNodeFlags_OpenOnArrow
+	ImGuiTreeNodeFlags flags = (
+		ImGuiTreeNodeFlags_OpenOnArrow
 	);
 
-    bool is_leaf = entity_slot.children.count == 0;
-    if (is_leaf) {
-        flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-    }
+	bool is_leaf = entity_slot.children.count == 0;
+	if (is_leaf) {
+		flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+	}
 
-    if (entity == selected) {
-        flags |= ImGuiTreeNodeFlags_Selected;
-    }
+	if (entity == selected) {
+		flags |= ImGuiTreeNodeFlags_Selected;
+	}
 
-    bool open = ImGui::TreeNodeEx((void*)((size_t)entity.handle.index), flags, "%s", entity_slot.name.data);
-    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
-        selected = entity;
-    }
+	bool open = ImGui::TreeNodeEx((void*)((size_t)entity.handle.index), flags, "%s", entity_slot.name.data);
+	if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+		selected = entity;
+	}
 
-    if (ImGui::BeginDragDropSource()) {
-        ImGui::SetDragDropPayload("ENTITY", &entity, sizeof(EntityHandle));
-        	ImGui::Text("Being Dragged: %s", entity_slot.name.data);
-        ImGui::EndDragDropSource();
-    }
+	if (ImGui::BeginDragDropSource()) {
+		ImGui::SetDragDropPayload("ENTITY", &entity, sizeof(EntityHandle));
+			ImGui::Text("Being Dragged: %s", entity_slot.name.data);
+		ImGui::EndDragDropSource();
+	}
 
-    if (ImGui::BeginDragDropTarget()) {
-        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY")) {
-            EntityHandle dropped = *(EntityHandle*)payload->Data;
+	if (ImGui::BeginDragDropTarget()) {
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ENTITY")) {
+			EntityHandle dropped = *(EntityHandle*)payload->Data;
 			scene->set_parent(dropped, entity);
-        }
+		}
 
-        ImGui::EndDragDropTarget();
-    }
+		ImGui::EndDragDropTarget();
+	}
 
-    if (open && !is_leaf) {
-        for (EntityHandle child : entity_slot.children) {
-            render_tree_hierarchy(scene, child, selected);
-        }
-        ImGui::TreePop();
-    }
+	if (open && !is_leaf) {
+		for (EntityHandle child : entity_slot.children) {
+			render_tree_hierarchy(scene, child, selected);
+		}
+		ImGui::TreePop();
+	}
 }
 
 struct Engine;
@@ -59,6 +59,7 @@ struct Editor {
 	template<typename B>
 	void render(Engine* engine, Renderer<B>* renderer) {
 		AppState* app = (AppState*)engine->application_state;
+
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
@@ -70,11 +71,11 @@ struct Editor {
 		// === Full-screen dockspace host window ===
 		{
 			ImGuiWindowFlags flags = (
-				ImGuiWindowFlags_NoTitleBar      |
-				ImGuiWindowFlags_NoCollapse      |
-				ImGuiWindowFlags_NoResize        |
-				ImGuiWindowFlags_NoMove          |
-				ImGuiWindowFlags_NoDocking       |
+				ImGuiWindowFlags_NoTitleBar |
+				ImGuiWindowFlags_NoCollapse |
+				ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoMove |
+				ImGuiWindowFlags_NoDocking |
 				ImGuiWindowFlags_NoBringToFrontOnFocus |
 				ImGuiWindowFlags_NoNavFocus
 			);
@@ -86,122 +87,142 @@ struct Editor {
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
 			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
-
 			ImGui::Begin("DockspaceRoot", nullptr, flags);
-			ImGui::PopStyleColor();
-			ImGui::PopStyleVar(2);
+				ImGui::PopStyleColor();
+				ImGui::PopStyleVar(2);
 
-			// === Single dockspace ===
-			ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
-			ImGuiDockNodeFlags dockFlags = ImGuiDockNodeFlags_PassthruCentralNode;
+				ImGuiID dockspace_id = ImGui::GetID("MainDockspace");
+				ImGuiDockNodeFlags dockFlags = ImGuiDockNodeFlags_PassthruCentralNode;
 
-			// === Build layout once ===
-			if (!ImGui::DockBuilderGetNode(dockspace_id)) {
-				ImGui::DockBuilderRemoveNode(dockspace_id);
-				ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
-				ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
+				if (!ImGui::DockBuilderGetNode(dockspace_id)) {
+					ImGui::DockBuilderRemoveNode(dockspace_id);
+					ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
+					ImGui::DockBuilderSetNodeSize(dockspace_id, viewport->Size);
 
-				ImGuiID right_id;
-				ImGuiID left_id = ImGui::DockBuilderSplitNode(
-					dockspace_id, ImGuiDir_Left, 0.25f, nullptr, &right_id
-				);
+					ImGuiID right_id;
+					ImGuiID left_id = ImGui::DockBuilderSplitNode(
+						dockspace_id, ImGuiDir_Left, 0.25f, nullptr, &right_id
+					);
 
-				ImGuiID top_id;
-				ImGuiID bottom_id = ImGui::DockBuilderSplitNode(
-					dockspace_id, ImGuiDir_Down, 0.25f, nullptr, &top_id
-				);
+					ImGuiID top_id;
+					ImGuiID bottom_id = ImGui::DockBuilderSplitNode(
+						dockspace_id, ImGuiDir_Down, 0.25f, nullptr, &top_id
+					);
 
+					ImGui::DockBuilderDockWindow("Hierarchy", left_id);
+					ImGui::DockBuilderDockWindow("Assets", bottom_id);
+					ImGui::DockBuilderFinish(dockspace_id);
+				}
 
-				// Dock "Hierarchy" into the left panel
-				ImGui::DockBuilderDockWindow("Hierarchy", left_id);
-				ImGui::DockBuilderDockWindow("Assets", bottom_id);
-
-				ImGui::DockBuilderFinish(dockspace_id);
-			}
-
-			ImGui::DockSpace(dockspace_id, ImVec2(0, 0), dockFlags);
-
+				ImGui::DockSpace(dockspace_id, ImVec2(0, 0), dockFlags);
 			ImGui::End();
 		}
 
 		// === Hierarchy window ===
 		{
 			ImGui::Begin("Hierarchy");
-			render_tree_hierarchy(&engine->scene, engine->scene.root, this->selected);
+				render_tree_hierarchy(&engine->scene, engine->scene.root, this->selected);
 			ImGui::End();
 		}
 
+		// === Inspector window ===
 		{
 			ImGui::Begin("Inspector");
-                if (ImGui::RadioButton("Translate", current_gizmo_operation == ImGuizmo::TRANSLATE)) {
-                    current_gizmo_operation = ImGuizmo::TRANSLATE;
-                }
-                ImGui::SameLine();
-                if (ImGui::RadioButton("Rotate", current_gizmo_operation == ImGuizmo::ROTATE)) {
-                    current_gizmo_operation = ImGuizmo::ROTATE;
-                }
-                ImGui::SameLine();
-                if (ImGui::RadioButton("Scale", current_gizmo_operation == ImGuizmo::SCALE)) {
-                    current_gizmo_operation = ImGuizmo::SCALE;
-                }
+				if (ImGui::RadioButton("Translate", current_gizmo_operation == ImGuizmo::TRANSLATE))
+					current_gizmo_operation = ImGuizmo::TRANSLATE;
+				ImGui::SameLine();
+				if (ImGui::RadioButton("Rotate", current_gizmo_operation == ImGuizmo::ROTATE))
+					current_gizmo_operation = ImGuizmo::ROTATE;
+				ImGui::SameLine();
+				if (ImGui::RadioButton("Scale", current_gizmo_operation == ImGuizmo::SCALE))
+					current_gizmo_operation = ImGuizmo::SCALE;
 
-                if (this->selected != EntityHandle::invalid()) {
-                    #define BUFFER_CAPACITY 256
-                    char buffer[BUFFER_CAPACITY];
-                    int ret = snprintf(buffer, BUFFER_CAPACITY, "Picked Index: %d", this->selected.handle.index);
-                    RUNTIME_ASSERT(ret >= 0);
-                    ImGui::Text("%s", buffer);
-                    // ImGui::Checkbox("Wireframe", &picked_entity.reference->render_wireframe);
-                    // ImGui::Checkbox("Render AABB", &picked_entity.reference->render_aabb);
-                }
-                // ImGui::Checkbox("Demo Window", &show_demo_window);
-                // ImGui::Checkbox("present_picking_framebuffer", &present_picking_framebuffer);
-                // ImGui::ColorEdit4("Bg Color", bg_color);
-            ImGui::End();
+				if (this->selected != EntityHandle::invalid()) {
+					#define BUFFER_CAPACITY 256
+					char buffer[BUFFER_CAPACITY];
+					int ret = snprintf(buffer, BUFFER_CAPACITY, "Picked Index: %d", this->selected.handle.index);
+					RUNTIME_ASSERT(ret >= 0);
+					ImGui::Text("%s", buffer);
 
+					Entity& entity_slot = engine->scene.entities.get(this->selected.handle);
+					Transform& t = entity_slot.transform;
+
+					ImGui::DragFloat3("Position", &t.position.x, 0.1f);
+					ImGui::DragFloat3("Scale", &t.scale.x, 0.1f);
+
+					for (const auto& entry : entity_slot.components) {
+						Component* c = entry.value;
+						if (MeshComponent* mesh_component = dynamic_cast<MeshComponent*>(c)) {
+							if (ImGui::CollapsingHeader("MeshComponent")) {
+								ImGui::Checkbox("Wireframe", &mesh_component->pipeline.rasterizer.fill);
+							}
+						} else {
+							RUNTIME_ASSERT(false);
+						}
+					}
+				}
+			ImGui::End(); // FIX: Inspector is fully closed before GizmoOverlay begins
+		}
+
+		// === Gizmo overlay window === (FIX: moved out of Inspector's scope)
+		{
 			ImGuiWindowFlags flags = (
-				ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | 
-				ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoCollapse | 
-				ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoBackground
+				ImGuiWindowFlags_NoTitleBar |
+				ImGuiWindowFlags_NoResize |
+				ImGuiWindowFlags_NoMove |
+				ImGuiWindowFlags_NoScrollbar |
+				ImGuiWindowFlags_NoScrollWithMouse |
+				ImGuiWindowFlags_NoCollapse |
+				ImGuiWindowFlags_NoSavedSettings |
+				ImGuiWindowFlags_NoMouseInputs |
+				ImGuiWindowFlags_NoBackground
 			);
 
-            ImGui::SetNextWindowPos(ImVec2(0, 0));
-            ImGui::SetNextWindowSize(ImVec2((float)engine->window.WINDOW_WIDTH, (float)engine->window.WINDOW_HEIGHT));
-            ImGui::Begin("GizmoOverlay", nullptr, flags);
-                if (this->selected != EntityHandle::invalid()) {
+			ImGui::SetNextWindowPos(ImVec2(0, 0));
+			ImGui::SetNextWindowSize(ImVec2((float)engine->window.WINDOW_WIDTH, (float)engine->window.WINDOW_HEIGHT));
+			ImGui::Begin("GizmoOverlay", nullptr, flags);
+				if (this->selected != EntityHandle::invalid()) {
 					Entity& entity_slot = engine->scene.entities.get(this->selected.handle);
-					
-                    ImGuizmo::SetOrthographic(false);
-                    ImGuizmo::SetDrawlist();
-                    ImGuizmo::SetRect(0, 0, (float)engine->window.WINDOW_WIDTH, (float)engine->window.WINDOW_HEIGHT);
-                    Mat4 viewT = view.transpose();
-                    Mat4 projT = projection.transpose();
-                    Mat4 newTransformT = entity_slot.get_world_transform(&engine->scene).transpose();
-                    bool is_manipulated = ImGuizmo::Manipulate(&viewT.v[0].x, &projT.v[0].x, current_gizmo_operation, ImGuizmo::WORLD, &newTransformT.v[0].x);
-                    if (is_manipulated) {
-                        Mat4 newTransformWorld = newTransformT.transpose();
-                    	entity_slot.set_world_transform(&engine->scene, newTransformWorld);
-                    }
-                }
-            ImGui::End();
+
+					ImGuizmo::SetOrthographic(false);
+					ImGuizmo::SetDrawlist();
+					ImGuizmo::SetRect(0, 0, (float)engine->window.WINDOW_WIDTH, (float)engine->window.WINDOW_HEIGHT);
+
+					Mat4 viewT       = view.transpose();
+					Mat4 projT       = projection.transpose();
+					Mat4 newTransformT = entity_slot.get_world_transform(&engine->scene).transpose();
+
+					bool is_manipulated = ImGuizmo::Manipulate(
+						&viewT.v[0].x, &projT.v[0].x,
+						current_gizmo_operation, ImGuizmo::WORLD,
+						&newTransformT.v[0].x
+					);
+
+					if (is_manipulated) {
+						Mat4 newTransformWorld = newTransformT.transpose();
+						entity_slot.set_world_transform(&engine->scene, newTransformWorld);
+					}
+				}
+			ImGui::End();
 		}
 
 		// === Assets window ===
 		{
 			ImGui::Begin("Assets");
-			Vector<Handle> texture_handles = renderer->backend.textures.handle_list(engine->memory.frame_allocator);
-			for (Handle texture_handle : texture_handles) {
-				auto texture = renderer->backend.textures.get(texture_handle);
-				ImGui::Image(
-					(ImTextureID)(uintptr_t)texture.id,
-					ImVec2(64, 64),
-					ImVec2(0, 1), ImVec2(1, 0)
-				);
-				if (ImGui::IsItemClicked()) {
-					app->face_texture.handle = texture_handle;
+				Vector<Handle> texture_handles = renderer->backend.textures.handle_list(engine->memory.frame_allocator);
+				for (Handle texture_handle : texture_handles) {
+					auto texture = renderer->backend.textures.get(texture_handle);
+					ImGui::Image(
+						(ImTextureID)(uintptr_t)texture.id,
+						ImVec2(64, 64),
+						ImVec2(0, 1),
+						ImVec2(1, 0)
+					);
+					if (ImGui::IsItemClicked()) {
+						app->face_texture.handle = texture_handle;
+					}
+					ImGui::SameLine();
 				}
-				ImGui::SameLine();
-			}
 			ImGui::End();
 		}
 
