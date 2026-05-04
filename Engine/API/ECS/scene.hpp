@@ -2,7 +2,11 @@
 
 #include "entity_handle.hpp"
 
-struct EntityManager; 
+// TODO(Jovanni): I actually think i'm going ot breka think into a EntityManager
+// and then entity actulayy doesn't have anything aother than datat no methods so
+// manager.set_matrix(entity, matrix);
+
+
 struct Scene {
 	MemoryContext memory = {};
 	Registry<Entity, 256> entities = {};
