@@ -68,7 +68,6 @@ struct Editor {
 		Mat4 view = engine->get_view_matrix();
 		Mat4 projection = engine->get_projection_matrix();
 
-		// === Full-screen dockspace host window ===
 		{
 			ImGuiWindowFlags flags = (
 				ImGuiWindowFlags_NoTitleBar |
@@ -118,14 +117,12 @@ struct Editor {
 			ImGui::End();
 		}
 
-		// === Hierarchy window ===
 		{
 			ImGui::Begin("Hierarchy");
 				render_tree_hierarchy(&engine->scene, engine->scene.root, this->selected);
 			ImGui::End();
 		}
 
-		// === Inspector window ===
 		{
 			ImGui::Begin("Inspector");
 				if (ImGui::RadioButton("Translate", current_gizmo_operation == ImGuizmo::TRANSLATE))
@@ -155,16 +152,26 @@ struct Editor {
 						if (MeshComponent* mesh_component = dynamic_cast<MeshComponent*>(c)) {
 							if (ImGui::CollapsingHeader("MeshComponent")) {
 								ImGui::Checkbox("Wireframe", &mesh_component->pipeline.rasterizer.fill);
+
+								auto mesh_slot = renderer->backend.meshes.get(mesh_component->mesh.handle);
+								Vector<Handle> material_handles = renderer->backend.materials.handle_list(engine->memory.frame_allocator);
+								int index = 0; 
+								for (Handle material_handle : material_handles) {
+									ImGui::Text("Material %d", index++);
+									if (ImGui::IsItemClicked()) {
+										mesh_slot.entries[0].material.handle = material_handle;
+									}
+									ImGui::SameLine();
+								}
 							}
 						} else {
 							RUNTIME_ASSERT(false);
 						}
 					}
 				}
-			ImGui::End(); // FIX: Inspector is fully closed before GizmoOverlay begins
+			ImGui::End();
 		}
 
-		// === Gizmo overlay window === (FIX: moved out of Inspector's scope)
 		{
 			ImGuiWindowFlags flags = (
 				ImGuiWindowFlags_NoTitleBar |
@@ -206,7 +213,6 @@ struct Editor {
 			ImGui::End();
 		}
 
-		// === Assets window ===
 		{
 			ImGui::Begin("Assets");
 				Vector<Handle> texture_handles = renderer->backend.textures.handle_list(engine->memory.frame_allocator);
