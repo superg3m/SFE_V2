@@ -225,11 +225,11 @@ struct Editor {
 
 		{
 			ImGui::Begin("Assets");
-				Vector<Handle> texture_handles = renderer->backend.textures.handle_list(engine->memory.frame_allocator);
-				for (Handle texture_handle : texture_handles) {
-					render_texture_image(engine, renderer);
+				Vector<Handle> textures = renderer->backend.textures.handle_list(engine->memory.frame_allocator);
+				for (Handle texture : textures) {
+					this->render_texture_image(engine, renderer, texture);
 					if (ImGui::IsItemClicked()) {
-						app->face_texture.handle = texture_handle;
+						app->face_texture.handle = texture;
 					}
 					
 					ImGui::SameLine();
