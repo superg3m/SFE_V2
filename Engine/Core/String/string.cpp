@@ -7,7 +7,7 @@ String String::create(const char* data, u64 length) {
 	return {data, length};
 }
 
-String String::intern(void* string_intern_map, const char* data, u64 length) {
+String String::intern(Arena* string_arena, void* string_intern_map, const char* data, u64 length) {
 	Hashmap<String, String>* intern_map = (Hashmap<String, String>*)string_intern_map;
 	RUNTIME_ASSERT(string_intern_map);
 	String ret = {};
@@ -19,7 +19,7 @@ String String::intern(void* string_intern_map, const char* data, u64 length) {
 		return ret;
 	}
 
-	String value = {String::allocate(intern_map->allocator, data, length), length};
+	String value = {String::allocate(string_arena->to_allocator(), data, length), length};
 	intern_map->put(key, value);
 
 	return value;
@@ -308,5 +308,3 @@ String String::between_delimiters(const char* str, u64 str_length, const char* s
 
 	return ret;
 }
-
-Hashmap<String, String>* string_intern_map = nullptr;

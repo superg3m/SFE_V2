@@ -4,10 +4,10 @@
 #include "Runtime/runtime.hpp"
 
 Engine* engine = nullptr;
-extern Hashmap<String, String>* string_intern_map;
 
 constexpr int PROGRAM_MEMORY_CAPACITY = MB(50);
 constexpr int PERMANENT_MEMORY_CAPACITY = MB(10);
+constexpr int STRING_MEMORY_CAPACITY = MB(10);
 constexpr int FRAME_MEMORY_CAPACITY = MB(10);
 
 INTERNAL_LINKAGE Platform::DLL* dll = nullptr;
@@ -15,9 +15,9 @@ INTERNAL_LINKAGE const char* dll_name = "game.dll";
 INTERNAL_LINKAGE const char* temp_dll_name = "application_temp.dll";
 INTERNAL_LINKAGE Platform::FileTime last_write_time = {};
 
-typedef void(ApplicationInitalizeFunc)(Engine* engine, Hashmap<String, String>* string_intern_map);
-typedef void(ApplicationUpdateFunc)(Engine* engine, Hashmap<String, String>* string_intern_map, float dt);
-typedef void(ApplicationRenderFunc)(Engine* engine, Hashmap<String, String>* string_intern_map, float dt);
+typedef void(ApplicationInitalizeFunc)(Engine* engine, Arena* string_arena, Hashmap<String, String>* string_intern_map);
+typedef void(ApplicationUpdateFunc)(Engine* engine, Arena* string_arena, Hashmap<String, String>* string_intern_map, float dt);
+typedef void(ApplicationRenderFunc)(Engine* engine, Arena* string_arena, Hashmap<String, String>* string_intern_map, float dt);
 
 /*
 Mat4 Engine::get_view_matrix() {
@@ -68,18 +68,21 @@ int main() {
 	memory.frame_arena = Arena::fixed(program_arena.push(FRAME_MEMORY_CAPACITY, alignof(u8)), FRAME_MEMORY_CAPACITY);
 	memory.frame_allocator = memory.frame_arena.to_allocator();
 
+
+	Arena string_arena = Arena::fixed(program_arena.push(STRING_MEMORY_CAPACITY, alignof(u8)), STRING_MEMORY_CAPACITY);
+	Allocator string_allocator = string_arena.to_allocator();
+
 	Platform::init(); // I hate this inconsistency, maybe call it MemorySystem, PlatformSystem, InputSystem, WindowCreationSystem
 	{
 		engine = (Engine*)memory.permanent_allocator.malloc(sizeof(Engine), alignof(Engine));
-		string_intern_map = (Hashmap<String, String>*)memory.permanent_allocator.malloc(sizeof(Hashmap<String, String>), alignof(Hashmap<String, String>));
 	}
 
 	InputSystem input = {};
 	Renderer<OpenGL> renderer = {};
 	*engine = Engine::create(memory, input.input_state, renderer.API(memory), Window::create(800, 600, "HelloWorld"));
-	*string_intern_map = Hashmap<String, String>(memory.permanent_allocator);
+	Hashmap<String, String> string_intern_map = Hashmap<String, String>(memory.permanent_allocator);
 	engine->camera = Camera::create(0, 0, 10);
-
+	
 	input.init(engine->window.ctx);
 
 	INTERNAL_LINKAGE ApplicationInitalizeFunc* application_init = nullptr;
@@ -91,7 +94,7 @@ int main() {
 
 	RUNTIME_ASSERT(Platform::file_exists(dll_name));
 	load_application_function_pointers(&application_init, &application_update, &application_render);
-	application_init(engine, string_intern_map);
+	application_init(engine, &string_arena, &string_intern_map);
 
 	float dt = 0.0f;
 	float previous_time = Platform::get_seconds_elapsed();
@@ -110,8 +113,8 @@ int main() {
 				engine->reloaded_dll = true;
 			}
 
-			if (application_update) application_update(engine, string_intern_map, dt);
-			if (application_render) application_render(engine, string_intern_map, dt);
+			if (application_update) application_update(engine, &string_arena, &string_intern_map, dt);
+			if (application_render) application_render(engine, &string_arena, &string_intern_map, dt);
 			engine->renderer.execute_request();
 			editor.render(engine, &renderer);
 			

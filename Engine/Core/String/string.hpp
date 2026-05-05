@@ -11,7 +11,7 @@ struct String {
     u64 length = 0;
 
     static String create(const char* data, u64 length);
-    static String intern(void* string_intern_map, const char* data, u64 length);
+    static String intern(Arena* string_arena, void* string_intern_map, const char* data, u64 length);
     bool operator==(const String& other) const;
     bool operator!=(const String& other) const;
 
@@ -41,4 +41,4 @@ struct String {
 };
 
 #define STR(s) (String{s, sizeof(s) - 1})
-#define STR_INTERN(s) (String::intern(string_intern_map, s, sizeof(s) - 1))
+#define STR_INTERN(s) (String::intern(string_arena, string_intern_map, s, sizeof(s) - 1))
