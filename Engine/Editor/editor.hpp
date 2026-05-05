@@ -56,6 +56,16 @@ struct Editor {
 
 	void init(Engine* engine);
 
+	void render_texture_image(Engine* engine, Renderer<OpenGL>* renderer, TextureHandle texture) {
+		OpenGL::Texture texture_slot = renderer->backend.textures.get(texture.handle);
+		ImGui::Image(
+			(ImTextureID)(uintptr_t)texture_slot.id,
+			ImVec2(64, 64),
+			ImVec2(0, 1),
+			ImVec2(1, 0)
+		);
+	}
+
 	template<typename B>
 	void render(Engine* engine, Renderer<B>* renderer) {
 		AppState* app = (AppState*)engine->application_state;
