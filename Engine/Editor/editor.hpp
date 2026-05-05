@@ -227,16 +227,11 @@ struct Editor {
 			ImGui::Begin("Assets");
 				Vector<Handle> texture_handles = renderer->backend.textures.handle_list(engine->memory.frame_allocator);
 				for (Handle texture_handle : texture_handles) {
-					auto texture = renderer->backend.textures.get(texture_handle);
-					ImGui::Image(
-						(ImTextureID)(uintptr_t)texture.id,
-						ImVec2(64, 64),
-						ImVec2(0, 1),
-						ImVec2(1, 0)
-					);
+					render_texture_image(engine, renderer);
 					if (ImGui::IsItemClicked()) {
 						app->face_texture.handle = texture_handle;
 					}
+					
 					ImGui::SameLine();
 				}
 			ImGui::End();
