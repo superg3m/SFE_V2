@@ -420,7 +420,7 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material) {
 OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, String path) {
 	Mesh ret = {};
 	Assimp::Importer importer;
-	unsigned int assimp_flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;
+	unsigned int assimp_flags = aiProcess_Triangulate | aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;
 	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(path);
 	const aiScene* scene = importer.ReadFile(path.data, assimp_flags);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
