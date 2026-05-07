@@ -7,13 +7,15 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 
 	app->container_texture = engine->renderer.create_texture(STR_INTERN("../../../Game/Assets/Textures/container.jpg"));
 
-	Material& material = engine->renderer.create_material();
-	app->material = material.self;
+	Material& cube_material = engine->renderer.create_material();
+	app->material = cube_material.self;
+	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), app->container_texture); 
+
 	app->backpack_mesh = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
 	MeshHandle glass = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
 	MeshHandle helmet = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
 	MeshHandle church = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/church.glb"));
-	app->cube_mesh = engine->renderer.create_mesh_cube(material.self);
+	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
 
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
 	int index = 0;
@@ -55,34 +57,15 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	});
 
 	app->skybox_material = engine->renderer.create_material().self;
-
-	/*
-	// so techincally if you run out of textures, but you wanted to use the same frame buffer
-	// the render group shouldn't clear color 
-	FrameBuffer framebuffer = engine->renderer.create_framebuffer();
-	RenderGroup render_group = enigne->renderer.render_group_begin(framebuffer, Vec3(0.25, 0.25, 0.25), &this->scene.active_camera); // if you leave the camera field blank it will use the
-	// active_camera in the scene.
-
-
-	engine->renderer.render_group_end();
-	
-	*/
-
-	// TODO(Jovanni): CHECK HANDEDNESS?
+	Material& skybox_material = engine->renderer.materials->get(app->skybox_material.handle);
+	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), app->skybox_day);
+	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), app->skybox_night);
 
 	Entity& backpack = engine->manager.create_entity_from_mesh(STR_INTERN("backpack"), engine->scene.root, app->backpack_mesh);
 	Entity& cube = engine->manager.create_entity_from_mesh(STR_INTERN("cube"), engine->scene.root, app->cube_mesh, app->cube_translations.count);
 	Entity& glass_entity = engine->manager.create_entity_from_mesh(STR_INTERN("glass"), engine->scene.root, glass);
 	Entity& helmet_for_ants = engine->manager.create_entity_from_mesh(STR_INTERN("helmet"), engine->scene.root, helmet);
 	Entity& bullshit = engine->manager.create_entity_from_mesh(STR_INTERN("b7ullshit"), engine->scene.root, church);
-
-	Material& cube_material = engine->renderer.materials->get(app->material.handle);
-	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), app->container_texture); 
-
-	Material& skybox_material = engine->renderer.materials->get(app->skybox_material.handle);
-	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), app->skybox_day);
-	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), app->skybox_night);
-
 	Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
 	skybox.add_component<SkyboxComponent>(app->skybox_material);
 	app->timer.start(5.0f);
