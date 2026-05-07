@@ -10,6 +10,8 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	Material& material = engine->renderer.create_material();
 	app->material = material.self;
 	app->backpack_mesh = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
+	MeshHandle helmet = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
+	MeshHandle church = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/church.glb"));
 	app->cube_mesh = engine->renderer.create_mesh_cube(material.self);
 
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
@@ -65,8 +67,12 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	
 	*/
 
+	// TODO(Jovanni): CHECK HANDEDNESS?
+
 	Entity& backpack = engine->manager.create_entity_from_mesh(STR_INTERN("backpack"), engine->scene.root, app->backpack_mesh);
-	Entity& cube = engine->manager.create_entity_from_mesh(STR_INTERN("cube"), engine->scene.root, app->cube_mesh, 1);
+	Entity& cube = engine->manager.create_entity_from_mesh(STR_INTERN("cube"), engine->scene.root, app->cube_mesh, app->cube_translations.count);
+	Entity& helmet_for_ants = engine->manager.create_entity_from_mesh(STR_INTERN("glass"), engine->scene.root, helmet);
+	Entity& bullshit = engine->manager.create_entity_from_mesh(STR_INTERN("b7ullshit"), engine->scene.root, church);
 
 	Material& cube_material = engine->renderer.materials->get(app->material.handle);
 	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), app->container_texture); 
@@ -140,7 +146,7 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 	Material& skybox_material = engine->renderer.materials->get(app->skybox_material.handle);
 	skybox_material.set_float(STR_INTERN("uBlend"), app->sky_blend);
 	skybox_material.set_mat4(STR_INTERN("uModel"), model);
-
+	
 	// clear_color()
 }
 
@@ -153,9 +159,6 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 The end goal of this project is the following:
 - [] Render AABBS
 - [x] wireframe
-- [] RenderGroup a user facing idae in the renderer when initalizing MeshComponents
-	the idea is that you must provide a frame buffer and a camera reference/pointer in order to be used from that render group.
-- [] MeshGroupComponent (use all children to compute like the aabb or globally apply stuff, for example if I turn on wireframe, all children turn on wireframe as well)
 - [] remove as much callbacks as I can (perfer) glfwGetCursorPos(window, &xpos, &ypos); for example
 - [] display second camera "minimap" (should just be a screen textured-quad anchored to the top-right, small with render texture from the framebuffer)
 	this is why making it manditory to pass in a frame buffer is nice! FrameBuffer {FrameBufferHandle fb, TextureHandle textrue}

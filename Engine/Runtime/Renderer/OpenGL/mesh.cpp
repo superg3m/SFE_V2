@@ -48,11 +48,11 @@ INTERNAL_LINKAGE AABB calculate_aabb(Vector<Vertex>& vertices, int base_vertex, 
 	return AABB::from_center_extents(center, extents);
 }
 
-INTERNAL_LINKAGE void load_assimp_texture(OpenGL* backend, Material* material, int i, const aiScene* scene, String directory, aiTextureType ai_texture_type, String name) {
+INTERNAL_LINKAGE bool load_assimp_texture(OpenGL* backend, Material* material, int i, const aiScene* scene, String directory, aiTextureType ai_texture_type, String name) {
 	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(name);
 	const aiMaterial* ai_material = scene->mMaterials[i];
 	if (ai_material->GetTextureCount(ai_texture_type) <= 0) {
-		return;
+		return false;
 	}
 
 	aiString str;
@@ -70,17 +70,19 @@ INTERNAL_LINKAGE void load_assimp_texture(OpenGL* backend, Material* material, i
 		if (ai_texture) {
 			int width, height, nrChannel = 0;
 			u8* image_data = stbi_load_from_memory((u8*)ai_texture->pcData, ai_texture->mWidth, &width, &height, &nrChannel, 0);
-			texture = OpenGL::Texture::load_from_memory(image_data, width, height, nrChannel, {});
+			texture = OpenGL::Texture::load_from_memory(image_data, width, height, nrChannel, {.vertical_flip = true});
 			LOG_DEBUG("Material: %d | has embedded Texture of type: %s\n", i, name.data);
 		} else {
 			LOG_DEBUG("Material: %d | has external texture of type: %s\n", i, name.data);
-			texture = OpenGL::Texture::load_from_file(String::create(filename, length), {});
+			texture = OpenGL::Texture::load_from_file(String::create(filename, length), {.vertical_flip = true});
 		}
 
 		material->set_uniform(name, TextureHandle(texture_handle));
 	} else {
 		LOG_ERROR("Failed to get texture path for material: %d | type: %s\n", i, name);
 	}
+
+	return true;
 }
 
 OpenGL::MeshEntry OpenGL::MeshEntry::create(VertexLayout layout, MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices, u32 vertex_base, u32 index_base, GLenum draw_type) {
@@ -449,7 +451,7 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, String path) {
 		Handle material_handle = backend->materials.acquire();
 		Material& material = backend->materials.get(material_handle);
 		material = Material::create(material_handle, Allocator::general(), MaterialType::PBR);
-		load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_DIFFUSE, STR(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME));
+		material.set_bool(STR("has_albedo"), load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_DIFFUSE, STR(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME)));
 
 		/*
 		aiColor4D ambient_color(0.0f, 0.0f, 0.0f, 0.0f);
@@ -475,7 +477,7 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, String path) {
 		*/
 
 		if (ai_material->Get(AI_MATKEY_OPACITY, material.opacity) == AI_SUCCESS) {
-			LOG_WARN("SUCCESS_MESH_HAS_OPACITY: %f\n", material.opacity);
+			LOG_INFO("SUCCESS_MESH_HAS_OPACITY: %f\n", material.opacity);
 		} else {
 			LOG_WARN("Mesh Failed opacity matkey\n");
 		}

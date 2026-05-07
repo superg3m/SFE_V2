@@ -342,7 +342,6 @@ struct OpenGL {
 				MeshEntry& mesh_entry = group.mesh_entry;
 				if (!mesh_entry.should_render) continue;
 
-
 				group.mesh.vao.bind();
 				group.mesh.vbo.bind();
 				group.mesh.ebo.bind();
@@ -366,6 +365,11 @@ struct OpenGL {
 					this->draw_indices(mesh_entry.vertex_base, mesh_entry.index_base, mesh_entry.index_count, group.instance_count);
 				} else {
 					this->draw_vertices(mesh_entry.vertex_base, mesh_entry.vertex_count, group.instance_count);
+				}
+
+				for (int i = 0; i < 8; i++) {
+					gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
+					glBindTexture(GL_TEXTURE_2D, 0);
 				}
 
 				if (mesh_entry.should_render_aabb) {
