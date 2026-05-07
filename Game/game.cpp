@@ -142,16 +142,20 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 // TODO(Jovanni): I want to reorganize the runtime.
 
 The end goal of this project is the following:
-- [] Render AABBS
-- [x] wireframe
 - [] remove as much callbacks as I can (perfer) glfwGetCursorPos(window, &xpos, &ypos); for example
-- [] display second camera "minimap" (should just be a screen textured-quad anchored to the top-right, small with render texture from the framebuffer)
-	this is why making it manditory to pass in a frame buffer is nice! FrameBuffer {FrameBufferHandle fb, TextureHandle textrue}
-- [] remove the mouse delta
-- [] Clean up the code
+- [] CameraComponent
+- [] Remove mesh entries[0] hack in the editor and look at the renderer see if you can remove the render group shit?
+	remove the entry_index stuff.
 - [] maybe still consider have Texture* or Mesh* and then an OpenGL::Mesh inherits from it. SO you have most fields accessable through just the handle without going back
 	to the executable. This is very nice and clean it wwould work. The only reason i'm opposed is the the new OpenGL::Mesh will be be slow I think because of 
 	lack of cache locality and pointer chasing, but maybe it doesn't matter since these operations by their very natrue are very vew and far between I think?
+- [] Clean up the code
+
+
+- [] Render AABBS
+- [x] wireframe
+- [] display second camera "minimap" (should just be a screen textured-quad anchored to the top-right, small with render texture from the framebuffer)
+	this is why making it manditory to pass in a frame buffer is nice! FrameBuffer {FrameBufferHandle fb, TextureHandle textrue}
 - [] remove general allocator calls if possible
 - [] Control the framebuffer stuff gets rendered on (make sure you can easily make framebuffers, and get their textures)
 - [] Multiple Cameras (camera's as entities)
