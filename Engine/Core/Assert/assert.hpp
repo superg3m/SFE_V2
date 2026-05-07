@@ -15,3 +15,6 @@
 #define STATIC_ASSERT static_assert
 #define INVARIENT_TRIVAL_TYPE(...) STATIC_ASSERT(std::is_trivially_copyable_v<__VA_ARGS__>)
 #define INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(s) RUNTIME_ASSERT(s.data[s.length] == '\0')
+
+// NOTE(Jovanni):UNFORTUNATELY FOR ME (INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR) will not actually trigger the assert because
+// if the data string literal reading past it is a segfult. But its still useful to convey an intent.

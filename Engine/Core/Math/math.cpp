@@ -674,6 +674,16 @@ bool AABB::line_intersection(AABB aabb, Vec3 p0, Vec3 p1) {
 	return (tmax > tmin && tmax > 0.0f);
 }
 
+Mat4 AABB::to_transform_matrix4() {
+	Vec3 scale = this->max - this->min;
+	Vec3 center = this->center();
+	Mat4 transform = Mat4::identity();
+	transform = Mat4::scale(transform, scale);
+	transform = Mat4::translate(transform, center);
+
+	return transform;
+}
+
 Vec3 AABB::center() const {
 	Vec3 e = extents();
 	return Vec3(min.x + e.x, min.y + e.y, min.z + e.z);
@@ -803,7 +813,7 @@ Mat4 Mat4::rotate(Mat4 mat, float theta, Vec3 axis) {
 Mat4 Mat4::rotate(Mat4 mat, Quat quat) {
 	float theta;
 	Vec3 axis;
-	quat.angle_axis(theta, axis);
+	quat.to_angle_axis(theta, axis);
 	return Mat4::rotate(mat, theta, axis);
 }
 
@@ -1109,7 +1119,7 @@ Mat4 Quat::get_rotation_matrix() {
 	return result;
 }
 
-void Quat::angle_axis(float &theta, Vec3 &vec) {
+void Quat::to_angle_axis(float &theta, Vec3 &vec) {
 	Quat quat = this->normalize();
 	float sinf_half_theta = quat.v.magnitude();
 
@@ -1123,6 +1133,44 @@ void Quat::angle_axis(float &theta, Vec3 &vec) {
 	float w = CLAMP(quat.w, -1.0f, 1.0f);
 	theta = 2.0f * acosf(w);
 	theta = RAD_TO_DEGREES(theta);
+}
+
+// NOTE(Jovanni): AI, because I just want to work on the engine. I will come back to understand this and rewrite it. 
+Vec3 Quat::to_euler() {
+	Quat quat = this->normalize();
+
+	float x = quat.v.x;
+	float y = quat.v.y;
+	float z = quat.v.z;
+	float w = quat.w;
+
+	Vec3 euler = {};
+
+	// Roll (X axis)
+	float sinr_cosp = 2.0f * (w * x + y * z);
+	float cosr_cosp = 1.0f - 2.0f * (x * x + y * y);
+	euler.x = atan2f(sinr_cosp, cosr_cosp);
+
+	// Pitch (Y axis)
+	float sinp = 2.0f * (w * y - z * x);
+
+	if (fabsf(sinp) >= 1.0f) {
+		euler.y = copysignf(PI * 0.5f, sinp);
+	} else {
+		euler.y = asinf(sinp);
+	}
+
+	// Yaw (Z axis)
+	float siny_cosp = 2.0f * (w * z + x * y);
+	float cosy_cosp = 1.0f - 2.0f * (y * y + z * z);
+	euler.z = atan2f(siny_cosp, cosy_cosp);
+
+	// Convert to degrees
+	euler.x = RAD_TO_DEGREES(euler.x);
+	euler.y = RAD_TO_DEGREES(euler.y);
+	euler.z = RAD_TO_DEGREES(euler.z);
+
+	return euler;
 }
 
 Quat Quat::identity() {

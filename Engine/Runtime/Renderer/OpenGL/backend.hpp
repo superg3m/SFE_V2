@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../Core/core.hpp"
-#include "../renderer_api.hpp"
+#include "../../../Public/api.hpp"
 #include <concepts>
 #include <vendor.hpp>
 
@@ -17,7 +17,6 @@ void bind_vertex_attribute(int location, u32 stride, VertexAttribute attribute);
 
 struct OpenGL {
 	struct Texture {
-		u32 texture_unit = INT_MAX;
 		u32 id = 0;
 		u32 width = 0;
 		u32 height = 0;
@@ -25,9 +24,9 @@ struct OpenGL {
 		TextureSamplerType type = TextureSamplerType::SAMPLER_2D;
 
 		static void flip_vertically_in_place(u8* data, int width, int height);
-		static Texture load_from_file(u32 texture_unit, String path, TextureDescription desc);
-		static Texture load_from_memory(u32 texture_unit, const u8* data, int width, int height, int channels, TextureDescription desc);
-		static Texture load_cube_map(u32 texture_unit, Vector<String> cube_map_texture_paths);
+		static Texture load_from_file(String path, TextureDescription desc);
+		static Texture load_from_memory(const u8* data, int width, int height, int channels, TextureDescription desc);
+		static Texture load_cube_map(Vector<String> cube_map_texture_paths);
 	};
 
 	struct UniformDesc {
@@ -62,8 +61,8 @@ struct OpenGL {
 		void set_bool(String name, bool value);
 		void set_int(String name, int value);
 		void set_float(String name, float value);
-		void set_texture(String name, Texture texture);
-		void set_texture_cube(String name, Texture texture);
+		void set_texture(String name, int texture_unit, Texture texture);
+		void set_texture_cube(String name, int texture_unit, Texture texture);
 		void set_vec2(String name, const Vec2& value);
 		void set_vec2(String name, float x, float y);
 		void set_vec3(String name, const Vec3& value);
@@ -92,6 +91,7 @@ struct OpenGL {
 			return ret;
 		}
 
+		// TODO(Jovanni): Check if the correct vao is already bound, reduce the driver overhead
 		void bind() {
 			gl_error_check(glBindVertexArray(this->id));
 		}
@@ -167,7 +167,8 @@ struct OpenGL {
 	};
 
 	struct CommandBuffer {
-		void bind_pipeline(Pipeline pipeline);
+		// void bind_pipeline(Pipeline pipeline);
+		void bind_rasterizer_description(RasterizerDescription desc);
 		void bind_vertex_buffer(VertexBuffer vbo);
 		void bind_index_buffer(IndexBuffer ebo);
 		void draw_vertices(u32 vertex_base, u32 vertex_count);
@@ -179,12 +180,16 @@ struct OpenGL {
 
 	struct MeshEntry {
 		GLenum draw_type = GL_TRIANGLES;
+		String name = {};
 		u32 vertex_count = 0;
 		u32 index_count  = 0;
 		u32 vertex_base  = 0; // starting offset to next vertex in the vertex buffer
 		u32 index_base   = 0; // offset to next index in the index buffer
 		MaterialHandle material = MaterialHandle::invalid();
 		AABB aabb = {};
+		bool should_render = true;
+		bool should_render_aabb = false;
+		RasterizerDescription rasterizer_description = {};
 
 		static MeshEntry create(VertexLayout layout, MaterialHandle material, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES);
 	};
@@ -199,9 +204,10 @@ struct OpenGL {
 
 		static Mesh create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
 		static Mesh cube(MaterialHandle material);
+		static Mesh skybox_cube(MaterialHandle material);
 		static Mesh axis_aligned_bounding_box(MaterialHandle material, AABB aabb);
 		static Mesh axis_aligned_bounding_box(MaterialHandle material);
-		static Mesh load_from_file(OpenGL* backend, ShaderHandle shader_handle, String path);
+		static Mesh load_from_file(OpenGL* backend, String path);
 
 	private:
 		Vector<Vertex> vertices;
@@ -211,18 +217,33 @@ struct OpenGL {
 		void setup();
 	};
 
-	void execute_requests(Vector<Request>& requests, MemoryContext memory) {
-		Hashmap<Pipeline, Vector<DrawCallRequest>> draw_calls_map = Hashmap<Pipeline, Vector<DrawCallRequest>>(memory.frame_allocator);
-		for (Request& request : requests) {
+	struct RenderGroup {
+		Mesh mesh;
+		MeshEntry mesh_entry;
+		int instance_count = 1; 
+
+		Mat4 model; // use this for position and sorting transparents stuff like that.
+	};
+
+	// TODO(Jovanni): I should pass in the camera and lights
+	void execute_defered_request(EngineAPI* engine) {
+		Vector<RenderGroup> opaque_draw_calls = Vector<RenderGroup>(engine->memory.frame_allocator);
+		Vector<RenderGroup> translucent_draw_calls = Vector<RenderGroup>(engine->memory.frame_allocator);
+		Vector<DrawSkyboxRequest> skyboxes = Vector<DrawSkyboxRequest>(engine->memory.frame_allocator);
+
+		Mat4 view = engine->get_view_matrix();
+		Mat4 projection = engine->get_projection_matrix();
+
+		for (RenderRequest& request : engine->renderer.deferred_requests) {
 			switch (request.type) {
 				case RequestType::TEXTURE2D_LOAD: {
 					Texture& texture = this->textures.get(request.texture.user.handle);
-					texture = Texture::load_from_file(request.texture.texture_unit, request.texture.path, request.texture.description);
+					texture = Texture::load_from_file(request.texture.path, request.texture.description);
 				} break;
 
 				case RequestType::TEXTURE3D_LOAD: {
 					Texture& texture = this->textures.get(request.texture.user.handle);
-					texture = Texture::load_cube_map(request.texture.texture_unit, request.texture.cubemap_paths);
+					texture = Texture::load_cube_map(request.texture.cubemap_paths);
 				} break;
 
 				case RequestType::VBO_BIND: {
@@ -249,19 +270,17 @@ struct OpenGL {
 					// shader = Shader(request.shader.shader_paths);
 				} break;
 
-				case RequestType::SHADER_CREATE: {
-					Shader& shader = this->shaders.get(request.shader.user.handle);
-					shader = Shader::create(request.shader.shader_paths);
-				} break;
-
+				// TODO(Jovanni): make a funciton thats just recompile_dirty_shaders()
+				/*
 				case RequestType::SHADER_RECOMPILE: {
 					Shader& shader = this->shaders.get(request.shader.user.handle);
 					shader.compile();
 				} break;
+				*/
 
 				case RequestType::MESH_LOAD: {
 					Mesh& mesh = this->meshes.get(request.mesh.user.handle);
-					mesh = Mesh::load_from_file(this, request.mesh.shader, request.mesh.path);
+					mesh = Mesh::load_from_file(this, request.mesh.path);
 				} break;
 
 				case RequestType::MESH_CUBE_CREATE: {
@@ -275,13 +294,28 @@ struct OpenGL {
 				} break;
 
 				case RequestType::DRAW_CALL: {
-					if (draw_calls_map.has(request.draw_call.pipeline)) { 
-						draw_calls_map[request.draw_call.pipeline].append(request.draw_call);
+					Mesh& mesh_slot = this->meshes.get(request.draw_call.mesh.handle);
+					MeshEntry& mesh_entry = mesh_slot.entries[request.draw_call.entry_index];
+					Material& material = this->materials.get(mesh_entry.material.handle);
+					RenderGroup group = {};
+					group.mesh = mesh_slot;
+					group.mesh_entry = mesh_entry;
+					group.instance_count = request.draw_call.instance_count;
+					group.model = request.draw_call.model;
+
+					if (material.opacity < 1.0f) {
+						translucent_draw_calls.append(group);
 					} else {
-						Vector<DrawCallRequest> vector = Vector<DrawCallRequest>({request.draw_call}, memory.frame_allocator);
-						draw_calls_map.put(request.draw_call.pipeline, vector);
+						opaque_draw_calls.append(group);
 					}
 				} break;
+
+				case RequestType::DRAW_SKYBOX: {
+					skyboxes.append(request.draw_skybox);
+				} break;
+				
+				// TODO(Jovanni):
+				// DRAW_SKYBOX (just supply a texture 3d everything else I should be able to handle I think?)
 
 				default: {
 					RUNTIME_ASSERT(false);
@@ -289,44 +323,157 @@ struct OpenGL {
 			}
 		}
 
-		// eventually do every frame_buffer as well...
-		// TODO(Jovanni): this isn't techinally right because I want to be able to order the pipelines
-		// for example opaques should draw before transparent ones. ANd also transparent ones hould be sorted...
-		CommandBuffer cmd = {};
-		cmd.begin_frame();
-			for (auto& entry : draw_calls_map) {
-				Pipeline& pipeline = entry.key;
-				Vector<DrawCallRequest>& draw_calls = entry.value;
-				cmd.bind_pipeline(pipeline);
-				for (DrawCallRequest& draw_call : draw_calls) {
-					Mesh& mesh = this->meshes.get(draw_call.mesh.handle);
-					mesh.vao.bind();
-					mesh.vbo.bind();
-					mesh.ebo.bind();
-					for (MeshEntry& mesh_entry : mesh.entries) {
-						Material& material = this->materials.get(mesh_entry.material.handle);
-						Shader& shader = this->shaders.get(material.shader.handle);
-						shader.use();
-						shader.set_material(this, &material);
-						shader.set_model(draw_call.model);
-						shader.set_view(draw_call.view);
-						shader.set_projection(draw_call.projection);
+		LOCAL_PERSIST Shader pbr_shader = Shader::create({STR("../../../Game/Assets/Shaders/pbr.vert"), STR("../../../Game/Assets/Shaders/pbr.frag")});
+		LOCAL_PERSIST Shader pbr_instanced_shader = Shader::create({STR("../../../Game/Assets/Shaders/pbr_instanced.vert"), STR("../../../Game/Assets/Shaders/pbr.frag")});
+		
+		LOCAL_PERSIST Shader skybox_shader = Shader::create({STR("../../../Game/Assets/Shaders/skybox.vert"), STR("../../../Game/Assets/Shaders/skybox.frag")});
+		LOCAL_PERSIST Material& skybox_material = this->materials.get(this->materials.acquire());
+		LOCAL_PERSIST Mesh skybox_mesh = Mesh::skybox_cube(skybox_material.self);
 
-						if (mesh_entry.index_count) {
-							this->draw_indices(mesh_entry.vertex_base, mesh_entry.index_base, mesh_entry.index_count, draw_call.instance_count);
-						} else {
-							this->draw_vertices(mesh_entry.vertex_base, mesh_entry.vertex_count, draw_call.instance_count);
+		LOCAL_PERSIST Shader aabb_shader = Shader::create({STR("../../../Game/Assets/Shaders/fallback.vert"), STR("../../../Game/Assets/Shaders/fallback.frag")});
+		LOCAL_PERSIST Mesh aabb_mesh = Mesh::axis_aligned_bounding_box(MaterialHandle::invalid());
+
+		// eventually do every framebuffers as well...
+		CommandBuffer cmd = {}; 
+		cmd.begin_frame();
+			// NOTE(Jovanni): Draw opaques
+			for (RenderGroup& group : opaque_draw_calls) {
+				bool instanced = group.instance_count > 1;
+				MeshEntry& mesh_entry = group.mesh_entry;
+				if (!mesh_entry.should_render) continue;
+
+
+				group.mesh.vao.bind();
+				group.mesh.vbo.bind();
+				group.mesh.ebo.bind();
+				cmd.bind_rasterizer_description(mesh_entry.rasterizer_description);
+				Material& material = this->materials.get(mesh_entry.material.handle);
+				if (instanced) {
+					pbr_instanced_shader.use();
+					pbr_instanced_shader.set_material(this, &material);
+					pbr_instanced_shader.set_model(group.model);
+					pbr_instanced_shader.set_view(view);
+					pbr_instanced_shader.set_projection(projection);
+				} else {
+					pbr_shader.use();
+					pbr_shader.set_material(this, &material);
+					pbr_shader.set_model(group.model);
+					pbr_shader.set_view(view);
+					pbr_shader.set_projection(projection);
+				}
+
+				if (mesh_entry.index_count) {
+					this->draw_indices(mesh_entry.vertex_base, mesh_entry.index_base, mesh_entry.index_count, group.instance_count);
+				} else {
+					this->draw_vertices(mesh_entry.vertex_base, mesh_entry.vertex_count, group.instance_count);
+				}
+
+				if (mesh_entry.should_render_aabb) {
+					aabb_mesh.vao.bind();
+					aabb_mesh.vbo.bind();
+					aabb_mesh.ebo.bind();
+					aabb_shader.use();
+					aabb_shader.set_material(this, &material);
+					Mat4 model = group.model * mesh_entry.aabb.to_transform_matrix4();
+					aabb_shader.set_model(model);
+					aabb_shader.set_view(view);
+					aabb_shader.set_projection(projection);
+
+					this->draw_vertices(aabb_mesh.entries[0].vertex_base, aabb_mesh.entries[0].vertex_count, 1, aabb_mesh.entries[0].draw_type);
+				}
+			}
+
+			// TODO(Jovanni): Draw skyboxes
+			glDepthFunc(GL_LEQUAL);
+			Mat4 skybox_view_matrix = view;
+			skybox_view_matrix.v[0].w = 0.0f;
+			skybox_view_matrix.v[1].w = 0.0f;
+			skybox_view_matrix.v[2].w = 0.0f;
+			
+			skybox_mesh.vao.bind();
+			skybox_mesh.vbo.bind();
+			skybox_mesh.ebo.bind();
+			cmd.bind_rasterizer_description({
+				.cull_enabled = false
+			});
+			for (DrawSkyboxRequest request : skyboxes) {
+				Material& material = this->materials.get(request.material.handle);
+				skybox_material = material;
+
+				skybox_shader.use();
+				skybox_shader.set_material(this, &skybox_material);
+				skybox_shader.set_view(skybox_view_matrix);
+				skybox_shader.set_projection(projection);
+
+				if (skybox_mesh.entries[0].index_count) {
+					this->draw_indices(skybox_mesh.entries[0].vertex_base, skybox_mesh.entries[0].index_base, skybox_mesh.entries[0].index_count, 1);
+				} else {
+					this->draw_vertices(skybox_mesh.entries[0].vertex_base, skybox_mesh.entries[0].vertex_count, 1);
+				}
+			}
+			glDepthFunc(GL_LESS);
+
+			// NOTE(Jovanni): Draw translucents
+			if (translucent_draw_calls.count) {
+				gl_error_check(glEnable(GL_BLEND));
+				gl_error_check(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
+				// sort_translucent_meshs_by_camera
+				for (int i = 0; i < translucent_draw_calls.count; i++) {
+					RenderGroup group_a = translucent_draw_calls[i];
+					Vec3 a_position = Vec3(group_a.model.v[0].w, group_a.model.v[1].w, group_a.model.v[2].w); 
+					float a_distance = Vec3::distance(a_position, engine->scene.active_camera.position);
+					for (int j = i + 1; j < translucent_draw_calls.count; j++) {
+						RenderGroup group_b = translucent_draw_calls[j];
+						Vec3 b_position = Vec3(group_b.model.v[0].w, group_b.model.v[1].w, group_b.model.v[2].w); 
+						float b_distance = Vec3::distance(b_position,  engine->scene.active_camera.position);
+
+						if (a_distance > b_distance) {
+							Memory::swap(translucent_draw_calls[i], translucent_draw_calls[j]);
 						}
 					}
 				}
+
+				for (RenderGroup& group : translucent_draw_calls) {
+					bool instanced = group.instance_count > 1;
+
+					group.mesh.vao.bind();
+					group.mesh.vbo.bind();
+					group.mesh.ebo.bind();
+
+					MeshEntry& mesh_entry = group.mesh_entry;
+					Material& material = this->materials.get(mesh_entry.material.handle);
+					cmd.bind_rasterizer_description(mesh_entry.rasterizer_description);
+					if (instanced) {
+						pbr_instanced_shader.use();
+						pbr_instanced_shader.set_material(this, &material);
+						pbr_instanced_shader.set_model(group.model);
+						pbr_instanced_shader.set_view(view);
+						pbr_instanced_shader.set_projection(projection);
+					} else {
+						pbr_shader.use();
+						pbr_shader.set_material(this, &material);
+						pbr_shader.set_model(group.model);
+						pbr_shader.set_view(view);
+						pbr_shader.set_projection(projection);
+					}
+
+					if (mesh_entry.index_count) {
+						this->draw_indices(mesh_entry.vertex_base, mesh_entry.index_base, mesh_entry.index_count, group.instance_count, mesh_entry.draw_type);
+					} else {
+						this->draw_vertices(mesh_entry.vertex_base, mesh_entry.vertex_count, group.instance_count, mesh_entry.draw_type);
+					}
+				}
+			
+				gl_error_check(glDisable(GL_BLEND));
 			}
 		cmd.end_frame();
 	}
 
 	// TODO(Jovanni): For now just allow triangles, but later parameterize this? TRY INSTANCE STUF AGQAIN WIHT THE COUNT
-	void draw_vertices(u32 vertex_base, u32 vertex_count, u32 instance_count = 1) {
+	void draw_vertices(u32 vertex_base, u32 vertex_count, u32 instance_count = 1, u32 draw_type = GL_TRIANGLES) {
 		gl_error_check(glDrawArraysInstanced(
-			GL_TRIANGLES,
+			draw_type,
 			vertex_base,
 			vertex_count,
 			instance_count
@@ -334,14 +481,15 @@ struct OpenGL {
 	}
 
 	// TODO(Jovanni): For now just allow triangles, but later parameterize this?
-	void draw_indices(u32 vertex_base, u32 index_base, u32 index_count, u32 instance_count = 1) {
+	void draw_indices(u32 vertex_base, u32 index_base, u32 index_count, u32 instance_count = 1, u32 draw_type = GL_TRIANGLES) {
 		gl_error_check(glDrawElementsInstancedBaseVertex(
-			GL_TRIANGLES, index_count,
+			draw_type, index_count,
 			GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * index_base),
 			instance_count, vertex_base
 		));
 	}
 
+	/*
 	void create_picking_frameBuffer(int WIDTH, int HEIGHT) {
         glGenFramebuffers(1, &this->picking_fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, this->picking_fbo);
@@ -362,12 +510,13 @@ struct OpenGL {
         RUNTIME_ASSERT_MSG(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE, "FBO setup failed\n");
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+	*/
 
-	OpenGL create() {
+	static OpenGL create() {
 		OpenGL ret = {};
+		gl_error_check(glEnable(GL_DEPTH_TEST));
 
-
-		
+		return ret;
 	}
 
 	s32 BOUND_VAO_ID = -1;
@@ -381,7 +530,6 @@ struct OpenGL {
 	u32 picking_fbo = INT_MAX; 
 	u32 picking_texture = INT_MAX;
 
-	Vector<Request> request = {};
 	Registry<OpenGL::Texture, 256> textures = {};
 	Registry<Material, 256> materials = {};
 	Registry<OpenGL::Shader, 256> shaders = {};

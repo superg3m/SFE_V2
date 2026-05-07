@@ -13,16 +13,16 @@ u32 OpenGL::Shader::create_shader_program(Vector<String> shader_paths) {
 	for (String path : shader_paths) {
 		INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(path);
 		u32 shader_source_id = this->shader_source_compile(path);
-		glAttachShader(shader_program_id, shader_source_id);
+		gl_error_check(glAttachShader(shader_program_id, shader_source_id));
 		shader_source_ids[shader_source_count++] = shader_source_id;
 	}
-	glLinkProgram(shader_program_id);
+	gl_error_check(glLinkProgram(shader_program_id));
 
 	int success = false;
-	glGetProgramiv(shader_program_id, GL_LINK_STATUS, &success);
+	gl_error_check(glGetProgramiv(shader_program_id, GL_LINK_STATUS, &success));
 	if (!success) {
 		char info_log[1028] = {0};
-		glGetProgramInfoLog(shader_program_id, 512, NULL, info_log);
+		gl_error_check(glGetProgramInfoLog(shader_program_id, 512, NULL, info_log));
 		LOG_ERROR("LINKING_FAILED {%s}\n", shader_paths[0].data);
 		LOG_ERROR("%s -- --------------------------------------------------- --\n", info_log);
 
@@ -31,7 +31,7 @@ u32 OpenGL::Shader::create_shader_program(Vector<String> shader_paths) {
 			this->using_fallback = true;
 
 			for (int i = 0; i < shader_source_count; i++) {
-				glDeleteShader(shader_source_ids[i]);
+				gl_error_check(glDeleteShader(shader_source_ids[i]));
 			}
 
 			return OpenGL::Shader::create_shader_program(fallback_paths);
@@ -41,20 +41,20 @@ u32 OpenGL::Shader::create_shader_program(Vector<String> shader_paths) {
 	}
 
 	for (int i = 0; i < shader_source_count; i++) {
-		glDeleteShader(shader_source_ids[i]);
+		gl_error_check(glDeleteShader(shader_source_ids[i]));
 	}
 
 	int uniform_count = 0;
-	glGetProgramiv(shader_program_id, GL_ACTIVE_UNIFORMS, &uniform_count);
+	gl_error_check(glGetProgramiv(shader_program_id, GL_ACTIVE_UNIFORMS, &uniform_count));
 	for (int i = 0; i < uniform_count; i++) {
 		int size;
 		GLenum type;
 		const GLsizei name_max_size = 256;
 		GLchar name[name_max_size];
 		GLsizei name_length;
-		glGetActiveUniform(shader_program_id, (u32)i, name_max_size, &name_length, &size, &type, name);
+		gl_error_check(glGetActiveUniform(shader_program_id, (u32)i, name_max_size, &name_length, &size, &type, name));
 
-		int location = glGetUniformLocation(shader_program_id, name);
+		int location = gl_error_check(glGetUniformLocation(shader_program_id, name));
 		UniformDesc value = UniformDesc{type, location};
 		this->uniforms.put(String::create(name, name_length), value);
 	}
@@ -276,21 +276,21 @@ void OpenGL::Shader::set_bool(String name, bool value) {
 void OpenGL::Shader::set_int(String name, int value) {
 	gl_error_check(glUniform1i(this->get_uniform_location(name, GL_INT), value));
 }
-void OpenGL::Shader::set_texture(String name, Texture texture) {
+void OpenGL::Shader::set_texture(String name, int texture_unit, Texture texture) {
 	RUNTIME_ASSERT(texture.type == TextureSamplerType::SAMPLER_2D);
 
-	gl_error_check(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
+	gl_error_check(glActiveTexture(GL_TEXTURE0 + texture_unit));
 	gl_error_check(glBindTexture(GL_TEXTURE_2D, texture.id));
 
-	gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_2D), texture.texture_unit));
+	gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_2D), texture_unit));
 }
-void OpenGL::Shader::set_texture_cube(String name, Texture texture) {
+void OpenGL::Shader::set_texture_cube(String name, int texture_unit, Texture texture) {
 	RUNTIME_ASSERT(texture.type == TextureSamplerType::CUBEMAP_3D);
 
-	gl_error_check(glActiveTexture(GL_TEXTURE0 + texture.texture_unit));
+	gl_error_check(glActiveTexture(GL_TEXTURE0 + texture_unit));
 	gl_error_check(glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id));
-
-	gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_CUBE), texture.texture_unit));
+ 
+	gl_error_check(glUniform1i(this->get_uniform_location(name, GL_SAMPLER_CUBE), texture_unit));
 }
 void OpenGL::Shader::set_float(String name, float value) {
 	gl_error_check(glUniform1f(this->get_uniform_location(name, GL_FLOAT), value));
@@ -318,6 +318,11 @@ void OpenGL::Shader::set_mat4(String name, const Mat4& mat) {
 }
 
 void OpenGL::Shader::set_material(OpenGL* backend, Material* material) {
+	this->set_float(STR(MATERIAL_OPACITY_UNIFORM_NAME), material->opacity);
+	this->set_float(STR(MATERIAL_METALLIC_UNIFORM_NAME), material->metallic);
+	this->set_float(STR(MATERIAL_ROUGHNESS_UNIFORM_NAME), material->roughness);
+
+	int texture_count = 0;
 	for (const auto entry : material->bindings) {
 		String k = entry.key; 
 		BindingValue v = entry.value;
@@ -338,9 +343,9 @@ void OpenGL::Shader::set_material(OpenGL* backend, Material* material) {
 			case BindingValueType::TEXTURE_HANDLE: {
 				Texture& texture = backend->textures.get(v.texture_binding.handle);
 				if (texture.type == TextureSamplerType::SAMPLER_2D) {
-					this->set_texture(k, texture);
+					this->set_texture(k, texture_count++, texture);
 				} else {
-					this->set_texture_cube(k, texture);
+					this->set_texture_cube(k, texture_count++, texture);
 				}
 			} break;
 

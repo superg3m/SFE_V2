@@ -22,28 +22,15 @@ INTERNAL_LINKAGE AABB calculate_aabb(Vector<Vertex>& vertices, int base_vertex, 
 	float y_max = FLT_MIN;
 	float z_max = FLT_MIN;
 	for (int i = base_vertex; i < base_vertex + vertex_count; i++) {
-		const Vertex v = vertices[i];
-		float x = v.aPosition.x;
-		float y = v.aPosition.y;
-		float z = v.aPosition.z;
+		const Vertex& v = vertices[i];
 
-		if (x_min > x) {
-			x_min = x;
-		} else if (x_max < x) {
-			x_max = x;
-		}
+		x_min = MIN(x_min, v.aPosition.x);
+		y_min = MIN(y_min, v.aPosition.y);
+		z_min = MIN(z_min, v.aPosition.z);
 
-		if (y_min > y) {
-			y_min = y;
-		} else if (y_max < y) {
-			y_max = y;
-		}
-
-		if (z_min > z) {
-			z_min = z;
-		} else if (z_max < z) {
-			z_max = z;
-		}
+		x_max = MAX(x_max, v.aPosition.x);
+		y_max = MAX(y_max, v.aPosition.y);
+		z_max = MAX(z_max, v.aPosition.z);
 	}
 
 	Vec3 center  = Vec3(
@@ -83,11 +70,11 @@ INTERNAL_LINKAGE void load_assimp_texture(OpenGL* backend, Material* material, i
 		if (ai_texture) {
 			int width, height, nrChannel = 0;
 			u8* image_data = stbi_load_from_memory((u8*)ai_texture->pcData, ai_texture->mWidth, &width, &height, &nrChannel, 0);
-			texture = OpenGL::Texture::load_from_memory(ai_texture_type, image_data, width, height, nrChannel, {});
+			texture = OpenGL::Texture::load_from_memory(image_data, width, height, nrChannel, {});
 			LOG_DEBUG("Material: %d | has embedded Texture of type: %s\n", i, name.data);
 		} else {
 			LOG_DEBUG("Material: %d | has external texture of type: %s\n", i, name.data);
-			texture = OpenGL::Texture::load_from_file(ai_texture_type, String::create(filename, length), {});
+			texture = OpenGL::Texture::load_from_file(String::create(filename, length), {});
 		}
 
 		material->set_uniform(name, TextureHandle(texture_handle));
@@ -116,6 +103,7 @@ OpenGL::MeshEntry OpenGL::Mesh::process_mesh(Hashmap<int, MaterialHandle>& map, 
 	entry.index_count = ai_mesh->mNumFaces * 3;
 	entry.vertex_count = ai_mesh->mNumVertices;
 	entry.material = map.get(ai_mesh->mMaterialIndex);
+	entry.name = String::create(String::allocate(Allocator::general(), ai_mesh->mName.C_Str(), ai_mesh->mName.length), ai_mesh->mName.length); // is this cstr stable?
 	unsigned int meshPrimitiveType;
 	if (ai_mesh->mPrimitiveTypes & aiPrimitiveType_POINT) {
 		meshPrimitiveType = 1;
@@ -284,6 +272,66 @@ OpenGL::Mesh OpenGL::Mesh::cube(MaterialHandle material) {
 	return ret;
 }
 
+OpenGL::Mesh OpenGL::Mesh::skybox_cube(MaterialHandle material) {
+	Vector<Vertex> cube_vertices = {
+		// Back face (z = -1.0)
+		Vertex{Vec3(-1.0f,-1.0f,-1.0f), Vec3(0,0,-1), Vec2(0,0)}, // 0
+		Vertex{Vec3( 1.0f, 1.0f,-1.0f), Vec3(0,0,-1), Vec2(1,1)}, // 1
+		Vertex{Vec3( 1.0f,-1.0f,-1.0f), Vec3(0,0,-1), Vec2(1,0)}, // 2
+		Vertex{Vec3(-1.0f, 1.0f,-1.0f), Vec3(0,0,-1), Vec2(0,1)}, // 3
+
+		// Front face (z = +1.0)
+		Vertex{Vec3(-1.0f,-1.0f, 1.0f), Vec3(0,0,1), Vec2(0,0)}, // 4
+		Vertex{Vec3( 1.0f,-1.0f, 1.0f), Vec3(0,0,1), Vec2(1,0)}, // 5
+		Vertex{Vec3( 1.0f, 1.0f, 1.0f), Vec3(0,0,1), Vec2(1,1)}, // 6
+		Vertex{Vec3(-1.0f, 1.0f, 1.0f), Vec3(0,0,1), Vec2(0,1)}, // 7
+
+		// Left face (x = -1.0)
+		Vertex{Vec3(-1.0f, 1.0f, 1.0f), Vec3(-1,0,0), Vec2(0,1)}, // 8
+		Vertex{Vec3(-1.0f, 1.0f,-1.0f), Vec3(-1,0,0), Vec2(1,1)}, // 9
+		Vertex{Vec3(-1.0f,-1.0f,-1.0f), Vec3(-1,0,0), Vec2(1,0)}, // 10
+		Vertex{Vec3(-1.0f,-1.0f, 1.0f), Vec3(-1,0,0), Vec2(0,0)}, // 11
+
+		// Right face (x = +1.0)
+		Vertex{Vec3( 1.0f, 1.0f, 1.0f), Vec3(1,0,0), Vec2(0,1)}, // 12
+		Vertex{Vec3( 1.0f,-1.0f,-1.0f), Vec3(1,0,0), Vec2(1,0)}, // 13
+		Vertex{Vec3( 1.0f, 1.0f,-1.0f), Vec3(1,0,0), Vec2(1,1)}, // 14
+		Vertex{Vec3( 1.0f,-1.0f, 1.0f), Vec3(1,0,0), Vec2(0,0)}, // 15
+
+		// Bottom face (y = -1.0)
+		Vertex{Vec3(-1.0f,-1.0f,-1.0f), Vec3(0,-1,0), Vec2(0,1)}, // 16
+		Vertex{Vec3( 1.0f,-1.0f,-1.0f), Vec3(0,-1,0), Vec2(1,1)}, // 17
+		Vertex{Vec3( 1.0f,-1.0f, 1.0f), Vec3(0,-1,0), Vec2(1,0)}, // 18
+		Vertex{Vec3(-1.0f,-1.0f, 1.0f), Vec3(0,-1,0), Vec2(0,0)}, // 19
+
+		// Top face (y = +1.0)
+		Vertex{Vec3(-1.0f, 1.0f,-1.0f), Vec3(0,1,0), Vec2(0,1)}, // 20
+		Vertex{Vec3( 1.0f, 1.0f, 1.0f), Vec3(0,1,0), Vec2(1,0)}, // 21
+		Vertex{Vec3( 1.0f, 1.0f,-1.0f), Vec3(0,1,0), Vec2(1,1)}, // 22
+		Vertex{Vec3(-1.0f, 1.0f, 1.0f), Vec3(0,1,0), Vec2(0,0)}, // 23
+	};
+
+	Vector<u32> cube_indices = {
+		0,  1,  2,  1,  0,  3,  // Front
+		4,  5,  6,  6,  7,  4,  // Back
+
+		8,  9,  10, 10, 11, 8,  // Left
+		12, 13, 14, 13, 12, 15, // Right
+
+		16, 17, 18, 18, 19, 16, // Bottom
+		20, 21, 22, 21, 20, 23  // Top
+	};
+
+
+	Mesh ret;
+	ret.vertices = cube_vertices;
+	ret.indices = cube_indices;
+	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material, ret.vertices, ret.indices, 0, 0, GL_TRIANGLES));
+	ret.setup();
+
+	return ret;
+}
+
 OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material, AABB aabb) {
 	// Vec3 center = aabb.getCenter();
 	Vec3 extents = aabb.extents();
@@ -330,7 +378,7 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material, AA
 		Vertex{Vec3(bottom_3), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(top_3), Vec3(0, 0, 0), Vec2(0, 0)},
 	};
 
-	Mesh ret;
+	Mesh ret = {};
 	ret.vertices = aabb_vertices;
 	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material, ret.vertices, ret.indices, 0, 0, GL_LINES));  
 	ret.setup();
@@ -359,7 +407,7 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material) {
 		Vertex{Vec3(-0.5f, -0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)}, Vertex{Vec3(-0.5f, 0.5f,  0.5f), Vec3(0, 0, 0), Vec2(0, 0)},
 	};
 
-	Mesh ret;
+	Mesh ret = {};
 	ret.vertices = aabb_vertices;
 	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material, ret.vertices, ret.indices, 0, 0, GL_LINES));
 	ret.setup();
@@ -367,7 +415,7 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material) {
 	return ret;
 }
 
-OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, ShaderHandle shader, String path) {
+OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, String path) {
 	Mesh ret = {};
 	Assimp::Importer importer;
 	unsigned int assimp_flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;
@@ -400,8 +448,8 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, ShaderHandle shader, 
 		const aiMaterial* ai_material = scene->mMaterials[i];
 		Handle material_handle = backend->materials.acquire();
 		Material& material = backend->materials.get(material_handle);
-		material.shader = shader;
-		load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_DIFFUSE, Material::DIFFUSE_TEXTURE);
+		material = Material::create(material_handle, Allocator::general(), MaterialType::PBR);
+		load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_DIFFUSE, STR(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME));
 
 		/*
 		aiColor4D ambient_color(0.0f, 0.0f, 0.0f, 0.0f);
@@ -410,7 +458,6 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, ShaderHandle shader, 
 			this->materials[i].ambient_color.g = ambient_color.g;
 			this->materials[i].ambient_color.b = ambient_color.b;
 		}
-
 
 		aiColor3D diffuse_color(0.0f, 0.0f, 0.0f);
 		if (ai_material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse_color) == AI_SUCCESS) {
@@ -425,14 +472,13 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, ShaderHandle shader, 
 			this->materials[i].specular_color.g = specular_color.g;
 			this->materials[i].specular_color.b = specular_color.b;
 		}
-
-		float opacity = 1.0f;
-		if (ai_material->Get(AI_MATKEY_OPACITY, opacity) == AI_SUCCESS) {
-			this->materials[i].opacity = opacity;
-		} else {
-			// LOG_WARN("Mesh Failed opacity matkey?\n");
-		}
 		*/
+
+		if (ai_material->Get(AI_MATKEY_OPACITY, material.opacity) == AI_SUCCESS) {
+			LOG_WARN("SUCCESS_MESH_HAS_OPACITY: %f\n", material.opacity);
+		} else {
+			LOG_WARN("Mesh Failed opacity matkey\n");
+		}
 
 		material_index_to_material_handle.put(i, MaterialHandle(material_handle));
 	}

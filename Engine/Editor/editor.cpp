@@ -13,7 +13,10 @@ void initalize_imgui(GLFWwindow* window) {
 	// ImGui::StyleColorsDark();
 }
 
-void Editor::init(Engine* engine) {
-	AppState* app = (AppState*)engine->application_state;
+Editor Editor::create(Engine* engine) {
+	Editor ret = {};
+	AppState* app = (AppState*)engine->app;
 	initalize_imgui((GLFWwindow*)engine->window.ctx);
+
+	return ret;
 }

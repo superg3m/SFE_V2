@@ -1,56 +1,17 @@
 #include "game.hpp"
 
-EXPORT_FN void application_init(Engine* engine, Arena* string_arena, Hashmap<String, String>* string_intern_map) {
-	engine->application_state = engine->memory.permanent_allocator.malloc(sizeof(AppState), alignof(AppState));
-	AppState* app = (AppState*)engine->application_state;
+EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<String, String>* string_intern_map) {
+	engine->app = engine->memory.permanent_allocator.malloc(sizeof(AppState), alignof(AppState));
+	AppState* app = (AppState*)engine->app;
 	*app = {};
 
-	// EntityHandle backpack = engine->scene.create_entity(STR_INTERN("backpack"), engine->scene.root);
-	// EntityHandle cube = engine->scene.create_entity(STR_INTERN("cube"), engine->scene.root);
-	// EntityHandle cube3 = engine->scene.create_entity(STR_INTERN("cube3"), engine->scene.root);
-	// EntityHandle cube4 = engine->scene.create_entity(STR_INTERN("cube4"), engine->scene.root);
-	// Entity& backpack_slot = engine->scene.entities.get(backpack.handle);
-	// Entity& cube_slot = engine->scene.entities.get(cube.handle);
+	app->container_texture = engine->renderer.create_texture(STR_INTERN("../../../Game/Assets/Textures/container.jpg"));
 
-	app->backpack_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/model.vert"), STR_INTERN("../../../Game/Assets/Shaders/model.frag")});
-	app->backpack_mesh = engine->renderer.create_mesh(app->backpack_shader, STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
-	// backpack_slot.add_component<MeshComponent>(app->backpack_mesh);
+	Material& material = engine->renderer.create_material();
+	app->material = material.self;
+	app->backpack_mesh = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
+	app->cube_mesh = engine->renderer.create_mesh_cube(material.self);
 
-	app->cube_shader = engine->renderer.create_shader({STR_INTERN("../../../Game/Assets/Shaders/cube.vert"), STR_INTERN("../../../Game/Assets/Shaders/cube.frag")});
-	app->material = engine->renderer.create_material(app->cube_shader);
-	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
-	// cube_slot.add_component<MeshComponent>(app->cube_mesh);
-
-	app->opaque_pipeline = Pipeline{
-		.rasterizer = {
-			.fill = true
-		},
-		.depth = {
-			.depth_testing = true,
-			.depth_write = true
-		},
-		.blend = {
-			.enabled = false
-		}
-	};
-
-	app->opaque_wireframe_pipeline = Pipeline{
-		.rasterizer = {
-			.fill = false
-		},
-		.depth = {
-			.depth_testing = true,
-			.depth_write = true
-		},
-		.blend = {
-			.enabled = false
-		}
-	};
-
-	TextureDescription desc = {};
-	app->container_texture = engine->renderer.create_texture(0, STR_INTERN("../../../Game/Assets/Textures/container.jpg"), desc);
-	app->face_texture = engine->renderer.create_texture(1, STR_INTERN("../../../Game/Assets/Textures/awesomeface.png"), desc);
-	
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
 	int index = 0;
 	float offset = 0.1f;
@@ -69,16 +30,70 @@ EXPORT_FN void application_init(Engine* engine, Arena* string_arena, Hashmap<Str
 	}, engine->memory.frame_allocator});
 
 	app->instance_cube_vbo = engine->renderer.create_vbo(app->cube_mesh, layout, app->cube_translations, true);
+
+	// {right, left, top, bottom, front, back}
+	#define SKYBOX_TEXTURE_PREFIX "../../../Game/Assets/Skyboxes/day_and_night"
+	app->skybox_day = engine->renderer.create_texture({
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/right.png"),
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/left.png"),
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/top.png"),
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/bottom.png"),
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/front.png"),
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/back.png"),
+	});
+
+	app->skybox_night = engine->renderer.create_texture({
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/right.png"),
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/left.png"),
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/top.png"),
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/bottom.png"),
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/front.png"),
+		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/back.png"),
+	});
+
+	app->skybox_material = engine->renderer.create_material().self;
+
+	/*
+	// so techincally if you run out of textures, but you wanted to use the same frame buffer
+	// the render group shouldn't clear color 
+	FrameBuffer framebuffer = engine->renderer.create_framebuffer();
+	RenderGroup render_group = enigne->renderer.render_group_begin(framebuffer, Vec3(0.25, 0.25, 0.25), &this->scene.active_camera); // if you leave the camera field blank it will use the
+	// active_camera in the scene.
+
+
+	engine->renderer.render_group_end();
+	
+	*/
+
+	Entity& backpack = engine->manager.create_entity_from_mesh(STR_INTERN("backpack"), engine->scene.root, app->backpack_mesh);
+	Entity& cube = engine->manager.create_entity_from_mesh(STR_INTERN("cube"), engine->scene.root, app->cube_mesh, 1);
+
+	Material& cube_material = engine->renderer.materials->get(app->material.handle);
+	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), app->container_texture); 
+
+	Material& skybox_material = engine->renderer.materials->get(app->skybox_material.handle);
+	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), app->skybox_day);
+	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), app->skybox_night);
+
+	Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
+	skybox.add_component<SkyboxComponent>(app->skybox_material);
 	app->timer.start(5.0f);
 }
 
-EXPORT_FN void application_update(Engine* engine, Arena* string_arena, Hashmap<String, String>* string_intern_map, float dt) {
-	AppState* app = (AppState*)engine->application_state;
+EXPORT_FN void application_update(EngineAPI* engine, Arena* string_arena, Hashmap<String, String>* string_intern_map, float dt) {
+	AppState* app = (AppState*)engine->app;
 
-	engine->scene.update(engine, dt);
-	app->accumulator += dt * 100;
+	app->accumulator += dt * 5;
+	if (app->accumulator >= 720.0f) {
+		app->accumulator = 0.0f;
+	}
 
-	// active_scene.update(dt);
+	if (app->accumulator >= 360.0f) {
+		app->sky_blend = Math::remap(app->accumulator, 360.0f, 720.0f, 1.0f, 0.0f);
+	} else {
+		app->sky_blend = Math::remap(app->accumulator, 0.0f, 360.0f, 0.0f, 1.0f);
+	}
+
 	if (engine->input.get_key_pressed(KEY_ESCAPE)) {
 		engine->window.close = true;
 	}
@@ -88,59 +103,45 @@ EXPORT_FN void application_update(Engine* engine, Arena* string_arena, Hashmap<S
 	}
 
 	if (engine->input.get_key_pressed(KEY_R)) {
-		engine->renderer.shader_recompile(app->cube_shader);
-		engine->renderer.shader_recompile(app->backpack_shader);
+		// engine->renderer.recompile_dirty_shaders();
 	}
 
 	if (engine->input.get_key(KEY_SPACE, PRESSED|DOWN)) {
-		engine->camera.process_keyboard(CameraDirection::UP, dt);
+		engine->scene.active_camera.process_keyboard(CameraDirection::UP, dt);
 	}
 
 	if (engine->input.get_key(KEY_CTRL, PRESSED|DOWN)) {
-		engine->camera.process_keyboard(CameraDirection::DOWN, dt);
+		engine->scene.active_camera.process_keyboard(CameraDirection::DOWN, dt);
 	}
 
 	if (engine->input.get_key(KEY_W, PRESSED|DOWN)) {
-		engine->camera.process_keyboard(CameraDirection::FORWARD, dt); 
+		engine->scene.active_camera.process_keyboard(CameraDirection::FORWARD, dt); 
 	}
 
 	if (engine->input.get_key(KEY_A, PRESSED|DOWN)) {
-		engine->camera.process_keyboard(CameraDirection::LEFT, dt); 
+		engine->scene.active_camera.process_keyboard(CameraDirection::LEFT, dt); 
 	}
 
 	if (engine->input.get_key(KEY_S, PRESSED|DOWN)) {
-		engine->camera.process_keyboard(CameraDirection::BACKWARD, dt);
+		engine->scene.active_camera.process_keyboard(CameraDirection::BACKWARD, dt);
 	}
 
 	if (engine->input.get_key(KEY_D, PRESSED|DOWN)) {
-		engine->camera.process_keyboard(CameraDirection::RIGHT, dt); 
+		engine->scene.active_camera.process_keyboard(CameraDirection::RIGHT, dt); 
 	}
 }
 
-EXPORT_FN void application_render(Engine* engine, Arena* string_arena, Hashmap<String, String>* string_intern_map, float dt) {
-	AppState* app = (AppState*)engine->application_state;
-	engine->renderer.material_set_uniform(app->material, STR_INTERN("uContainer"), app->container_texture); 
-	engine->renderer.material_set_uniform(app->material, STR_INTERN("uFace"), app->face_texture); 
+EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashmap<String, String>* string_intern_map, float dt) {
+	AppState* app = (AppState*)engine->app;
+	Mat4 model = Mat4::rotate(Mat4::identity(), Quat::from_euler(0, app->accumulator, 0));
 
-	if(app->timer.tick(dt)) {
-		app->use_opaque_pipeline = !app->use_opaque_pipeline;
-		app->timer.reset();
-	}
+	Material& cube_material = engine->renderer.materials->get(app->material.handle);
 
-	Mat4 model = Mat4::rotate(Mat4::identity(), Quat::from_euler(app->accumulator, app->accumulator, 0));
-	Mat4 view = engine->get_view_matrix();
-	Mat4 projection = engine->get_projection_matrix();
+	Material& skybox_material = engine->renderer.materials->get(app->skybox_material.handle);
+	skybox_material.set_float(STR_INTERN("uBlend"), app->sky_blend);
+	skybox_material.set_mat4(STR_INTERN("uModel"), model);
 
-	engine->renderer.material_set_uniform(app->material, STR_INTERN("uContainer"), app->container_texture); 
-	engine->renderer.material_set_uniform(app->material, STR_INTERN("uFace"), app->face_texture); 
-
-	Pipeline pipeline = app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	engine->renderer.bind_vbo(app->instance_cube_vbo, app->cube_mesh);
-	engine->renderer.draw_mesh(pipeline, app->cube_mesh, model, view, projection, app->cube_translations.count);
-	
-	model = Mat4::translate(model, 0, 5, 0);
-	pipeline = !app->use_opaque_pipeline ? app->opaque_pipeline : app->opaque_wireframe_pipeline;
-	engine->renderer.draw_mesh(pipeline, app->backpack_mesh, model, view, projection);
+	// clear_color()
 }
 
 // https://www.youtube.com/watch?v=9R2rRLbBkHU
@@ -150,31 +151,52 @@ EXPORT_FN void application_render(Engine* engine, Arena* string_arena, Hashmap<S
 // TODO(Jovanni): I want to reorganize the runtime.
 
 The end goal of this project is the following:
-- [] A lot of the time working wtih handles is just a pain in the ass... So what if you cna work with handles but always be abel to get the underlying compressed content
-	The idea is you have a Shader that has the similar stuff and then you have an opengl shader that has opengl specific stuff
+- [] Render AABBS
+- [x] wireframe
+- [] RenderGroup a user facing idae in the renderer when initalizing MeshComponents
+	the idea is that you must provide a frame buffer and a camera reference/pointer in order to be used from that render group.
+- [] MeshGroupComponent (use all children to compute like the aabb or globally apply stuff, for example if I turn on wireframe, all children turn on wireframe as well)
+- [] remove as much callbacks as I can (perfer) glfwGetCursorPos(window, &xpos, &ypos); for example
+- [] display second camera "minimap" (should just be a screen textured-quad anchored to the top-right, small with render texture from the framebuffer)
+	this is why making it manditory to pass in a frame buffer is nice! FrameBuffer {FrameBufferHandle fb, TextureHandle textrue}
+- [] remove the mouse delta
+- [] Clean up the code
+- [] maybe still consider have Texture* or Mesh* and then an OpenGL::Mesh inherits from it. SO you have most fields accessable through just the handle without going back
+	to the executable. This is very nice and clean it wwould work. The only reason i'm opposed is the the new OpenGL::Mesh will be be slow I think because of 
+	lack of cache locality and pointer chasing, but maybe it doesn't matter since these operations by their very natrue are very vew and far between I think?
+- [] remove general allocator calls if possible
+- [] Control the framebuffer stuff gets rendered on (make sure you can easily make framebuffers, and get their textures)
+- [] Multiple Cameras (camera's as entities)
+- [] Lights (should be easy?)
+- [] Approaching Zero Driver Overhead in OpenGL (Check if VAO is already bound for example)
+- [] transparent mesh (should be easy?)
+- [] semi-transparent mesh (should just work, but maybe not?)
 - [] robust rendering system (account for framebuffer objects)
 	- [] texture for depth, color, light, normals
 		- These shouldn't be in the shader, theres should just be thier own shader and i just swap out the shader
 		that way its easy and doesn't clutter up shaders.
 
-- [] Show entity heiarchy
 - [] Animations
 - [] Physics (collisions, shooting)
-- [] Multiple Cameras
-- [] pickable entities (probably ray based) (maybe frame buffer) (but also maybe just tree based?)
-- [] Hot reloading
+- [] Accomplish this for the editor https://x.com/JKoukourakis/status/2001955668715282521/photo/2
+- [] Replace imgui with my own GUI System
+- [] See if you can make the API system a bit nicer (I don't like how error prone it is)
+	basically because the api objects have data (deferred requests) you can just construct them how you would like to anywehere
+- [] skybox component and draw a skybox (should be easy?)
+- [-] pickable entities (probably ray based) (maybe frame buffer) (but also maybe just tree based?)
 - [] Material system thats nice and hotswappable
+	- [] most of this is actully a editor thing
 - [] Scene system with nice lighting abilities (spotlight, sunlight, pointlights)
 - [-] nice docking imgui and imguizmo
+	- [] Make it stylized
 - [] AS FEW Syscalls during a frame as possible!!!
 - [] Profile and code instrumentation in imgui
 
 - [] Remove all constructors except for containers and other places it makes sense, in those places make sure you have a default constructor
 - [] Make sure you have as few general allocation as possible I'm very very concerned about allocations across dll boundaries
 - [] AABB render (*maybe you can do this by sying draw mesh, but only this range of entries? Little bit hacky but works)
-- [] Entity stuff
 - [] 3d grid of lines (should be simple?)
-- [] inside hte shader directory I should have a manifest that keep track of the last modified time (so I can not have to recompile all shaders
+- [] inside the shader directory I should have a manifest that keep track of the last modified time (so I can not have to recompile all shaders) (just the dirty ones)
 - [] Shader Header is a really interesting idea
 	u8* shader_header_data = Platform::read_entire_file("shader_header.h")
 	u8* shader_vert_source = Platform::read_entire_file("shader.vert")

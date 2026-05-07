@@ -154,11 +154,11 @@ procedures_config = {
         compiler_inject_into_args=[]
     ),
  
- 	"API": ProcedureConfig(
+ 	"Public": ProcedureConfig(
         build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
-        output_name = "api.lib",
+        output_name = "public.lib",
         source_files = [
-            f"{RELATIVE_ENGINE_ROOT}/API/api.cpp",
+            f"{RELATIVE_ENGINE_ROOT}/Public/api.cpp",
         ],
         additional_libs = [],
         include_paths = INCLUDES,
@@ -217,7 +217,7 @@ procedures_config = {
         source_files = [
             f"{RELATIVE_GAME_ROOT}/game.cpp",
         ],
-        additional_libs = libs + ["core.lib", "api.lib"],
+        additional_libs = libs + ["core.lib", "public.lib"],
         include_paths = INCLUDES,
         compiler_inject_into_args=inject,
         on_source_change_recompile=recompile #doesn't work on mac because of codesign (BS)

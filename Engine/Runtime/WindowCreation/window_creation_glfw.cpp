@@ -1,7 +1,8 @@
 #include "window_creation.hpp"
 #include "../Core/core.hpp"
 #include "../../Vendor/vendor.hpp"
-#include "../../API/api.hpp"
+#include "../../Public/api.hpp"
+#include "../engine.hpp"
 #include "../Renderer/OpenGL/backend.hpp"
 
 extern Engine* engine;

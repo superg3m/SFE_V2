@@ -1,6 +1,6 @@
 #include "input.hpp"
 #include "../../Vendor/vendor.hpp"
-#include "../../API/api.hpp"
+#include "../engine.hpp"
 
 struct GLFW_Context {
 	int glfw_key_map[KEY_CODE_COUNT] = {-1};
@@ -39,18 +39,19 @@ void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
 	last_mouse_y = mouse_y;
 
 	if (engine->window.capture_mouse) {
-		engine->camera.process_mouse_movement(xoffset, yoffset);
+		engine->scene.active_camera.process_mouse_movement(xoffset, yoffset);
 	}
 }
 
 
 void scroll(GLFWwindow* window, double xoffset, double yoffset) {
-	engine->camera.process_mouse_scroll((float)yoffset);
+	// engine->scene.active_camera.process_mouse_scroll((float)yoffset);
 }
 
-void InputSystem::init(void* window) {
-	ctx.window = (GLFWwindow*)window;
+InputSystem InputSystem::create(void* window) {
+	InputSystem ret = {};
 
+	ctx.window = (GLFWwindow*)window;
 	ctx.glfw_key_map[KEY_A] = GLFW_KEY_A;
 	ctx.glfw_key_map[KEY_B] = GLFW_KEY_B;
 	ctx.glfw_key_map[KEY_C] = GLFW_KEY_C;
@@ -127,6 +128,8 @@ void InputSystem::init(void* window) {
 
 	glfwSetCursorPosCallback((GLFWwindow*)window, mouse);
 	glfwSetScrollCallback((GLFWwindow*)window, scroll);
+
+	return ret;
 }
 
 void InputSystem::poll() {

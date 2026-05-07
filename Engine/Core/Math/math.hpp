@@ -218,21 +218,6 @@ struct IVec4 {
 	bool operator!=(const IVec4 &right);
 };
 
-struct AABB {
-	Vec3 min;
-	Vec3 max;
-
-	AABB();
-	AABB(Vec3 min, Vec3 max);
-	AABB(float min_x, float min_y, float min_z, float max_x, float max_y, float max_z);
-
-	static AABB from_center_extents(Vec3 center, Vec3 extents);
-	static bool line_intersection(AABB aabb, Vec3 p0, Vec3 p1);  // p1 is treated as direction (p0 + t*p1)
-
-	Vec3 center() const;
-	Vec3 extents() const;
-};
-
 typedef struct Quat Quat;
 
 // Matrices are ROW-MAJOR
@@ -286,6 +271,23 @@ struct Mat4 {
 	void print() const;
 };
 
+
+struct AABB {
+	Vec3 min;
+	Vec3 max;
+
+	AABB();
+	AABB(Vec3 min, Vec3 max);
+	AABB(float min_x, float min_y, float min_z, float max_x, float max_y, float max_z);
+
+	static AABB from_center_extents(Vec3 center, Vec3 extents);
+	static bool line_intersection(AABB aabb, Vec3 p0, Vec3 p1);  // p1 is treated as direction (p0 + t*p1)
+	Mat4 to_transform_matrix4();
+
+	Vec3 center() const;
+	Vec3 extents() const;
+};
+
 struct Quat {
 	float w;
 	Vec3 v;
@@ -297,7 +299,8 @@ struct Quat {
 	Quat scale(float scale);
 	Quat normalize();
 	Mat4 get_rotation_matrix();
-	void angle_axis(float &theta, Vec3 &vec);
+	void to_angle_axis(float &theta, Vec3 &vec);
+	Vec3 to_euler();
 
 	static Quat identity();
 	static Quat literal(float w, Vec3 axis);

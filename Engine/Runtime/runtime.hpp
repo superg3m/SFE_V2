@@ -1,3 +1,5 @@
 #include "Renderer/renderer.hpp"
 #include "WindowCreation/window_creation.hpp"
 #include "Input/input.hpp"
+#include "Scene/scene.hpp"
+#include "EntityManager/entity_manager.hpp"

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "input_api.hpp"
+#include "input_state.hpp"
 
 struct InputSystem {
 	InputState input_state = {};
+	InputAPI API();
 
-	void init(void* ctx);
+	static InputSystem create(void* ctx);
 	void poll();
 };

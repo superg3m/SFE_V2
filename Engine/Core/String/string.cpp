@@ -19,8 +19,9 @@ String String::intern(Arena* string_arena, void* string_intern_map, const char* 
 		return ret;
 	}
 
-	String value = {String::allocate(string_arena->to_allocator(), data, length), length};
-	intern_map->put(key, value);
+	String safe_key = {String::allocate(string_arena->to_allocator(), data, length), length};
+	String value = safe_key;
+	intern_map->put(safe_key, value);
 
 	return value;
 }
