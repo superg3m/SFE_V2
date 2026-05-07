@@ -10,7 +10,8 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	Material& material = engine->renderer.create_material();
 	app->material = material.self;
 	app->backpack_mesh = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
-	MeshHandle helmet = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
+	MeshHandle glass = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
+	MeshHandle helmet = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
 	MeshHandle church = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/church.glb"));
 	app->cube_mesh = engine->renderer.create_mesh_cube(material.self);
 
@@ -71,7 +72,8 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 
 	Entity& backpack = engine->manager.create_entity_from_mesh(STR_INTERN("backpack"), engine->scene.root, app->backpack_mesh);
 	Entity& cube = engine->manager.create_entity_from_mesh(STR_INTERN("cube"), engine->scene.root, app->cube_mesh, app->cube_translations.count);
-	Entity& helmet_for_ants = engine->manager.create_entity_from_mesh(STR_INTERN("glass"), engine->scene.root, helmet);
+	Entity& glass_entity = engine->manager.create_entity_from_mesh(STR_INTERN("glass"), engine->scene.root, glass);
+	Entity& helmet_for_ants = engine->manager.create_entity_from_mesh(STR_INTERN("helmet"), engine->scene.root, helmet);
 	Entity& bullshit = engine->manager.create_entity_from_mesh(STR_INTERN("b7ullshit"), engine->scene.root, church);
 
 	Material& cube_material = engine->renderer.materials->get(app->material.handle);

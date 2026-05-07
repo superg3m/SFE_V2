@@ -482,6 +482,14 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, String path) {
 			LOG_WARN("Mesh Failed opacity matkey\n");
 		}
 
+		aiString alpha_mode;
+		if (ai_material->Get(AI_MATKEY_GLTF_ALPHAMODE, alpha_mode) == AI_SUCCESS) {
+			printf("%s\n", alpha_mode.C_Str());
+			if (alpha_mode == aiString("BLEND")) {
+				material.opacity = 0.3f;
+			}
+		}
+
 		material_index_to_material_handle.put(i, MaterialHandle(material_handle));
 	}
 

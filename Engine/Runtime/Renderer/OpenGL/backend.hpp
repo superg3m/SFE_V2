@@ -467,6 +467,11 @@ struct OpenGL {
 					} else {
 						this->draw_vertices(mesh_entry.vertex_base, mesh_entry.vertex_count, group.instance_count, mesh_entry.draw_type);
 					}
+
+					for (int i = 0; i < 8; i++) {
+						gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
+						glBindTexture(GL_TEXTURE_2D, 0);
+					}
 				}
 			
 				gl_error_check(glDisable(GL_BLEND));
