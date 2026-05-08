@@ -208,7 +208,7 @@ struct OpenGL {
 		static Mesh skybox_cube(MaterialHandle material);
 		static Mesh axis_aligned_bounding_box(MaterialHandle material, AABB aabb);
 		static Mesh axis_aligned_bounding_box(MaterialHandle material);
-		static Mesh load_from_file(OpenGL* backend, String path);
+		static Mesh load_from_file(OpenGL* backend, String path, TextureDescription desc);
 
 	private:
 		Vector<Vertex> vertices;
@@ -282,7 +282,7 @@ struct OpenGL {
 
 				case RequestType::MESH_LOAD: {
 					Mesh& mesh = this->meshes.get(request.mesh.user.handle);
-					mesh = Mesh::load_from_file(this, request.mesh.path);
+					mesh = Mesh::load_from_file(this, request.mesh.path, request.mesh.texture_description);
 				} break;
 
 				case RequestType::MESH_CUBE_CREATE: {
@@ -322,8 +322,8 @@ struct OpenGL {
 						}
 					}
 
-					translucent_draw_calls.append(opaque_group);
-					opaque_draw_calls.append(tanslucent_group);
+					opaque_draw_calls.append(opaque_group);
+					translucent_draw_calls.append(tanslucent_group);
 				} break;
 
 				case RequestType::DRAW_AABB: {

@@ -54,9 +54,9 @@ struct RenderAPI {
 	}
 	*/
 
-	MeshHandle create_mesh(String path) {
+	MeshHandle create_mesh(String path, TextureDescription desc = {}) {
 		MeshHandle mesh = this->_private_acquire_mesh_handle(this->b);
-		RenderRequest request = RENDER_REQUEST_MESH_LOAD(mesh, path);
+		RenderRequest request = RENDER_REQUEST_MESH_LOAD(mesh, path, desc);
 		this->deferred_requests.append(request);
 		
 		return mesh;

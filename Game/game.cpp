@@ -11,10 +11,10 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), container_texture); 
 
 	MeshHandle cube = engine->renderer.create_mesh_cube(app->material);
-	// MeshHandle backback = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
-	// MeshHandle glass = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
-	// MeshHandle helmet = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
-	// MeshHandle church = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/church.glb"));
+	MeshHandle backback = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
+	MeshHandle glass = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
+	MeshHandle helmet = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
+	MeshHandle church = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/church.glb"));
 
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
 	int index = 0;
@@ -61,10 +61,10 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), skybox_night);
 
 	engine->manager.create_entity_from_mesh(STR_INTERN("cube"), engine->scene.root, cube, app->cube_translations.count);
-	// engine->manager.create_entity_from_mesh(STR_INTERN("backpack"), engine->scene.root, backback);
-	// engine->manager.create_entity_from_mesh(STR_INTERN("glass"), engine->scene.root, glass);
-	// engine->manager.create_entity_from_mesh(STR_INTERN("helmet"), engine->scene.root, helmet);
-	// engine->manager.create_entity_from_mesh(STR_INTERN("church"), engine->scene.root, church);
+	engine->manager.create_entity_from_mesh(STR_INTERN("backpack"), engine->scene.root, backback);
+	engine->manager.create_entity_from_mesh(STR_INTERN("glass"), engine->scene.root, glass);
+	engine->manager.create_entity_from_mesh(STR_INTERN("helmet"), engine->scene.root, helmet);
+	engine->manager.create_entity_from_mesh(STR_INTERN("church"), engine->scene.root, church);
 
 	Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
 	skybox.add_component<SkyboxComponent>(app->skybox_material);

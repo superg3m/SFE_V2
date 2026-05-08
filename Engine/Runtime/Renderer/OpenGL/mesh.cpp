@@ -48,7 +48,7 @@ INTERNAL_LINKAGE AABB calculate_aabb(Vector<Vertex>& vertices, int base_vertex, 
 	return AABB::from_center_extents(center, extents);
 }
 
-INTERNAL_LINKAGE bool load_assimp_texture(OpenGL* backend, Material* material, int i, const aiScene* scene, String directory, aiTextureType ai_texture_type, String name) {
+INTERNAL_LINKAGE bool load_assimp_texture(OpenGL* backend, Material* material, int i, const aiScene* scene, String directory, aiTextureType ai_texture_type, String name, TextureDescription desc) {
 	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(name);
 	const aiMaterial* ai_material = scene->mMaterials[i];
 	if (ai_material->GetTextureCount(ai_texture_type) <= 0) {
@@ -70,11 +70,11 @@ INTERNAL_LINKAGE bool load_assimp_texture(OpenGL* backend, Material* material, i
 		if (ai_texture) {
 			int width, height, nrChannel = 0;
 			u8* image_data = stbi_load_from_memory((u8*)ai_texture->pcData, ai_texture->mWidth, &width, &height, &nrChannel, 0);
-			texture = OpenGL::Texture::load_from_memory(image_data, width, height, nrChannel, {.vertical_flip = true});
+			texture = OpenGL::Texture::load_from_memory(image_data, width, height, nrChannel, desc);
 			LOG_DEBUG("Material: %d | has embedded Texture of type: %s\n", i, name.data);
 		} else {
 			LOG_DEBUG("Material: %d | has external texture of type: %s\n", i, name.data);
-			texture = OpenGL::Texture::load_from_file(String::create(filename, length), {.vertical_flip = true});
+			texture = OpenGL::Texture::load_from_file(String::create(filename, length), desc);
 		}
 
 		material->set_uniform(name, TextureHandle(texture_handle));
@@ -413,10 +413,15 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material) {
 	return ret;
 }
 
-OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, String path) {
+OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, String path, TextureDescription desc) {
 	Mesh ret = {};
 	Assimp::Importer importer;
-	unsigned int assimp_flags = aiProcess_Triangulate | aiProcess_PreTransformVertices | aiProcess_GenSmoothNormals | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices;
+	unsigned int assimp_flags = (
+		aiProcess_Triangulate|aiProcess_FlipUVs | 
+		aiProcess_PreTransformVertices|aiProcess_GenSmoothNormals | 
+		aiProcess_JoinIdenticalVertices
+	);
+	
 	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(path);
 	const aiScene* scene = importer.ReadFile(path.data, assimp_flags);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
@@ -447,7 +452,7 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, String path) {
 		Handle material_handle = backend->materials.acquire();
 		Material& material = backend->materials.get(material_handle);
 		material = Material::create(material_handle, Allocator::general(), MaterialType::PBR);
-		material.set_bool(STR("has_albedo"), load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_DIFFUSE, STR(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME)));
+		material.set_bool(STR("has_albedo"), load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_DIFFUSE, STR(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), desc));
 
 		/*
 		aiColor4D ambient_color(0.0f, 0.0f, 0.0f, 0.0f);
@@ -482,7 +487,7 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, String path) {
 		if (ai_material->Get(AI_MATKEY_GLTF_ALPHAMODE, alpha_mode) == AI_SUCCESS) {
 			printf("%s\n", alpha_mode.C_Str());
 			if (alpha_mode == aiString("BLEND")) {
-				material.opacity = 0.25f;
+				material.opacity = 0.20f;
 			}
 		}
 
