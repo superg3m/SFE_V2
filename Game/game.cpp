@@ -36,23 +36,23 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 
 	// {right, left, top, bottom, front, back}
 	#define SKYBOX_TEXTURE_PREFIX "../../../Game/Assets/Skyboxes/day_and_night"
-	TextureHandle skybox_day = engine->renderer.create_texture({
+	TextureHandle skybox_day = engine->renderer.create_texture({{
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/right.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/left.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/top.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/bottom.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/front.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/back.png"),
-	});
+	}, engine->memory.frame_allocator});
 
-	TextureHandle skybox_night = engine->renderer.create_texture({
+	TextureHandle skybox_night = engine->renderer.create_texture({{
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/right.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/left.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/top.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/bottom.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/front.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/back.png"),
-	});
+	}, engine->memory.frame_allocator});
 
 	app->skybox_material = engine->renderer.create_material().self;
 	Material& skybox_material = engine->renderer.materials->get(app->skybox_material.handle);

@@ -331,8 +331,7 @@ struct Editor {
 									ImGui::EndDragDropTarget();
 								}
 									
-								/*
-								Material& material = renderer->get(mesh_entry.material);
+								Material& material = renderer->get(mesh_slot.material);
 								for (auto& pair : material.bindings) {
 									String key = pair.key;
 									BindingValue& value = pair.value;
@@ -385,7 +384,6 @@ struct Editor {
 								ImGui::Spacing();
 								ImGui::Separator();
 								ImGui::Text("Add Binding");
-								*/
 
 								/*
 								static char new_key[64] = {};
@@ -396,7 +394,7 @@ struct Editor {
 								if (ImGui::Button("Add##binding") && new_key[0] != '\0') {
 									BindingValue new_val = {};
 									new_val.type = (BindingValueType)new_type;
-									material.bindings.put(String::create(new_key, ), new_val); // adjust to your map API
+									material.bindings.put(String::create(new_key, ), new_val);
 									new_key[0] = '\0';
 								}
 
@@ -408,7 +406,7 @@ struct Editor {
 								if (ImGui::BeginPopup("RemoveBindingPopup")) {
 									for (auto& pair : material.bindings) {
 										if (ImGui::MenuItem(pair.key.data)) {
-											material.bindings.remove(pair.key); // adjust to your map API
+											material.bindings.remove(pair.key);
 											ImGui::CloseCurrentPopup();
 											break;
 										}
