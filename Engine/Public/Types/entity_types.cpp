@@ -15,6 +15,20 @@ void Entity::update(EngineAPI* engine, float dt) {
 	}
 }
 
+Mat4 CameraComponent::get_view_matrix(EngineAPI* engine) {
+	bool success = false;
+	Mat4 view = engine->manager.get_world_transform(this->owner->self).inverse(success);
+	if (!success) {
+		LOG_ERROR("failed to invert camera transform\n");
+	}
+
+	return view;
+}
+
+Mat4 CameraComponent::get_projection_matrix(float aspect_ratio) {
+	return Mat4::perspective(this->fov, aspect_ratio, this->near_plane, this->far_plane);
+}
+
 /*
 void PlayerControllerComponent::update(float dt) {
 	StatusComponent* status = this->owner->GetComponent<StatusComponent>();

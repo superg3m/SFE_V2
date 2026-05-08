@@ -50,19 +50,8 @@ struct CameraComponent : public Component {
 
 	CameraComponent(Entity* owner, int max_health);
 	void update(EngineAPI* engine, float dt) override {};
-	Mat4 get_view_matrix(EngineAPI* engine) {
-		bool success = false;
-		Mat4 view = engine->manager.get_world_transform(this->owner->self).inverse(success);
-		if (!success) {
-			LOG_ERROR("failed to invert camera transform\n");
-		}
-
-        return view;
-	}
-	
-	Mat4 get_projection_matrix(float aspect_ratio) {
-		return Mat4::perspective(this->fov, aspect_ratio, this->near_plane, this->far_plane);
-	}
+	Mat4 get_view_matrix(EngineAPI* engine);
+	Mat4 get_projection_matrix(float aspect_ratio);
 };
 
 struct HealthComponent : public Component {
