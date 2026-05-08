@@ -55,21 +55,3 @@ void bind_vertex_attribute(int location, u32 stride, VertexAttribute attribute) 
 		gl_error_check(glVertexAttribDivisor(location, attribute.instanced));
 	}
 }
-
-/*
-void OpenGL::draw(Vector<RenderObject>& objects) {
-	OpenGL::CommandBuffer cmd = renderer.BeginFrame();
-
-	for (auto& obj : objects) {
-		cmd.BindPipeline(obj.pipeline);
-		cmd.BindVertexBuffer(obj.vbo);
-		cmd.BindIndexBuffer(obj.ibo);
-		cmd.BindTexture(0, obj.albedo);
-		cmd.SetUniform("uModel", obj.model);
-
-		cmd.DrawIndexed(36);
-	}
-
-	renderer.EndFrame(cmd);
-}
-*/

@@ -192,6 +192,11 @@ struct OpenGL {
 		String name;
 		AABB aabb;
 
+		static Mesh create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
+		static Mesh cube(MaterialHandle material);
+		static Mesh skybox_cube(MaterialHandle material);
+		static Mesh axis_aligned_bounding_box(MaterialHandle material, AABB aabb);
+		static Mesh axis_aligned_bounding_box(MaterialHandle material);
 		void setup(Vector<Vertex>& vertices, Vector<u32>& indices);
 	};
 
@@ -201,13 +206,7 @@ struct OpenGL {
 		// TODO(Jovanni):
 		// Vector<MaterialHandle>
 
-		static Model create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
-		static Model cube(MaterialHandle material);
-		static Model skybox_cube(MaterialHandle material);
-		static Model axis_aligned_bounding_box(MaterialHandle material, AABB aabb);
-		static Model axis_aligned_bounding_box(MaterialHandle material);
 		static Model load_from_file(OpenGL* backend, String path, TextureDescription desc);
-
 	private:
 		void process_node(OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform);
 		Mesh process_mesh(OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
@@ -279,13 +278,11 @@ struct OpenGL {
 					mesh = Model::load_from_file(this, request.model.path, request.model.texture_description);
 				} break;
 
-				/*
 				case RequestType::MESH_CUBE_CREATE: {
 					Mesh& mesh = this->meshes.get(request.mesh.user.handle);
 					mesh = Mesh::cube(request.mesh.material);
 				} break;
-				*/
-
+	
 				case RequestType::MATERIAL_SET_UNIFORM: {
 					Material& material_slot = this->materials.get(request.material.user.handle);
 					material_slot.set_uniform(request.material.name, request.material.value);
@@ -331,10 +328,10 @@ struct OpenGL {
 		
 		LOCAL_PERSIST Shader skybox_shader = Shader::create({STR("../../../Game/Assets/Shaders/skybox.vert"), STR("../../../Game/Assets/Shaders/skybox.frag")});
 		LOCAL_PERSIST Material& skybox_material = this->materials.get(this->materials.acquire());
-		// LOCAL_PERSIST Mesh skybox_mesh = Mesh::skybox_cube(skybox_material.self);
+		LOCAL_PERSIST Mesh skybox_mesh = Mesh::skybox_cube(skybox_material.self);
 
 		LOCAL_PERSIST Shader aabb_shader = Shader::create({STR("../../../Game/Assets/Shaders/fallback.vert"), STR("../../../Game/Assets/Shaders/fallback.frag")});
-		// LOCAL_PERSIST Mesh aabb_mesh = Mesh::axis_aligned_bounding_box(MaterialHandle::invalid());
+		LOCAL_PERSIST Mesh aabb_mesh = Mesh::axis_aligned_bounding_box(MaterialHandle::invalid());
 
 		// eventually do every framebuffers as well...
 		CommandBuffer cmd = {}; 
@@ -371,7 +368,6 @@ struct OpenGL {
 				}
 			}
 			
-			/*
 			{
 				// TODO(Jovanni): Draw skyboxes
 				glDepthFunc(GL_LEQUAL);
@@ -396,11 +392,7 @@ struct OpenGL {
 					skybox_shader.set_view(skybox_view_matrix);
 					skybox_shader.set_projection(projection);
 
-					if (skybox_mesh.entries[0].index_count) {
-						this->draw_indices(skybox_mesh.entries[0].vertex_base, skybox_mesh.entries[0].index_base, skybox_mesh.entries[0].index_count, 1);
-					} else {
-						this->draw_vertices(skybox_mesh.entries[0].vertex_base, skybox_mesh.entries[0].vertex_count, 1);
-					}
+					this->draw_mesh(skybox_mesh, 1);
 				}
 				glDepthFunc(GL_LESS);
 			}
@@ -421,7 +413,6 @@ struct OpenGL {
 					this->draw_mesh(aabb_mesh, 1);
 				}
 			}
-			*/
 			
 			{
 				// NOTE(Jovanni): Draw translucents

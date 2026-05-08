@@ -40,8 +40,8 @@ void MeshComponent::update(EngineAPI* engine, float dt) {
 	if (!this->should_render) return;
 	engine->renderer.draw_mesh(this->mesh, this->rasterizer_description, engine->manager.get_world_transform(this->owner->self), this->instance_count);
 
-	// if (!this->render_aabb) return;
-	// engine->renderer.draw_aabb(this->mesh, engine->manager.get_world_transform(this->owner->self));
+	if (!this->render_aabb) return;
+	engine->renderer.draw_aabb(this->mesh, engine->manager.get_world_transform(this->owner->self));
 }
 
 SkyboxComponent::SkyboxComponent(Entity* owner, MaterialHandle material) {
@@ -50,5 +50,5 @@ SkyboxComponent::SkyboxComponent(Entity* owner, MaterialHandle material) {
 }
 
 void SkyboxComponent::update(EngineAPI* engine, float dt) {
-	// engine->renderer.draw_skybox(this->material);
+	engine->renderer.draw_skybox(this->material);
 }

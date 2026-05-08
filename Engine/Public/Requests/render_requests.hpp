@@ -4,8 +4,8 @@
 #include "../Types/render_types.hpp"
 
 enum class RequestType {
+	MESH_CUBE_CREATE,
 	MODEL_LOAD,
-	// MODEL_CUBE_CREATE,
 
 	TEXTURE2D_LOAD,
 	TEXTURE3D_LOAD,
@@ -110,12 +110,9 @@ struct MaterialRequest {
 	}
 };
 
-/*
 struct MeshRequest {
 	MeshHandle user = MeshHandle::invalid();
 	MaterialHandle material = MaterialHandle::invalid();
-	TextureDescription texture_description = {};
-	String path = {};
 
 	static MeshRequest create(MeshHandle user, MaterialHandle material) {
 		MeshRequest ret = {};
@@ -124,17 +121,7 @@ struct MeshRequest {
 		
 		return ret;
 	}
-
-	static MeshRequest create(MeshHandle user, String path, TextureDescription texture_description) {
-		MeshRequest ret = {};
-		ret.user = user;
-		ret.path = path;
-		ret.texture_description = texture_description;
-		
-		return ret;
-	}
 };
-*/
 
 struct ModelRequest {
 	ModelHandle user = ModelHandle::invalid();
@@ -197,7 +184,7 @@ struct RenderRequest {
 		TextureRequest texture;
 		VertexBufferRequest vbo;
 		IndexBufferRequest ebo;
-		// MeshRequest mesh;
+		MeshRequest mesh;
 		ModelRequest model;
 		MaterialRequest material;
 		DrawCallRequest draw_call;
@@ -211,9 +198,8 @@ struct RenderRequest {
 #define RENDER_REQUEST_VERTEX_BUFFER_CREATE(vbo, mesh, layout, data, count, element_size, dynamic) RenderRequest{.type = RequestType::VBO_CREATE, .vbo = VertexBufferRequest::create(vbo, mesh, layout, data, count, element_size, dynamic)}
 #define RENDER_REQUEST_VERTEX_BUFFER_UPDATE(vbo, mesh, data, count, element_size)                  RenderRequest{.type = RequestType::VBO_UPDATE, .vbo = VertexBufferRequest::update(vbo, mesh, data, count, element_size)}
 
-// #define RENDER_REQUEST_MESH_LOAD(mesh, path, desc) RenderRequest{.type = RequestType::MESH_LOAD, .mesh = MeshRequest::create(mesh, path, desc)}
 #define RENDER_REQUEST_MODEL_LOAD(model, path, desc) RenderRequest{.type = RequestType::MODEL_LOAD, .model = ModelRequest::create(model, path, desc)}
-// #define RENDER_REQUEST_MESH_CREATE_CUBE(mesh, material) RenderRequest{.type = RequestType::MESH_CUBE_CREATE, .mesh = MeshRequest::create(mesh, material)}
+#define RENDER_REQUEST_MESH_CREATE_CUBE(mesh, material) RenderRequest{.type = RequestType::MESH_CUBE_CREATE, .mesh = MeshRequest::create(mesh, material)}
 #define RENDER_REQUEST_DRAW_CALL(mesh, desc, model, instance_count) RenderRequest{.type = RequestType::DRAW_CALL, .draw_call = DrawCallRequest::create(mesh, desc, model, instance_count)}
-// #define RENDER_REQUEST_DRAW_AABB(mesh, model) RenderRequest{.type = RequestType::DRAW_AABB, .draw_call = DrawCallRequest::create(mesh, model)}
-// #define RENDER_REQUEST_DRAW_SKYBOX(texture) RenderRequest{.type = RequestType::DRAW_SKYBOX, .draw_skybox = DrawSkyboxRequest::create(texture)}
+#define RENDER_REQUEST_DRAW_AABB(mesh, model) RenderRequest{.type = RequestType::DRAW_AABB, .draw_call = DrawCallRequest::create(mesh, model)}
+#define RENDER_REQUEST_DRAW_SKYBOX(texture) RenderRequest{.type = RequestType::DRAW_SKYBOX, .draw_skybox = DrawSkyboxRequest::create(texture)}

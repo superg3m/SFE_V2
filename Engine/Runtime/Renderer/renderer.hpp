@@ -37,12 +37,10 @@ struct Renderer {
 		return backend->vbos.acquire();
 	}
 
-	/*
 	static MeshHandle acquire_mesh_handle(void* b) {
 		B* backend = (B*)b; 
 		return backend->meshes.acquire();
 	}
-	*/
 
 	static ModelHandle acquire_model_handle(void* b) {
 		B* backend = (B*)b; 
@@ -62,7 +60,7 @@ struct Renderer {
 	}
 
 	RenderAPI API() {
-		return RenderAPI(this->memory, &this->backend, &this->backend.materials, &acquire_vbo_handle, &acquire_model_handle, &acquire_texture_handle);
+		return RenderAPI(this->memory, &this->backend, &this->backend.materials, &acquire_vbo_handle, &acquire_mesh_handle, &acquire_model_handle, &acquire_texture_handle);
 	}
 
 	void sync(RenderAPI* api) {
