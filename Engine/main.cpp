@@ -77,6 +77,15 @@ int main() {
 	load_application_function_pointers(&application_init, &application_update, &application_render);
 	application_init(&api, &string_arena, &string_intern_map);
 
+	/*
+	TODO(Jovanni): Actually implement this
+	CameraData camera_data = {
+		.view = view,
+		.persepctive_projection = perspective,
+		.ortho_projection = ortho
+	}
+	*/
+
 	float dt = 0.0f;
 	float previous_time = Platform::get_seconds_elapsed();
 	while (!engine->window.should_close()) {

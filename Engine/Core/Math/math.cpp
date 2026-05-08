@@ -1082,7 +1082,7 @@ Quat Quat::normalize() {
 	return ret;
 }
 
-Mat4 Quat::get_rotation_matrix() {
+Mat4 Quat::to_rotation_matrix() {
 	Mat4 result = Mat4::identity();
 
 	float x2 = this->v.x * this->v.x;

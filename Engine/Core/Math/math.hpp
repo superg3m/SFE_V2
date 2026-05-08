@@ -298,7 +298,7 @@ struct Quat {
 	Quat inverse();
 	Quat scale(float scale);
 	Quat normalize();
-	Mat4 get_rotation_matrix();
+	Mat4 to_rotation_matrix();
 	void to_angle_axis(float &theta, Vec3 &vec);
 	Vec3 to_euler();
 

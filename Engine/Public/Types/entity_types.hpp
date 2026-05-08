@@ -44,12 +44,25 @@ protected:
 struct CameraComponent : public Component {
 	using Component::Component;
 
-	int current_health = 0;
-	int max_health = 0;
+	float fov = 60.0f;
+	float near_plane = 0.1f;
+	float far_plane = 1000.0f;
 
 	CameraComponent(Entity* owner, int max_health);
 	void update(EngineAPI* engine, float dt) override {};
-	void get_view_matrix();
+	Mat4 get_view_matrix(EngineAPI* engine) {
+		bool success = false;
+		Mat4 view = engine->manager.get_world_transform(this->owner->self).inverse(success);
+		if (!success) {
+			LOG_ERROR("failed to invert camera transform\n");
+		}
+
+        return view;
+	}
+	
+	Mat4 get_projection_matrix(float aspect_ratio) {
+		return Mat4::perspective(this->fov, aspect_ratio, this->near_plane, this->far_plane);
+	}
 };
 
 struct HealthComponent : public Component {
@@ -129,12 +142,7 @@ struct Transform {
 	Vec3 scale    = Vec3(1);
 
 	Mat4 get_matrix() const {
-		Mat4 matrix = Mat4::identity();
-		matrix = Mat4::scale(matrix, this->scale);
-		matrix = Mat4::rotate(matrix, this->rotation);
-		matrix = Mat4::translate(matrix, this->position);
-
-		return matrix;
+		return Mat4::transform(this->scale, this->rotation, this->position);
 	}
 
 	void set_matrix(Mat4 m) {
