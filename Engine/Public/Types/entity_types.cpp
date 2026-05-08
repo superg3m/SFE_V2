@@ -15,6 +15,14 @@ void Entity::update(EngineAPI* engine, float dt) {
 	}
 }
 
+void CameraComponent::update(EngineAPI* engine, float dt) {
+	Mat4 view = this->get_view_matrix(engine); // I mean this is very bad but, it is what it is
+
+	this->front = Vec3(view.v[0].x, view.v[1].x, view.v[2].x).normalize();
+	this->right = Vec3::cross(this->front, this->world_up).normalize();
+	this->up    = Vec3::cross(this->right, this->front).normalize();
+}
+
 Mat4 CameraComponent::get_view_matrix(EngineAPI* engine) {
 	bool success = false;
 	Mat4 view = engine->manager.get_world_transform(this->owner->self).inverse(success);
@@ -25,8 +33,55 @@ Mat4 CameraComponent::get_view_matrix(EngineAPI* engine) {
 	return view;
 }
 
+Mat4 CameraComponent::process_mouse_delta(Vec2 delta, bool contrain_pitch) {
+	delta *= this->sensitivity;
+
+	Vec3 euler = this->owner->transform.rotation.to_euler();
+
+	euler.x += delta.x;
+	euler.y += delta.y;
+
+    if (contrain_pitch) {
+        if (euler.y > 89.0f) {
+            euler.y = 89.0f;
+        } else if (euler.y < -89.0f) {
+            euler.y = -89.0f;
+        }
+    }
+
+	this->owner->transform.rotation = Quat::from_euler(euler);
+}
+
 Mat4 CameraComponent::get_projection_matrix(float aspect_ratio) {
 	return Mat4::perspective(this->fov, aspect_ratio, this->near_plane, this->far_plane);
+}
+
+void CameraComponent::process_keyboard(CameraDirection direction, float speed, float dt) {
+	float velocity = speed * dt;
+
+	if (direction == CameraDirection::UP) {
+		this->owner->transform.position = this->owner->transform.position + this->world_up.scale(velocity);
+	}
+
+	if (direction == CameraDirection::DOWN) {
+		this->owner->transform.position = this->owner->transform.position + this->world_up.scale(-velocity);
+	}
+
+	if (direction == CameraDirection::FORWARD) {
+		this->owner->transform.position = this->owner->transform.position + this->front.scale(velocity);
+	}
+	
+	if (direction == CameraDirection::BACKWARD) {
+		this->owner->transform.position = this->owner->transform.position + this->front.scale(-velocity);
+	}
+	
+	if (direction == CameraDirection::LEFT) {
+		this->owner->transform.position = this->owner->transform.position + this->right.scale(-velocity);
+	}
+	
+	if (direction == CameraDirection::RIGHT) {
+		this->owner->transform.position = this->owner->transform.position + this->right.scale(velocity);
+	}
 }
 
 // TODO(Jovanni): ALRIGHT actually do this

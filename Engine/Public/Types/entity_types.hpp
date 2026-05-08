@@ -47,11 +47,20 @@ struct CameraComponent : public Component {
 	float fov = 60.0f;
 	float near_plane = 0.1f;
 	float far_plane = 1000.0f;
+	float sensitivity = 1.0;
+
+	Vec3 world_up = Vec3(0, 1, 0);
+	Vec3 up = {};
+	Vec3 front = {};
+	Vec3 right = {};
 
 	CameraComponent(Entity* owner);
-	void update(EngineAPI* engine, float dt) override {};
+	void update(EngineAPI* engine, float dt) override;
 	Mat4 get_view_matrix(EngineAPI* engine);
 	Mat4 get_projection_matrix(float aspect_ratio);
+	Mat4 process_mouse_delta(Vec2 delta, bool contrain_pitch);
+
+	void process_keyboard(CameraDirection direction, float speed, float dt);
 };
 
 struct FreeCameraComponent : public Component {
