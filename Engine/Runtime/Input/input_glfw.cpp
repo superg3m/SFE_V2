@@ -24,13 +24,13 @@ void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
 	engine->input.input_state.previous_mouse = engine->input.input_state.current_mouse;
 	engine->input.input_state.current_mouse = Vec2(mouse_x, mouse_y);
 
-	Vec2 delta = Vec2(
+	engine->input.input_state.mouse_delta = Vec2(
 		engine->input.input_state.current_mouse.x - engine->input.input_state.previous_mouse.x,
 		engine->input.input_state.previous_mouse.y - engine->input.input_state.current_mouse.y
 	);
 
 	if (engine->window.capture_mouse) {
-		engine->scene.active_camera.process_mouse_movement(delta.x, delta.y);
+		engine->scene.active_camera.process_mouse_movement(engine->input.input_state.mouse_delta.x, engine->input.input_state.mouse_delta.y);
 	}
 }
 

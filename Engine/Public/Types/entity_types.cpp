@@ -29,6 +29,58 @@ Mat4 CameraComponent::get_projection_matrix(float aspect_ratio) {
 	return Mat4::perspective(this->fov, aspect_ratio, this->near_plane, this->far_plane);
 }
 
+// TODO(Jovanni): ALRIGHT actually do this
+void FreeCameraComponent::update(EngineAPI* engine, float dt) {
+	// engine->input.input_state.mouse_delta * sensitivity * dt;
+	// engine->input.input_state.mouse_delta * sensitivity * dt;
+	/*
+	if (inputManager.IsMousePositionChanged()) {
+
+		float deltaX = currentPos.x - oldPos.x;
+		float deltaY = currentPos.y - oldPos.y;
+
+		// rot around Y axis
+		float yDeltaAngle = -deltaX * m_sensitivity * deltaTime;
+		m_yRot += yDeltaAngle;
+		glm::quat yRot = glm::angleAxis(glm::radians(m_yRot), glm::vec3(0.0f, 1.0f, 0.0f));
+
+		// rot around X axis
+		float xDeltaAngle = -deltaY * m_sensitivity * deltaTime;
+		m_xRot += xDeltaAngle;
+		m_xRot = std::clamp(m_xRot, -89.0f, 89.0f);
+		glm::quat xRot = glm::angleAxis(glm::radians(m_xRot), glm::vec3(1.0f, 0.0f, 0.0f));
+
+		rotation = glm::normalize(yRot * xRot);
+
+		m_owner->SetRotation(rotation);
+	}
+	*/
+
+	if (engine->input.get_key(KEY_SPACE, PRESSED|DOWN)) {
+		engine->scene.active_camera.process_keyboard(CameraDirection::UP, dt);
+	}
+
+	if (engine->input.get_key(KEY_CTRL, PRESSED|DOWN)) {
+		engine->scene.active_camera.process_keyboard(CameraDirection::DOWN, dt);
+	}
+
+	if (engine->input.get_key(KEY_W, PRESSED|DOWN)) {
+		engine->scene.active_camera.process_keyboard(CameraDirection::FORWARD, dt); 
+	}
+
+	if (engine->input.get_key(KEY_A, PRESSED|DOWN)) {
+		engine->scene.active_camera.process_keyboard(CameraDirection::LEFT, dt); 
+	}
+
+	if (engine->input.get_key(KEY_S, PRESSED|DOWN)) {
+		engine->scene.active_camera.process_keyboard(CameraDirection::BACKWARD, dt);
+	}
+
+	if (engine->input.get_key(KEY_D, PRESSED|DOWN)) {
+		engine->scene.active_camera.process_keyboard(CameraDirection::RIGHT, dt); 
+	}
+}
+
 /*
 void PlayerControllerComponent::update(float dt) {
 	StatusComponent* status = this->owner->GetComponent<StatusComponent>();

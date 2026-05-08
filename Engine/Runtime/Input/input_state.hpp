@@ -133,4 +133,5 @@ struct InputState {
 
 	Vec2 current_mouse = Vec2(0);
 	Vec2 previous_mouse = Vec2(0);
+	Vec2 mouse_delta = Vec2(0);
 };

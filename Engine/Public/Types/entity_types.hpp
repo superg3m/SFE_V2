@@ -48,10 +48,17 @@ struct CameraComponent : public Component {
 	float near_plane = 0.1f;
 	float far_plane = 1000.0f;
 
-	CameraComponent(Entity* owner, int max_health);
+	CameraComponent(Entity* owner);
 	void update(EngineAPI* engine, float dt) override {};
 	Mat4 get_view_matrix(EngineAPI* engine);
 	Mat4 get_projection_matrix(float aspect_ratio);
+};
+
+struct FreeCameraComponent : public Component {
+	using Component::Component;
+
+	FreeCameraComponent(Entity* owner);
+	void update(EngineAPI* engine, float dt) override;
 };
 
 struct HealthComponent : public Component {
