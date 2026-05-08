@@ -85,13 +85,13 @@ struct MeshComponent : public Component {
 	using Component::Component;
 	MeshHandle mesh = MeshHandle::invalid();
 	Mat4 model = Mat4::identity();
-	int entry_index = 0;
 	int instance_count = 1;
 
-	bool should_render_mesh = true;
-	bool render_mesh_wireframe = false;
+	bool should_render = true;
+	bool render_aabb = false;
+	RasterizerDescription rasterizer_description = {};
 
-	MeshComponent(Entity* owner, MeshHandle mesh, int entry_index, int instance_count, bool should_render_mesh = true);
+	MeshComponent(Entity* owner, MeshHandle mesh, int instance_count);
 	void update(EngineAPI* engine, float dt) override;
 };
 

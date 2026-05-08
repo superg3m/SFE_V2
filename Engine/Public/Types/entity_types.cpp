@@ -30,16 +30,18 @@ void PlayerControllerComponent::update(float dt) {
 }
 */
 
-MeshComponent::MeshComponent(Entity* owner, MeshHandle mesh, int entry_index, int instance_count, bool should_render_mesh) {
+MeshComponent::MeshComponent(Entity* owner, MeshHandle mesh, int instance_count) {
 	this->owner = owner;
 	this->mesh = mesh;
-	this->entry_index = entry_index;
 	this->instance_count = instance_count;
-	this->should_render_mesh = should_render_mesh;
 }
 
 void MeshComponent::update(EngineAPI* engine, float dt) {
-	engine->renderer.draw_mesh(this->mesh, this->entry_index, engine->manager.get_world_transform(this->owner->self), this->instance_count);
+	if (!this->should_render) return;
+	engine->renderer.draw_mesh(this->mesh, this->rasterizer_description, engine->manager.get_world_transform(this->owner->self), this->instance_count);
+
+	if (!this->render_aabb) return;
+	engine->renderer.draw_aabb(this->mesh, engine->manager.get_world_transform(this->owner->self));
 }
 
 SkyboxComponent::SkyboxComponent(Entity* owner, MaterialHandle material) {

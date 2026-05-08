@@ -6,7 +6,6 @@
 enum class RequestType {
 	MESH_LOAD,
 	MESH_CUBE_CREATE,
-	MESH_AABB_CREATE,
 
 	TEXTURE2D_LOAD,
 	TEXTURE3D_LOAD,
@@ -19,6 +18,7 @@ enum class RequestType {
 	MATERIAL_SET_UNIFORM,
 
 	DRAW_CALL,
+	DRAW_AABB,
 	DRAW_SKYBOX,
 };
 
@@ -134,14 +134,24 @@ struct MeshRequest {
 
 struct DrawCallRequest {
 	MeshHandle mesh = MeshHandle::invalid(); // mesh_entries, vao, vbo, ebo, material
-	int entry_index = 0;
+	RasterizerDescription rasterizer_description = {};
 	Mat4 model = Mat4::identity();
 	int instance_count = 1;
 
-	static DrawCallRequest create(MeshHandle mesh, int entry_index, Mat4 model, int instance_count = 1) {
+	// for aabb
+	static DrawCallRequest create(MeshHandle mesh, Mat4 model, int instance_count = 1) {
+		DrawCallRequest ret = {};
+		ret.mesh = mesh;
+		ret.model = model;
+		ret.instance_count = instance_count;
+
+		return ret;
+	}
+
+	static DrawCallRequest create(MeshHandle mesh, RasterizerDescription desc, Mat4 model, int instance_count = 1) {
 		DrawCallRequest ret = {}; 	
 		ret.mesh = mesh;
-		ret.entry_index = entry_index;
+		ret.rasterizer_description = desc;
 		ret.model = model;
 		ret.instance_count = instance_count;
 
@@ -182,5 +192,6 @@ struct RenderRequest {
 
 #define RENDER_REQUEST_MESH_LOAD(mesh, path) RenderRequest{.type = RequestType::MESH_LOAD, .mesh = MeshRequest::create(mesh, path)}
 #define RENDER_REQUEST_MESH_CREATE_CUBE(mesh, material) RenderRequest{.type = RequestType::MESH_CUBE_CREATE, .mesh = MeshRequest::create(mesh, material)}
-#define RENDER_REQUEST_DRAW_CALL(mesh, entry_index, model, instance_count) RenderRequest{.type = RequestType::DRAW_CALL, .draw_call = DrawCallRequest::create(mesh, entry_index, model, instance_count)}
+#define RENDER_REQUEST_DRAW_CALL(mesh, desc, model, instance_count) RenderRequest{.type = RequestType::DRAW_CALL, .draw_call = DrawCallRequest::create(mesh, desc, model, instance_count)}
+#define RENDER_REQUEST_DRAW_AABB(mesh, model) RenderRequest{.type = RequestType::DRAW_AABB, .draw_call = DrawCallRequest::create(mesh, model)}
 #define RENDER_REQUEST_DRAW_SKYBOX(texture) RenderRequest{.type = RequestType::DRAW_SKYBOX, .draw_skybox = DrawSkyboxRequest::create(texture)}

@@ -93,7 +93,6 @@ OpenGL::MeshEntry OpenGL::MeshEntry::create(VertexLayout layout, MaterialHandle 
 	ret.vertex_base  = vertex_base;
 	ret.index_base   = index_base;
 	ret.material = material;
-	ret.aabb = calculate_aabb(vertices, vertex_base, ret.vertex_count);
 
 	return ret;
 }
@@ -194,9 +193,6 @@ void OpenGL::Mesh::process_node(Hashmap<int, MaterialHandle>& map, aiNode* node,
 
 void OpenGL::Mesh::setup() {
 	this->aabb = calculate_aabb(this->vertices, 0, this->vertices.count);
-	for (MeshEntry& entry : entries) {
-		entry.aabb = calculate_aabb(this->vertices, entry.vertex_base, entry.vertex_count);
-	}
 
 	this->vao = VertexArrayObject::create();
 	this->vbo = VertexBuffer::create(this->vao, VertexLayout::PNTC(), this->vertices.data, this->vertices.count, sizeof(Vertex));

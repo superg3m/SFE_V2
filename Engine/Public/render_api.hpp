@@ -70,6 +70,14 @@ struct RenderAPI {
 		return mesh;
 	}
 
+	MeshHandle create_mesh_aabb(MaterialHandle material) {
+		MeshHandle mesh = this->_private_acquire_mesh_handle(this->b);
+		RenderRequest request = RENDER_REQUEST_MESH_CREATE_CUBE(mesh, material);
+		this->deferred_requests.append(request);
+
+		return mesh;
+	}
+
 	/*
 	void shader_recompile(ShaderHandle shader) {
 		RenderRequest request = RENDER_REQUSTREC RenderRequest::shader_recompile(shader);
@@ -102,8 +110,13 @@ struct RenderAPI {
 		return material_slot;
 	}
 
-	void draw_mesh(MeshHandle mesh, int entry_index, Mat4 model, u32 instance_count = 1) {
-		RenderRequest request = RENDER_REQUEST_DRAW_CALL(mesh, entry_index, model, instance_count);
+	void draw_aabb(MeshHandle mesh, Mat4 model) {
+		RenderRequest request = RENDER_REQUEST_DRAW_AABB(mesh, model);
+		this->deferred_requests.append(request);
+	}
+
+	void draw_mesh(MeshHandle mesh, RasterizerDescription desc, Mat4 model, u32 instance_count = 1) {
+		RenderRequest request = RENDER_REQUEST_DRAW_CALL(mesh, desc, model, instance_count);
 		this->deferred_requests.append(request);
 	}
 

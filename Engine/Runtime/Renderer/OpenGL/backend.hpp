@@ -178,6 +178,7 @@ struct OpenGL {
 		void end_frame();
 	};
 
+	// TODO(Jovanni): Figure out EXACTLY WHAT CONSITITUTES A SubMesh/Mesh? For example the Church vs the Backpack
 	struct MeshEntry {
 		GLenum draw_type = GL_TRIANGLES;
 		String name = {};
@@ -186,10 +187,6 @@ struct OpenGL {
 		u32 vertex_base  = 0; // starting offset to next vertex in the vertex buffer
 		u32 index_base   = 0; // offset to next index in the index buffer
 		MaterialHandle material = MaterialHandle::invalid();
-		AABB aabb = {};
-		bool should_render = true;
-		bool should_render_aabb = false;
-		RasterizerDescription rasterizer_description = {};
 
 		static MeshEntry create(VertexLayout layout, MaterialHandle material, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES);
 	};
@@ -200,6 +197,10 @@ struct OpenGL {
 		VertexBuffer vbo = {};
 		IndexBuffer ebo = {};
 		Vector<MeshEntry> entries;
+
+		// TODO(Jovanni):
+		// Vector<MaterialHandle>
+
 		AABB aabb;
 
 		static Mesh create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
@@ -219,10 +220,10 @@ struct OpenGL {
 
 	struct RenderGroup {
 		Mesh mesh;
-		MeshEntry mesh_entry;
-		int instance_count = 1; 
-
-		Mat4 model; // use this for position and sorting transparents stuff like that.
+		Mat4 model;
+		int instance_count;
+		Vector<int> entry_indices;
+		RasterizerDescription desc;
 	};
 
 	// TODO(Jovanni): I should pass in the camera and lights
@@ -230,6 +231,7 @@ struct OpenGL {
 		Vector<RenderGroup> opaque_draw_calls = Vector<RenderGroup>(engine->memory.frame_allocator);
 		Vector<RenderGroup> translucent_draw_calls = Vector<RenderGroup>(engine->memory.frame_allocator);
 		Vector<DrawSkyboxRequest> skyboxes = Vector<DrawSkyboxRequest>(engine->memory.frame_allocator);
+		Vector<DrawCallRequest> aabbs = Vector<DrawCallRequest>(engine->memory.frame_allocator);
 
 		Mat4 view = engine->get_view_matrix();
 		Mat4 projection = engine->get_projection_matrix();
@@ -295,19 +297,37 @@ struct OpenGL {
 
 				case RequestType::DRAW_CALL: {
 					Mesh& mesh_slot = this->meshes.get(request.draw_call.mesh.handle);
-					MeshEntry& mesh_entry = mesh_slot.entries[request.draw_call.entry_index];
-					Material& material = this->materials.get(mesh_entry.material.handle);
-					RenderGroup group = {};
-					group.mesh = mesh_slot;
-					group.mesh_entry = mesh_entry;
-					group.instance_count = request.draw_call.instance_count;
-					group.model = request.draw_call.model;
 
-					if (material.opacity < 1.0f) {
-						translucent_draw_calls.append(group);
-					} else {
-						opaque_draw_calls.append(group);
+					RenderGroup opaque_group = {};
+					opaque_group.model = request.draw_call.model;
+					opaque_group.mesh = mesh_slot;
+					opaque_group.instance_count = request.draw_call.instance_count;
+					opaque_group.entry_indices = Vector<int>(engine->memory.frame_allocator, mesh_slot.entries.count);
+					opaque_group.desc = request.draw_call.rasterizer_description;
+
+					RenderGroup tanslucent_group = {};
+					tanslucent_group.model = request.draw_call.model;
+					tanslucent_group.mesh = mesh_slot;
+					tanslucent_group.instance_count = request.draw_call.instance_count;
+					tanslucent_group.entry_indices = Vector<int>(engine->memory.frame_allocator, mesh_slot.entries.count);
+					tanslucent_group.desc = request.draw_call.rasterizer_description;
+
+					for (int i = 0; i < mesh_slot.entries.count; i++) {
+						MeshEntry& mesh_entry = mesh_slot.entries[i];
+						Material& material = this->materials.get(mesh_entry.material.handle);
+						if (material.opacity < 1.0f) {
+							tanslucent_group.entry_indices.append(i);
+						} else {
+							opaque_group.entry_indices.append(i);
+						}
 					}
+
+					translucent_draw_calls.append(opaque_group);
+					opaque_draw_calls.append(tanslucent_group);
+				} break;
+
+				case RequestType::DRAW_AABB: {
+					aabbs.append(request.draw_call);
 				} break;
 
 				case RequestType::DRAW_SKYBOX: {
@@ -337,149 +357,154 @@ struct OpenGL {
 		CommandBuffer cmd = {}; 
 		cmd.begin_frame();
 			// NOTE(Jovanni): Draw opaques
-			for (RenderGroup& group : opaque_draw_calls) {
-				bool instanced = group.instance_count > 1;
-				MeshEntry& mesh_entry = group.mesh_entry;
-				if (!mesh_entry.should_render) continue;
-
-				group.mesh.vao.bind();
-				group.mesh.vbo.bind();
-				group.mesh.ebo.bind();
-				cmd.bind_rasterizer_description(mesh_entry.rasterizer_description);
-				Material& material = this->materials.get(mesh_entry.material.handle);
-				if (instanced) {
-					pbr_instanced_shader.use();
-					pbr_instanced_shader.set_material(this, &material);
-					pbr_instanced_shader.set_model(group.model);
-					pbr_instanced_shader.set_view(view);
-					pbr_instanced_shader.set_projection(projection);
-				} else {
-					pbr_shader.use();
-					pbr_shader.set_material(this, &material);
-					pbr_shader.set_model(group.model);
-					pbr_shader.set_view(view);
-					pbr_shader.set_projection(projection);
-				}
-
-				if (mesh_entry.index_count) {
-					this->draw_indices(mesh_entry.vertex_base, mesh_entry.index_base, mesh_entry.index_count, group.instance_count);
-				} else {
-					this->draw_vertices(mesh_entry.vertex_base, mesh_entry.vertex_count, group.instance_count);
-				}
-
-				for (int i = 0; i < 8; i++) {
-					gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
-					glBindTexture(GL_TEXTURE_2D, 0);
-				}
-
-				if (mesh_entry.should_render_aabb) {
-					aabb_mesh.vao.bind();
-					aabb_mesh.vbo.bind();
-					aabb_mesh.ebo.bind();
-					aabb_shader.use();
-					aabb_shader.set_material(this, &material);
-					Mat4 model = group.model * mesh_entry.aabb.to_transform_matrix4();
-					aabb_shader.set_model(model);
-					aabb_shader.set_view(view);
-					aabb_shader.set_projection(projection);
-
-					this->draw_vertices(aabb_mesh.entries[0].vertex_base, aabb_mesh.entries[0].vertex_count, 1, aabb_mesh.entries[0].draw_type);
-				}
-			}
-
-			// TODO(Jovanni): Draw skyboxes
-			glDepthFunc(GL_LEQUAL);
-			Mat4 skybox_view_matrix = view;
-			skybox_view_matrix.v[0].w = 0.0f;
-			skybox_view_matrix.v[1].w = 0.0f;
-			skybox_view_matrix.v[2].w = 0.0f;
-			
-			skybox_mesh.vao.bind();
-			skybox_mesh.vbo.bind();
-			skybox_mesh.ebo.bind();
-			cmd.bind_rasterizer_description({
-				.cull_enabled = false
-			});
-			for (DrawSkyboxRequest request : skyboxes) {
-				Material& material = this->materials.get(request.material.handle);
-				skybox_material = material;
-
-				skybox_shader.use();
-				skybox_shader.set_material(this, &skybox_material);
-				skybox_shader.set_view(skybox_view_matrix);
-				skybox_shader.set_projection(projection);
-
-				if (skybox_mesh.entries[0].index_count) {
-					this->draw_indices(skybox_mesh.entries[0].vertex_base, skybox_mesh.entries[0].index_base, skybox_mesh.entries[0].index_count, 1);
-				} else {
-					this->draw_vertices(skybox_mesh.entries[0].vertex_base, skybox_mesh.entries[0].vertex_count, 1);
-				}
-			}
-			glDepthFunc(GL_LESS);
-
-			// NOTE(Jovanni): Draw translucents
-			if (translucent_draw_calls.count) {
-				gl_error_check(glEnable(GL_BLEND));
-				gl_error_check(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-
-				// sort_translucent_meshs_by_camera
-				for (int i = 0; i < translucent_draw_calls.count; i++) {
-					RenderGroup group_a = translucent_draw_calls[i];
-					Vec3 a_position = Vec3(group_a.model.v[0].w, group_a.model.v[1].w, group_a.model.v[2].w); 
-					float a_distance = Vec3::distance(a_position, engine->scene.active_camera.position);
-					for (int j = i + 1; j < translucent_draw_calls.count; j++) {
-						RenderGroup group_b = translucent_draw_calls[j];
-						Vec3 b_position = Vec3(group_b.model.v[0].w, group_b.model.v[1].w, group_b.model.v[2].w); 
-						float b_distance = Vec3::distance(b_position,  engine->scene.active_camera.position);
-
-						if (a_distance > b_distance) {
-							Memory::swap(translucent_draw_calls[i], translucent_draw_calls[j]);
-						}
-					}
-				}
-
-				for (RenderGroup& group : translucent_draw_calls) {
+			{
+				for (RenderGroup& group : opaque_draw_calls) {
 					bool instanced = group.instance_count > 1;
 
 					group.mesh.vao.bind();
 					group.mesh.vbo.bind();
 					group.mesh.ebo.bind();
+					cmd.bind_rasterizer_description(group.desc);
+					for (int i : group.entry_indices) {
+						MeshEntry mesh_entry = group.mesh.entries[i];
+						Material& material = this->materials.get(mesh_entry.material.handle);
+						if (instanced) {
+							pbr_instanced_shader.use();
+							pbr_instanced_shader.set_material(this, &material);
+							pbr_instanced_shader.set_model(group.model);
+							pbr_instanced_shader.set_view(view);
+							pbr_instanced_shader.set_projection(projection);
+						} else {
+							pbr_shader.use();
+							pbr_shader.set_material(this, &material);
+							pbr_shader.set_model(group.model);
+							pbr_shader.set_view(view);
+							pbr_shader.set_projection(projection);
+						}
 
-					MeshEntry& mesh_entry = group.mesh_entry;
-					Material& material = this->materials.get(mesh_entry.material.handle);
-					cmd.bind_rasterizer_description(mesh_entry.rasterizer_description);
-					if (instanced) {
-						pbr_instanced_shader.use();
-						pbr_instanced_shader.set_material(this, &material);
-						pbr_instanced_shader.set_model(group.model);
-						pbr_instanced_shader.set_view(view);
-						pbr_instanced_shader.set_projection(projection);
-					} else {
-						pbr_shader.use();
-						pbr_shader.set_material(this, &material);
-						pbr_shader.set_model(group.model);
-						pbr_shader.set_view(view);
-						pbr_shader.set_projection(projection);
-					}
+						this->draw_entry(mesh_entry, group.instance_count);
 
-					if (mesh_entry.index_count) {
-						this->draw_indices(mesh_entry.vertex_base, mesh_entry.index_base, mesh_entry.index_count, group.instance_count, mesh_entry.draw_type);
-					} else {
-						this->draw_vertices(mesh_entry.vertex_base, mesh_entry.vertex_count, group.instance_count, mesh_entry.draw_type);
-					}
-
-					for (int i = 0; i < 8; i++) {
-						gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
-						glBindTexture(GL_TEXTURE_2D, 0);
+						// TODO(Jovanni): remove this, basiclaly if a material doens't have an albedo texture, give it a default white texture
+						for (int i = 0; i < 4; i++) {
+							gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
+							glBindTexture(GL_TEXTURE_2D, 0);
+						}
 					}
 				}
+			}
 			
-				gl_error_check(glDisable(GL_BLEND));
+			{
+				// TODO(Jovanni): Draw skyboxes
+				glDepthFunc(GL_LEQUAL);
+				Mat4 skybox_view_matrix = view;
+				skybox_view_matrix.v[0].w = 0.0f;
+				skybox_view_matrix.v[1].w = 0.0f;
+				skybox_view_matrix.v[2].w = 0.0f;
+				
+				skybox_mesh.vao.bind();
+				skybox_mesh.vbo.bind();
+				skybox_mesh.ebo.bind();
+				cmd.bind_rasterizer_description({
+					.cull_enabled = false
+				});
+
+				for (DrawSkyboxRequest request : skyboxes) {
+					Material& material = this->materials.get(request.material.handle);
+					skybox_material = material;
+
+					skybox_shader.use();
+					skybox_shader.set_material(this, &skybox_material);
+					skybox_shader.set_view(skybox_view_matrix);
+					skybox_shader.set_projection(projection);
+
+					if (skybox_mesh.entries[0].index_count) {
+						this->draw_indices(skybox_mesh.entries[0].vertex_base, skybox_mesh.entries[0].index_base, skybox_mesh.entries[0].index_count, 1);
+					} else {
+						this->draw_vertices(skybox_mesh.entries[0].vertex_base, skybox_mesh.entries[0].vertex_count, 1);
+					}
+				}
+				glDepthFunc(GL_LESS);
+			}
+
+			// Draw AABBS
+			if (aabbs.count) {
+				Mesh& mesh_slot = this->meshes.get(aabbs[0].mesh.handle);
+
+				aabb_mesh.vao.bind();
+				aabb_mesh.vbo.bind();
+				aabb_mesh.ebo.bind();
+				aabb_shader.use();
+				for (DrawCallRequest request : aabbs) {
+					Mat4 model = request.model * mesh_slot.aabb.to_transform_matrix4();
+					aabb_shader.set_model(model);
+					aabb_shader.set_view(view);
+					aabb_shader.set_projection(projection);
+					this->draw_mesh(aabb_mesh, 1);
+				}
+			}	
+			
+			{
+				// NOTE(Jovanni): Draw translucents
+				if (translucent_draw_calls.count) {
+					gl_error_check(glEnable(GL_BLEND));
+					gl_error_check(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
+					// sort_translucent_meshs_by_camera
+					for (int i = 0; i < translucent_draw_calls.count; i++) {
+						RenderGroup group_a = translucent_draw_calls[i];
+						Vec3 a_position = Vec3(group_a.model.v[0].w, group_a.model.v[1].w, group_a.model.v[2].w); 
+						float a_distance = Vec3::distance(a_position, engine->scene.active_camera.position);
+						for (int j = i + 1; j < translucent_draw_calls.count; j++) {
+							RenderGroup group_b = translucent_draw_calls[j];
+							Vec3 b_position = Vec3(group_b.model.v[0].w, group_b.model.v[1].w, group_b.model.v[2].w); 
+							float b_distance = Vec3::distance(b_position,  engine->scene.active_camera.position);
+
+							if (a_distance > b_distance) {
+								Memory::swap(translucent_draw_calls[i], translucent_draw_calls[j]);
+							}
+						}
+					}
+
+					for (RenderGroup& group : translucent_draw_calls) {
+						bool instanced = group.instance_count > 1;
+
+						group.mesh.vao.bind();
+						group.mesh.vbo.bind();
+						group.mesh.ebo.bind();
+						cmd.bind_rasterizer_description(group.desc);
+						for (int i : group.entry_indices) {
+							MeshEntry mesh_entry = group.mesh.entries[i];
+							Material& material = this->materials.get(mesh_entry.material.handle);
+							if (instanced) {
+								pbr_instanced_shader.use();
+								pbr_instanced_shader.set_material(this, &material);
+								pbr_instanced_shader.set_model(group.model);
+								pbr_instanced_shader.set_view(view);
+								pbr_instanced_shader.set_projection(projection);
+							} else {
+								pbr_shader.use();
+								pbr_shader.set_material(this, &material);
+								pbr_shader.set_model(group.model);
+								pbr_shader.set_view(view);
+								pbr_shader.set_projection(projection);
+							}
+
+							this->draw_entry(mesh_entry, group.instance_count);
+
+							// TODO(Jovanni): remove this, basiclaly if a material doens't have an albedo texture, give it a default white texture
+							for (int i = 0; i < 4; i++) {
+								gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
+								glBindTexture(GL_TEXTURE_2D, 0);
+							}
+						}
+					}
+				
+					gl_error_check(glDisable(GL_BLEND));
+				}
 			}
 		cmd.end_frame();
 	}
 
-	// TODO(Jovanni): For now just allow triangles, but later parameterize this? TRY INSTANCE STUF AGQAIN WIHT THE COUNT
 	void draw_vertices(u32 vertex_base, u32 vertex_count, u32 instance_count = 1, u32 draw_type = GL_TRIANGLES) {
 		gl_error_check(glDrawArraysInstanced(
 			draw_type,
@@ -489,13 +514,26 @@ struct OpenGL {
 		));
 	}
 
-	// TODO(Jovanni): For now just allow triangles, but later parameterize this?
 	void draw_indices(u32 vertex_base, u32 index_base, u32 index_count, u32 instance_count = 1, u32 draw_type = GL_TRIANGLES) {
 		gl_error_check(glDrawElementsInstancedBaseVertex(
 			draw_type, index_count,
 			GL_UNSIGNED_INT, (void*)(sizeof(unsigned int) * index_base),
 			instance_count, vertex_base
 		));
+	}
+
+	void draw_entry(MeshEntry& mesh_entry, int instance_count) {
+		if (mesh_entry.index_count) {
+			this->draw_indices(mesh_entry.vertex_base, mesh_entry.index_base, mesh_entry.index_count, instance_count, mesh_entry.draw_type);
+		} else {
+			this->draw_vertices(mesh_entry.vertex_base, mesh_entry.vertex_count, instance_count, mesh_entry.draw_type);
+		}
+	}
+
+	void draw_mesh(Mesh& mesh, int instance_count) {
+		for (MeshEntry& mesh_entry : mesh.entries) {
+			this->draw_entry(mesh_entry, instance_count);
+		}
 	}
 
 	/*

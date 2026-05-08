@@ -313,13 +313,10 @@ struct Editor {
 
 								auto mesh_slot = renderer->backend.meshes.get(mesh_component->mesh.handle);
 								Vector<Handle> material_handles = renderer->backend.materials.handle_list(engine->memory.frame_allocator);
-								int index = 0;
 
-								auto& mesh_entry = mesh_slot.entries[mesh_component->entry_index];
-
-								ImGui::Checkbox("Render", &mesh_entry.should_render);
-								ImGui::Checkbox("Wireframe", &mesh_entry.rasterizer_description.wireframe);
-								ImGui::Checkbox("Render AABB", &mesh_entry.should_render_aabb);
+								ImGui::Checkbox("Render", &mesh_component->should_render);
+								ImGui::Checkbox("Wireframe", &mesh_component->rasterizer_description.wireframe);
+								ImGui::Checkbox("Render AABB", &mesh_component->render_aabb);
 								ImGui::Spacing();
 
 								ImGui::Text("Mesh");
@@ -333,7 +330,8 @@ struct Editor {
 
 									ImGui::EndDragDropTarget();
 								}
-																
+									
+								/*
 								Material& material = renderer->get(mesh_entry.material);
 								for (auto& pair : material.bindings) {
 									String key = pair.key;
@@ -382,10 +380,12 @@ struct Editor {
 									}
 									ImGui::PopID();
 								}
+						
 
 								ImGui::Spacing();
 								ImGui::Separator();
 								ImGui::Text("Add Binding");
+								*/
 
 								/*
 								static char new_key[64] = {};

@@ -5,17 +5,16 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	AppState* app = (AppState*)engine->app;
 	*app = {};
 
-	app->container_texture = engine->renderer.create_texture(STR_INTERN("../../../Game/Assets/Textures/container.jpg"));
-
+	TextureHandle container_texture = engine->renderer.create_texture(STR_INTERN("../../../Game/Assets/Textures/container.jpg"));
 	Material& cube_material = engine->renderer.create_material();
 	app->material = cube_material.self;
-	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), app->container_texture); 
+	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), container_texture); 
 
-	app->backpack_mesh = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
-	MeshHandle glass = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
-	MeshHandle helmet = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
-	MeshHandle church = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/church.glb"));
-	app->cube_mesh = engine->renderer.create_mesh_cube(app->material);
+	MeshHandle cube = engine->renderer.create_mesh_cube(app->material);
+	// MeshHandle backback = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"));
+	// MeshHandle glass = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
+	// MeshHandle helmet = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
+	// MeshHandle church = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/church.glb"));
 
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
 	int index = 0;
@@ -34,11 +33,11 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 		VertexAttribute{4, 0, BufferStrideTypeInfo::MAT4, true},
 	}, engine->memory.frame_allocator});
 
-	app->instance_cube_vbo = engine->renderer.create_vbo(app->cube_mesh, layout, app->cube_translations, true);
+	app->instance_cube_vbo = engine->renderer.create_vbo(cube, layout, app->cube_translations, true);
 
 	// {right, left, top, bottom, front, back}
 	#define SKYBOX_TEXTURE_PREFIX "../../../Game/Assets/Skyboxes/day_and_night"
-	app->skybox_day = engine->renderer.create_texture({
+	TextureHandle skybox_day = engine->renderer.create_texture({
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/right.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/left.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/top.png"),
@@ -47,7 +46,7 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Day/back.png"),
 	});
 
-	app->skybox_night = engine->renderer.create_texture({
+	TextureHandle skybox_night = engine->renderer.create_texture({
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/right.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/left.png"),
 		STR_INTERN(SKYBOX_TEXTURE_PREFIX "/Night/top.png"),
@@ -58,14 +57,15 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 
 	app->skybox_material = engine->renderer.create_material().self;
 	Material& skybox_material = engine->renderer.materials->get(app->skybox_material.handle);
-	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), app->skybox_day);
-	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), app->skybox_night);
+	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), skybox_day);
+	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), skybox_night);
 
-	Entity& backpack = engine->manager.create_entity_from_mesh(STR_INTERN("backpack"), engine->scene.root, app->backpack_mesh);
-	Entity& cube = engine->manager.create_entity_from_mesh(STR_INTERN("cube"), engine->scene.root, app->cube_mesh, app->cube_translations.count);
-	Entity& glass_entity = engine->manager.create_entity_from_mesh(STR_INTERN("glass"), engine->scene.root, glass);
-	Entity& helmet_for_ants = engine->manager.create_entity_from_mesh(STR_INTERN("helmet"), engine->scene.root, helmet);
-	Entity& bullshit = engine->manager.create_entity_from_mesh(STR_INTERN("b7ullshit"), engine->scene.root, church);
+	engine->manager.create_entity_from_mesh(STR_INTERN("cube"), engine->scene.root, cube, app->cube_translations.count);
+	// engine->manager.create_entity_from_mesh(STR_INTERN("backpack"), engine->scene.root, backback);
+	// engine->manager.create_entity_from_mesh(STR_INTERN("glass"), engine->scene.root, glass);
+	// engine->manager.create_entity_from_mesh(STR_INTERN("helmet"), engine->scene.root, helmet);
+	// engine->manager.create_entity_from_mesh(STR_INTERN("church"), engine->scene.root, church);
+
 	Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
 	skybox.add_component<SkyboxComponent>(app->skybox_material);
 	app->timer.start(5.0f);
@@ -142,10 +142,9 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 // TODO(Jovanni): I want to reorganize the runtime.
 
 The end goal of this project is the following:
-- [] remove as much callbacks as I can (perfer) glfwGetCursorPos(window, &xpos, &ypos); for example
-- [] CameraComponent
 - [] Remove mesh entries[0] hack in the editor and look at the renderer see if you can remove the render group shit?
 	remove the entry_index stuff.
+- [] CameraComponent
 - [] maybe still consider have Texture* or Mesh* and then an OpenGL::Mesh inherits from it. SO you have most fields accessable through just the handle without going back
 	to the executable. This is very nice and clean it wwould work. The only reason i'm opposed is the the new OpenGL::Mesh will be be slow I think because of 
 	lack of cache locality and pointer chasing, but maybe it doesn't matter since these operations by their very natrue are very vew and far between I think?

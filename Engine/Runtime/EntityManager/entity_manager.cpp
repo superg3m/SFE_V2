@@ -16,14 +16,14 @@ void EntityManager::create_entity_from_mesh(Renderer<OpenGL>* renderer, EntityHa
 	OpenGL::Mesh& mesh_slot = renderer->get(mesh);
 	if (mesh_slot.entries.count == 1) {
 		Entity& entity_slot = this->get(entity);
-		entity_slot.add_component<MeshComponent>(mesh, 0, instance_count);
+		entity_slot.add_component<MeshComponent>(mesh, instance_count);
 		return;
 	}
 
 	for (int i = 0; i < mesh_slot.entries.count; i++) {
 		OpenGL::MeshEntry& entry = mesh_slot.entries[i];
 		Entity& child = this->create_entity(entry.name, entity);
-		child.add_component<MeshComponent>(mesh, i, instance_count);
+		child.add_component<MeshComponent>(mesh, instance_count);
 	}
 }
 
