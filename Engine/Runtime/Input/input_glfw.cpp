@@ -21,25 +21,16 @@ INTERNAL_LINKAGE KeyState updated_key_state(KeyState state, bool down) {
 }
 
 void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
-	static bool first = true;
-	static float last_mouse_x;
-	static float last_mouse_y;
+	engine->input.input_state.previous_mouse = engine->input.input_state.current_mouse;
+	engine->input.input_state.current_mouse = Vec2(mouse_x, mouse_y);
 
-	if (first) {
-		last_mouse_x = mouse_x;
-		last_mouse_y = mouse_y;
-		first = false;
-		return;
-	}
-
-	float xoffset = mouse_x - last_mouse_x;
-	float yoffset = last_mouse_y - mouse_y;
-
-	last_mouse_x = mouse_x;
-	last_mouse_y = mouse_y;
+	Vec2 delta = Vec2(
+		engine->input.input_state.current_mouse.x - engine->input.input_state.previous_mouse.x,
+		engine->input.input_state.previous_mouse.y - engine->input.input_state.current_mouse.y
+	);
 
 	if (engine->window.capture_mouse) {
-		engine->scene.active_camera.process_mouse_movement(xoffset, yoffset);
+		engine->scene.active_camera.process_mouse_movement(delta.x, delta.y);
 	}
 }
 
@@ -134,7 +125,6 @@ InputSystem InputSystem::create(void* window) {
 
 void InputSystem::poll() {
 	static bool previous_captured_mouse = engine->window.capture_mouse;
-
 	if (previous_captured_mouse != engine->window.capture_mouse) {
 		previous_captured_mouse = engine->window.capture_mouse;
 		glfwSetInputMode((GLFWwindow*)engine->window.ctx, GLFW_CURSOR, engine->window.capture_mouse ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
