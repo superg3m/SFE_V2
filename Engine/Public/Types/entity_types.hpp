@@ -41,6 +41,17 @@ protected:
 	static int next_component_id;
 };
 
+struct CameraComponent : public Component {
+	using Component::Component;
+
+	int current_health = 0;
+	int max_health = 0;
+
+	CameraComponent(Entity* owner, int max_health);
+	void update(EngineAPI* engine, float dt) override {};
+	void get_view_matrix();
+};
+
 struct HealthComponent : public Component {
 	using Component::Component;
 

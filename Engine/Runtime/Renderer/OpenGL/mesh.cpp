@@ -132,18 +132,19 @@ OpenGL::Mesh OpenGL::Model::process_mesh(OpenGL* backend, Hashmap<int, MaterialH
 		RUNTIME_ASSERT_MSG(false, "Unknown primitive type in mesh.\n");
 	}
 
+	// TODO(Jovanni): I don't understand why I no longer have to compensate for the parent transform? Probably i'm being dumb?
 	{ // Geometry Start
 		const aiVector3D Zero3D(0.0f, 0.0f, 0.0f);
 		Vertex v = {};
 		for (unsigned int j = 0; j < ai_mesh->mNumVertices; j++) {
 			const aiVector3D& ai_position = ai_mesh->mVertices[j];
 
-			Vec4 transformed_position = parent_transform * Vec4(ai_position.x, ai_position.y, ai_position.z, 1.0f);
+			Vec4 transformed_position = /* parent_transform * */ Vec4(ai_position.x, ai_position.y, ai_position.z, 1.0f);
 			v.aPosition = Vec3(transformed_position.x, transformed_position.y, transformed_position.z);
 
 			if (ai_mesh->mNormals) {
 				const aiVector3D& pNormal = ai_mesh->mNormals[j];
-				Vec4 transformed_normal = parent_transform * Vec4(pNormal.x, pNormal.y, pNormal.z, 0.0f); // W component is 0 for vectors
+				Vec4 transformed_normal = /* parent_transform * */ Vec4(pNormal.x, pNormal.y, pNormal.z, 0.0f); // W component is 0 for vectors
 				v.aNormal = Vec3(transformed_normal.x, transformed_normal.y, transformed_normal.z).normalize(); // Normalize after transform
 			} else {
 				aiVector3D Normal(0.0f, 1.0f, 0.0f);
