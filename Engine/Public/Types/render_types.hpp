@@ -47,6 +47,17 @@ struct MeshHandle {
 	}
 };
 
+struct ModelHandle {
+	Handle handle = Handle::invalid();
+	ModelHandle(Handle handle) {
+		this->handle = handle;
+	}
+	
+	static ModelHandle invalid() {
+		return {Handle::invalid()};
+	}
+};
+
 struct VertexBufferHandle {
 	Handle handle = Handle::invalid();
 	VertexBufferHandle(Handle handle) {

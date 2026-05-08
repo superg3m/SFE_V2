@@ -16,7 +16,7 @@ struct EntityManager {
 
 	bool set_parent(EntityHandle entity, EntityHandle parent);
 	Entity& create_entity(String name, EntityHandle parent);
-	void create_entity_from_mesh(Renderer<OpenGL>* renderer, EntityHandle entity, MeshHandle mesh, int instance_count);
+	void create_entity_from_model(Renderer<OpenGL>* renderer, EntityHandle entity, ModelHandle mesh, int instance_count);
 	Entity& get(EntityHandle entity);
 
 	Mat4 get_world_transform(EntityHandle entity);
@@ -25,8 +25,8 @@ struct EntityManager {
 	void execute_deferred_requests(Renderer<OpenGL>* renderer, EngineAPI* api) {
 		for (EntityManagerRequest& request : api->manager.deferred_requests) {
 			switch (request.type) {
-				case EntityManagerRequestType::CREATE_ENTITY_FROM_MESH: {
-					this->create_entity_from_mesh(renderer, request.create_entity_from_mesh.user, request.create_entity_from_mesh.mesh, request.create_entity_from_mesh.instance_count);
+				case EntityManagerRequestType::CREATE_ENTITY_FROM_MODEL: {
+					this->create_entity_from_model(renderer, request.create_entity_from_model.user, request.create_entity_from_model.model, request.create_entity_from_model.instance_count);
 				} break;
 
 				default: {

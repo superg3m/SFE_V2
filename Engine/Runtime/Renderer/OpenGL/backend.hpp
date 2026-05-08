@@ -178,51 +178,45 @@ struct OpenGL {
 		void end_frame();
 	};
 
-	// TODO(Jovanni): Figure out EXACTLY WHAT CONSITITUTES A SubMesh/Mesh? For example the Church vs the Backpack
-	struct MeshEntry {
-		GLenum draw_type = GL_TRIANGLES;
-		String name = {};
-		u32 vertex_count = 0;
-		u32 index_count  = 0;
-		u32 vertex_base  = 0; // starting offset to next vertex in the vertex buffer
-		u32 index_base   = 0; // offset to next index in the index buffer
-		MaterialHandle material = MaterialHandle::invalid();
-
-		static MeshEntry create(VertexLayout layout, MaterialHandle material, Vector<Vertex>& vertex_data, Vector<u32> indices = {}, u32 vertex_base = 0, u32 index_base = 0, GLenum draw_type = GL_TRIANGLES);
-	};
-
-	// mesh is just geometry the actual material is something you submit with it
+	// Ok so I can get away with not having Submeshes because assimp has the preprocess geometry flag, I think.
 	struct Mesh {
+		MeshHandle self = MeshHandle::invalid();
 		VertexArrayObject vao = {};
 		VertexBuffer vbo = {};
 		IndexBuffer ebo = {};
-		Vector<MeshEntry> entries;
+
+		GLenum draw_type = GL_TRIANGLES;
+		u32 vertex_count  = 0;
+		u32 index_count   = 0;
+		MaterialHandle material = MaterialHandle::invalid();
+		String name;
+		AABB aabb;
+
+		void setup(Vector<Vertex>& vertices, Vector<u32>& indices);
+	};
+
+	struct Model {
+		Vector<Mesh> meshes; // these have the MeshComponents
 
 		// TODO(Jovanni):
 		// Vector<MaterialHandle>
 
-		AABB aabb;
-
-		static Mesh create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
-		static Mesh cube(MaterialHandle material);
-		static Mesh skybox_cube(MaterialHandle material);
-		static Mesh axis_aligned_bounding_box(MaterialHandle material, AABB aabb);
-		static Mesh axis_aligned_bounding_box(MaterialHandle material);
-		static Mesh load_from_file(OpenGL* backend, String path, TextureDescription desc);
+		static Model create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
+		static Model cube(MaterialHandle material);
+		static Model skybox_cube(MaterialHandle material);
+		static Model axis_aligned_bounding_box(MaterialHandle material, AABB aabb);
+		static Model axis_aligned_bounding_box(MaterialHandle material);
+		static Model load_from_file(OpenGL* backend, String path, TextureDescription desc);
 
 	private:
-		Vector<Vertex> vertices;
-		Vector<u32> indices;
-		void process_node(Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform);
-		MeshEntry process_mesh(Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
-		void setup();
+		void process_node(OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform);
+		Mesh process_mesh(OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
 	};
 
 	struct RenderGroup {
 		Mesh mesh;
 		Mat4 model;
 		int instance_count;
-		Vector<int> entry_indices;
 		RasterizerDescription desc;
 	};
 
@@ -280,15 +274,17 @@ struct OpenGL {
 				} break;
 				*/
 
-				case RequestType::MESH_LOAD: {
-					Mesh& mesh = this->meshes.get(request.mesh.user.handle);
-					mesh = Mesh::load_from_file(this, request.mesh.path, request.mesh.texture_description);
+				case RequestType::MODEL_LOAD: {
+					Model& mesh = this->models.get(request.model.user.handle);
+					mesh = Model::load_from_file(this, request.model.path, request.model.texture_description);
 				} break;
 
+				/*
 				case RequestType::MESH_CUBE_CREATE: {
 					Mesh& mesh = this->meshes.get(request.mesh.user.handle);
 					mesh = Mesh::cube(request.mesh.material);
 				} break;
+				*/
 
 				case RequestType::MATERIAL_SET_UNIFORM: {
 					Material& material_slot = this->materials.get(request.material.user.handle);
@@ -297,33 +293,20 @@ struct OpenGL {
 
 				case RequestType::DRAW_CALL: {
 					Mesh& mesh_slot = this->meshes.get(request.draw_call.mesh.handle);
+					Material& material = this->materials.get(mesh_slot.material.handle);
 
-					RenderGroup opaque_group = {};
-					opaque_group.model = request.draw_call.model;
-					opaque_group.mesh = mesh_slot;
-					opaque_group.instance_count = request.draw_call.instance_count;
-					opaque_group.entry_indices = Vector<int>(engine->memory.frame_allocator, mesh_slot.entries.count);
-					opaque_group.desc = request.draw_call.rasterizer_description;
+					RenderGroup group = {};
+					group.model = request.draw_call.model;
+					group.mesh = mesh_slot;
+					group.instance_count = request.draw_call.instance_count;
+					group.desc = request.draw_call.rasterizer_description;
 
-					RenderGroup tanslucent_group = {};
-					tanslucent_group.model = request.draw_call.model;
-					tanslucent_group.mesh = mesh_slot;
-					tanslucent_group.instance_count = request.draw_call.instance_count;
-					tanslucent_group.entry_indices = Vector<int>(engine->memory.frame_allocator, mesh_slot.entries.count);
-					tanslucent_group.desc = request.draw_call.rasterizer_description;
-
-					for (int i = 0; i < mesh_slot.entries.count; i++) {
-						MeshEntry& mesh_entry = mesh_slot.entries[i];
-						Material& material = this->materials.get(mesh_entry.material.handle);
-						if (material.opacity < 1.0f) {
-							tanslucent_group.entry_indices.append(i);
-						} else {
-							opaque_group.entry_indices.append(i);
-						}
+					bool translucent = material.opacity < 1.0f;
+					if (translucent) {
+						translucent_draw_calls.append(group);
+					} else {
+						opaque_draw_calls.append(group);
 					}
-
-					opaque_draw_calls.append(opaque_group);
-					translucent_draw_calls.append(tanslucent_group);
 				} break;
 
 				case RequestType::DRAW_AABB: {
@@ -348,10 +331,10 @@ struct OpenGL {
 		
 		LOCAL_PERSIST Shader skybox_shader = Shader::create({STR("../../../Game/Assets/Shaders/skybox.vert"), STR("../../../Game/Assets/Shaders/skybox.frag")});
 		LOCAL_PERSIST Material& skybox_material = this->materials.get(this->materials.acquire());
-		LOCAL_PERSIST Mesh skybox_mesh = Mesh::skybox_cube(skybox_material.self);
+		// LOCAL_PERSIST Mesh skybox_mesh = Mesh::skybox_cube(skybox_material.self);
 
 		LOCAL_PERSIST Shader aabb_shader = Shader::create({STR("../../../Game/Assets/Shaders/fallback.vert"), STR("../../../Game/Assets/Shaders/fallback.frag")});
-		LOCAL_PERSIST Mesh aabb_mesh = Mesh::axis_aligned_bounding_box(MaterialHandle::invalid());
+		// LOCAL_PERSIST Mesh aabb_mesh = Mesh::axis_aligned_bounding_box(MaterialHandle::invalid());
 
 		// eventually do every framebuffers as well...
 		CommandBuffer cmd = {}; 
@@ -360,39 +343,35 @@ struct OpenGL {
 			{
 				for (RenderGroup& group : opaque_draw_calls) {
 					bool instanced = group.instance_count > 1;
+					Material& material = this->materials.get(group.mesh.material.handle);
 
 					group.mesh.vao.bind();
 					group.mesh.vbo.bind();
 					group.mesh.ebo.bind();
 					cmd.bind_rasterizer_description(group.desc);
-					for (int i : group.entry_indices) {
-						MeshEntry mesh_entry = group.mesh.entries[i];
-						Material& material = this->materials.get(mesh_entry.material.handle);
-						if (instanced) {
-							pbr_instanced_shader.use();
-							pbr_instanced_shader.set_material(this, &material);
-							pbr_instanced_shader.set_model(group.model);
-							pbr_instanced_shader.set_view(view);
-							pbr_instanced_shader.set_projection(projection);
-						} else {
-							pbr_shader.use();
-							pbr_shader.set_material(this, &material);
-							pbr_shader.set_model(group.model);
-							pbr_shader.set_view(view);
-							pbr_shader.set_projection(projection);
-						}
+					if (instanced) {
+						pbr_instanced_shader.use();
+						pbr_instanced_shader.set_material(this, &material);
+						pbr_instanced_shader.set_model(group.model);
+						pbr_instanced_shader.set_view(view);
+						pbr_instanced_shader.set_projection(projection);
+					} else {
+						pbr_shader.use();
+						pbr_shader.set_material(this, &material);
+						pbr_shader.set_model(group.model);
+						pbr_shader.set_view(view);
+						pbr_shader.set_projection(projection);
+					}
 
-						this->draw_entry(mesh_entry, group.instance_count);
-
-						// TODO(Jovanni): remove this, basiclaly if a material doens't have an albedo texture, give it a default white texture
-						for (int i = 0; i < 4; i++) {
-							gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
-							glBindTexture(GL_TEXTURE_2D, 0);
-						}
+					this->draw_mesh(group.mesh, group.instance_count);
+					for (int i = 0; i < 4; i++) {
+						gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
+						glBindTexture(GL_TEXTURE_2D, 0);
 					}
 				}
 			}
 			
+			/*
 			{
 				// TODO(Jovanni): Draw skyboxes
 				glDepthFunc(GL_LEQUAL);
@@ -441,7 +420,8 @@ struct OpenGL {
 					aabb_shader.set_projection(projection);
 					this->draw_mesh(aabb_mesh, 1);
 				}
-			}	
+			}
+			*/
 			
 			{
 				// NOTE(Jovanni): Draw translucents
@@ -467,35 +447,30 @@ struct OpenGL {
 
 					for (RenderGroup& group : translucent_draw_calls) {
 						bool instanced = group.instance_count > 1;
+						Material& material = this->materials.get(group.mesh.material.handle);
 
 						group.mesh.vao.bind();
 						group.mesh.vbo.bind();
 						group.mesh.ebo.bind();
 						cmd.bind_rasterizer_description(group.desc);
-						for (int i : group.entry_indices) {
-							MeshEntry mesh_entry = group.mesh.entries[i];
-							Material& material = this->materials.get(mesh_entry.material.handle);
-							if (instanced) {
-								pbr_instanced_shader.use();
-								pbr_instanced_shader.set_material(this, &material);
-								pbr_instanced_shader.set_model(group.model);
-								pbr_instanced_shader.set_view(view);
-								pbr_instanced_shader.set_projection(projection);
-							} else {
-								pbr_shader.use();
-								pbr_shader.set_material(this, &material);
-								pbr_shader.set_model(group.model);
-								pbr_shader.set_view(view);
-								pbr_shader.set_projection(projection);
-							}
+						if (instanced) {
+							pbr_instanced_shader.use();
+							pbr_instanced_shader.set_material(this, &material);
+							pbr_instanced_shader.set_model(group.model);
+							pbr_instanced_shader.set_view(view);
+							pbr_instanced_shader.set_projection(projection);
+						} else {
+							pbr_shader.use();
+							pbr_shader.set_material(this, &material);
+							pbr_shader.set_model(group.model);
+							pbr_shader.set_view(view);
+							pbr_shader.set_projection(projection);
+						}
 
-							this->draw_entry(mesh_entry, group.instance_count);
-
-							// TODO(Jovanni): remove this, basiclaly if a material doens't have an albedo texture, give it a default white texture
-							for (int i = 0; i < 4; i++) {
-								gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
-								glBindTexture(GL_TEXTURE_2D, 0);
-							}
+						this->draw_mesh(group.mesh, group.instance_count);
+						for (int i = 0; i < 4; i++) {
+							gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
+							glBindTexture(GL_TEXTURE_2D, 0);
 						}
 					}
 				
@@ -522,17 +497,11 @@ struct OpenGL {
 		));
 	}
 
-	void draw_entry(MeshEntry& mesh_entry, int instance_count) {
-		if (mesh_entry.index_count) {
-			this->draw_indices(mesh_entry.vertex_base, mesh_entry.index_base, mesh_entry.index_count, instance_count, mesh_entry.draw_type);
-		} else {
-			this->draw_vertices(mesh_entry.vertex_base, mesh_entry.vertex_count, instance_count, mesh_entry.draw_type);
-		}
-	}
-
 	void draw_mesh(Mesh& mesh, int instance_count) {
-		for (MeshEntry& mesh_entry : mesh.entries) {
-			this->draw_entry(mesh_entry, instance_count);
+		if (mesh.index_count) {
+			this->draw_indices(0, 0, mesh.index_count, instance_count, mesh.draw_type);
+		} else {
+			this->draw_vertices(0, mesh.vertex_count, instance_count, mesh.draw_type);
 		}
 	}
 
@@ -584,6 +553,6 @@ struct OpenGL {
 	Registry<OpenGL::VertexBuffer, 256> vbos = {};
 	Registry<OpenGL::IndexBuffer, 256> ebos = {};
 	Registry<OpenGL::CommandBuffer, 256> command_buffers = {};
-	Registry<OpenGL::MeshEntry, 256> mesh_entries = {};
+	Registry<OpenGL::Model, 256> models = {};
 	Registry<OpenGL::Mesh, 256> meshes = {};
 };

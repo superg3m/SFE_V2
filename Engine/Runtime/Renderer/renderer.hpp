@@ -24,6 +24,10 @@ struct Renderer {
 		return this->backend.meshes.get(mesh.handle);
 	}
 
+	typename B::Model& get(ModelHandle model) {
+		return this->backend.models.get(model.handle);
+	}
+
 	Material& get(MaterialHandle material) {
 		return this->backend.materials.get(material.handle);
 	}
@@ -33,9 +37,16 @@ struct Renderer {
 		return backend->vbos.acquire();
 	}
 
+	/*
 	static MeshHandle acquire_mesh_handle(void* b) {
 		B* backend = (B*)b; 
 		return backend->meshes.acquire();
+	}
+	*/
+
+	static ModelHandle acquire_model_handle(void* b) {
+		B* backend = (B*)b; 
+		return backend->models.acquire();
 	}
 
 	static MaterialHandle acquire_material_handle(void* b) {
@@ -51,7 +62,7 @@ struct Renderer {
 	}
 
 	RenderAPI API() {
-		return RenderAPI(this->memory, &this->backend, &this->backend.materials, &acquire_vbo_handle, &acquire_mesh_handle, &acquire_texture_handle);
+		return RenderAPI(this->memory, &this->backend, &this->backend.materials, &acquire_vbo_handle, &acquire_model_handle, &acquire_texture_handle);
 	}
 
 	void sync(RenderAPI* api) {

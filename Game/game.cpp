@@ -10,11 +10,11 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	app->material = cube_material.self;
 	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), container_texture); 
 
-	MeshHandle cube = engine->renderer.create_mesh_cube(app->material);
-	MeshHandle backback = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
-	MeshHandle glass = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
-	MeshHandle helmet = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
-	MeshHandle church = engine->renderer.create_mesh(STR_INTERN("../../../Game/Assets/Models/church.glb"));
+	// MeshHandle cube = engine->renderer.create_mesh_cube(app->material);
+	ModelHandle backback = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
+	ModelHandle glass = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
+	ModelHandle helmet = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
+	ModelHandle church = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/church.glb"));
 
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
 	int index = 0;
@@ -33,7 +33,7 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 		VertexAttribute{4, 0, BufferStrideTypeInfo::MAT4, true},
 	}, engine->memory.frame_allocator});
 
-	app->instance_cube_vbo = engine->renderer.create_vbo(cube, layout, app->cube_translations, true);
+	// app->instance_cube_vbo = engine->renderer.create_vbo(cube, layout, app->cube_translations, true);
 
 	// {right, left, top, bottom, front, back}
 	#define SKYBOX_TEXTURE_PREFIX "../../../Game/Assets/Skyboxes/day_and_night"
@@ -60,14 +60,16 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), skybox_day);
 	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), skybox_night);
 
-	engine->manager.create_entity_from_mesh(STR_INTERN("cube"), engine->scene.root, cube, app->cube_translations.count);
-	engine->manager.create_entity_from_mesh(STR_INTERN("backpack"), engine->scene.root, backback);
-	engine->manager.create_entity_from_mesh(STR_INTERN("glass"), engine->scene.root, glass);
-	engine->manager.create_entity_from_mesh(STR_INTERN("helmet"), engine->scene.root, helmet);
-	engine->manager.create_entity_from_mesh(STR_INTERN("church"), engine->scene.root, church);
+	engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
+	engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
+	engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
+	engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
 
-	Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
-	skybox.add_component<SkyboxComponent>(app->skybox_material);
+	// Entity& cube = engine->manager.create_entity(STR_INTERN("cube"), engine->scene.root);
+	// Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
+
+	// cube.add_component<MeshComponent>(cube, app->cube_translations.count);
+	// skybox.add_component<SkyboxComponent>(app->skybox_material);
 	app->timer.start(5.0f);
 }
 
@@ -126,11 +128,11 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 	AppState* app = (AppState*)engine->app;
 	Mat4 model = Mat4::rotate(Mat4::identity(), Quat::from_euler(0, app->accumulator, 0));
 
-	Material& cube_material = engine->renderer.materials->get(app->material.handle);
+	// Material& cube_material = engine->renderer.materials->get(app->material.handle);
 
-	Material& skybox_material = engine->renderer.materials->get(app->skybox_material.handle);
-	skybox_material.set_float(STR_INTERN("uBlend"), app->sky_blend);
-	skybox_material.set_mat4(STR_INTERN("uModel"), model);
+	// Material& skybox_material = engine->renderer.materials->get(app->skybox_material.handle);
+	// skybox_material.set_float(STR_INTERN("uBlend"), app->sky_blend);
+	// skybox_material.set_mat4(STR_INTERN("uModel"), model);
 	
 	// clear_color()
 }

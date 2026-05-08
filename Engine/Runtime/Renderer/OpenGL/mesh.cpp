@@ -85,36 +85,37 @@ INTERNAL_LINKAGE bool load_assimp_texture(OpenGL* backend, Material* material, i
 	return true;
 }
 
-OpenGL::MeshEntry OpenGL::MeshEntry::create(VertexLayout layout, MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices, u32 vertex_base, u32 index_base, GLenum draw_type) {
-	MeshEntry ret = {};
-	ret.draw_type = draw_type;
-	ret.vertex_count = (vertices.count * sizeof(Vertex)) / layout.stride;
-	ret.index_count = indices.count;
-	ret.vertex_base  = vertex_base;
-	ret.index_base   = index_base;
-	ret.material = material;
+void OpenGL::Mesh::setup(Vector<Vertex>& vertices, Vector<u32>& indices) {
+	this->aabb = calculate_aabb(vertices, 0, vertices.count);
 
-	return ret;
+	this->vao = VertexArrayObject::create();
+	this->vbo = VertexBuffer::create(this->vao, VertexLayout::PNTC(), vertices.data, vertices.count, sizeof(Vertex));
+	this->ebo = IndexBuffer::create(this->vao, indices);
 }
 
-OpenGL::MeshEntry OpenGL::Mesh::process_mesh(Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform) {
-	OpenGL::MeshEntry entry = {};
-	entry.vertex_base = (unsigned int)this->vertices.count;
-	entry.index_base = (unsigned int)this->indices.count;
-	entry.index_count = ai_mesh->mNumFaces * 3;
-	entry.vertex_count = ai_mesh->mNumVertices;
-	entry.material = map.get(ai_mesh->mMaterialIndex);
-	entry.name = String::create(String::allocate(Allocator::general(), ai_mesh->mName.C_Str(), ai_mesh->mName.length), ai_mesh->mName.length); // is this cstr stable?
+OpenGL::Mesh OpenGL::Model::process_mesh(OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform) {
+	MeshHandle mesh_handle = backend->meshes.acquire();
+	OpenGL::Mesh& mesh = backend->meshes.get(mesh_handle.handle);
+	mesh.self = mesh_handle;
+	mesh.index_count = ai_mesh->mNumFaces * 3;
+	mesh.vertex_count = ai_mesh->mNumVertices;
+	mesh.material = map.get(ai_mesh->mMaterialIndex);
+	mesh.name = String::create(String::allocate(Allocator::general(), ai_mesh->mName.C_Str(), ai_mesh->mName.length), ai_mesh->mName.length); // is this cstr stable?
+
+	// TODO(Jovanni): Pass memory context 
+	Vector<Vertex> vertices = Vector<Vertex>(Allocator::general(), ai_mesh->mNumVertices);
+	Vector<u32> indices = Vector<u32>(Allocator::general(), ai_mesh->mNumFaces * 3);
+
 	unsigned int meshPrimitiveType;
 	if (ai_mesh->mPrimitiveTypes & aiPrimitiveType_POINT) {
 		meshPrimitiveType = 1;
-		entry.draw_type = GL_POINTS;
+		mesh.draw_type = GL_POINTS;
 	} else if (ai_mesh->mPrimitiveTypes & aiPrimitiveType_LINE) {
 		meshPrimitiveType = 2;
-		entry.draw_type = GL_LINES;
+		mesh.draw_type = GL_LINES;
 	} else if (ai_mesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE) {
 		meshPrimitiveType = 3;
-		entry.draw_type = GL_TRIANGLES;
+		mesh.draw_type = GL_TRIANGLES;
 	} else if (ai_mesh->mPrimitiveTypes & aiPrimitiveType_POLYGON) {
 		LOG_ERROR(
 			"We only support drawing triangle, line, or point meshes. "
@@ -150,25 +151,26 @@ OpenGL::MeshEntry OpenGL::Mesh::process_mesh(Hashmap<int, MaterialHandle>& map, 
 			const aiVector3D& uv = ai_mesh->HasTextureCoords(0) ? ai_mesh->mTextureCoords[0][j] : Zero3D;
 			v.aTexCoord = Vec2(uv.x, uv.y);
 
-			this->vertices.append(v);
+			vertices.append(v);
 		}
 
 		for (unsigned int j = 0; j < ai_mesh->mNumFaces; j++) {
 			const aiFace& Face = ai_mesh->mFaces[j];
 			if (Face.mNumIndices == 3) {
-				this->indices.append(Face.mIndices[0]);
-				this->indices.append(Face.mIndices[1]);
-				this->indices.append(Face.mIndices[2]);
+				indices.append(Face.mIndices[0]);
+				indices.append(Face.mIndices[1]);
+				indices.append(Face.mIndices[2]);
 			} else {
 				LOG_ERROR("Mesh '%s' has non-triangular face with %d indices. Skipping.\n", ai_mesh->mName.C_Str(), Face.mNumIndices);
 			}
 		}
 	} // Geometry End
 
-	return entry;
+	mesh.setup(vertices, indices);
+	return mesh;
 }
 
-void OpenGL::Mesh::process_node(Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform) {
+void OpenGL::Model::process_node(OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform) {
 	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		RUNTIME_ASSERT_MSG(mesh->mPrimitiveTypes != 0, "Primitive type not set by ASSIMP in mesh.\n");
@@ -182,34 +184,16 @@ void OpenGL::Mesh::process_node(Hashmap<int, MaterialHandle>& map, aiNode* node,
 			RUNTIME_ASSERT(false);
 		}
 
-		this->entries.append(this->process_mesh(map, mesh, scene, parent_transform));
+		this->meshes.append(this->process_mesh(backend, map, mesh, scene, parent_transform));
 	}
 
 	Mat4 new_parent_transform = parent_transform * convert_assimp_matrix_to_glm(node->mTransformation);
 	for (unsigned int i = 0; i < node->mNumChildren; i++) {
-		this->process_node(map, node->mChildren[i], scene, new_parent_transform);
+		this->process_node(backend, map, node->mChildren[i], scene, new_parent_transform);
 	}
 }
 
-void OpenGL::Mesh::setup() {
-	this->aabb = calculate_aabb(this->vertices, 0, this->vertices.count);
-
-	this->vao = VertexArrayObject::create();
-	this->vbo = VertexBuffer::create(this->vao, VertexLayout::PNTC(), this->vertices.data, this->vertices.count, sizeof(Vertex));
-	this->ebo = IndexBuffer::create(this->vao, this->indices);
-}
-
-
-OpenGL::Mesh OpenGL::Mesh::create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices, GLenum draw_type, u32 vertex_base, u32 index_base ) {
-	OpenGL::Mesh ret = {};
-	ret.vertices = vertices;
-	ret.indices = indices;
-	ret.entries.append(MeshEntry::create(VertexLayout::PNTC(), material, vertices, indices, vertex_base, index_base, draw_type));
-	ret.setup();
-	
-	return ret;
-}
-
+/*
 OpenGL::Mesh OpenGL::Mesh::cube(MaterialHandle material) {
 	Vector<Vertex> cube_vertices = {
 		// Back face (z = -0.5)
@@ -412,31 +396,24 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material) {
 
 	return ret;
 }
+*/
 
-OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, String path, TextureDescription desc) {
-	Mesh ret = {};
+OpenGL::Model OpenGL::Model::load_from_file(OpenGL* backend, String path, TextureDescription desc) {
+	Model ret = {};
 	Assimp::Importer importer;
 	unsigned int assimp_flags = (
 		aiProcess_Triangulate|aiProcess_FlipUVs | 
 		aiProcess_PreTransformVertices|aiProcess_GenSmoothNormals | 
 		aiProcess_JoinIdenticalVertices
 	);
-	
+
 	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(path);
 	const aiScene* scene = importer.ReadFile(path.data, assimp_flags);
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 		LOG_ERROR("ASSIMP ERROR: %s\n", importer.GetErrorString());
 	}
 
-	unsigned int total_vertex_count = 0;
-	unsigned int total_index_count = 0;
-	for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
-		total_vertex_count += scene->mMeshes[i]->mNumVertices;
-		total_index_count  += scene->mMeshes[i]->mNumFaces * 3;
-	}
-
-	ret.vertices.reserve(total_vertex_count);
-	ret.indices.reserve(total_index_count);
+	ret.meshes.reserve(scene->mNumMeshes);
 
 	u64 path_length = String::cstr_length(path.data);
 	int index = String::last_index_of(path.data, path_length, STRING_LIT_ARG("/"));
@@ -494,11 +471,7 @@ OpenGL::Mesh OpenGL::Mesh::load_from_file(OpenGL* backend, String path, TextureD
 		material_index_to_material_handle.put(i, MaterialHandle(material_handle));
 	}
 
-	ret.process_node(material_index_to_material_handle, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
-	ret.setup();
-
-	ret.vertices.clear();
-	ret.indices.clear();
+	ret.process_node(backend, material_index_to_material_handle, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
 
 	return ret;
 }

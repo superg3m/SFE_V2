@@ -13,7 +13,8 @@ MaterialDescription(
 */
 
 typedef VertexBufferHandle(AcquireVertexBufferFunc)(void* b);
-typedef MeshHandle(AcquireMeshFunc)(void* b);
+// typedef MeshHandle(AcquireMeshFunc)(void* b);
+typedef ModelHandle(AcquireModelFunc)(void* b);
 typedef TextureHandle(AcquireTextureFunc)(void* b);
 
 // TODO(Jovanni): instead of user call it self?
@@ -26,15 +27,17 @@ struct RenderAPI {
 	Vector<RenderRequest> deferred_requests = {};
 	Registry<Material, 256>* materials = {};
 	AcquireVertexBufferFunc* _private_acquire_vbo_handle = nullptr;
-    AcquireMeshFunc*         _private_acquire_mesh_handle = nullptr;
+    // AcquireMeshFunc*         _private_acquire_mesh_handle = nullptr;
+    AcquireModelFunc*        _private_acquire_model_handle = nullptr;
     AcquireTextureFunc*      _private_acquire_texture_handle = nullptr;
 
-	RenderAPI(MemoryContext memory, void* b, Registry<Material, 256>* materials, AcquireVertexBufferFunc* _private_acquire_vbo_handle, AcquireMeshFunc* _private_acquire_mesh_handle, AcquireTextureFunc* _private_acquire_texture_handle) {
+	RenderAPI(MemoryContext memory, void* b, Registry<Material, 256>* materials, AcquireVertexBufferFunc* _private_acquire_vbo_handle, AcquireModelFunc* _private_acquire_model_handle, AcquireTextureFunc* _private_acquire_texture_handle) {
 		this->b = b;
 		this->memory = memory;
 		this->materials = materials;
 		this->_private_acquire_vbo_handle = _private_acquire_vbo_handle;
-		this->_private_acquire_mesh_handle = _private_acquire_mesh_handle;
+		// this->_private_acquire_mesh_handle = _private_acquire_mesh_handle;
+		this->_private_acquire_model_handle = _private_acquire_model_handle;
 		this->_private_acquire_texture_handle = _private_acquire_texture_handle;
 	}
 
@@ -54,14 +57,7 @@ struct RenderAPI {
 	}
 	*/
 
-	MeshHandle create_mesh(String path, TextureDescription desc = {}) {
-		MeshHandle mesh = this->_private_acquire_mesh_handle(this->b);
-		RenderRequest request = RENDER_REQUEST_MESH_LOAD(mesh, path, desc);
-		this->deferred_requests.append(request);
-		
-		return mesh;
-	}
-
+	/*
 	MeshHandle create_mesh_cube(MaterialHandle material) {
 		MeshHandle mesh = this->_private_acquire_mesh_handle(this->b);
 		RenderRequest request = RENDER_REQUEST_MESH_CREATE_CUBE(mesh, material);
@@ -77,6 +73,7 @@ struct RenderAPI {
 
 		return mesh;
 	}
+	*/
 
 	/*
 	void shader_recompile(ShaderHandle shader) {
@@ -84,6 +81,14 @@ struct RenderAPI {
 		this->requests.append(request);
 	}
 	*/
+
+	ModelHandle create_model(String path, TextureDescription desc = {}) {
+		ModelHandle model = this->_private_acquire_model_handle(this->b);
+		RenderRequest request = RENDER_REQUEST_MODEL_LOAD(model, path, desc);
+		this->deferred_requests.append(request);
+		
+		return model;
+	}
 
 	TextureHandle create_texture(String path, TextureDescription description = {}) {
 		TextureHandle texture = this->_private_acquire_texture_handle(this->b);
@@ -110,6 +115,12 @@ struct RenderAPI {
 		return material_slot;
 	}
 
+	void draw_mesh(MeshHandle mesh, RasterizerDescription desc, Mat4 model, u32 instance_count = 1) {
+		RenderRequest request = RENDER_REQUEST_DRAW_CALL(mesh, desc, model, instance_count);
+		this->deferred_requests.append(request);
+	}
+
+	/*
 	void draw_aabb(MeshHandle mesh, Mat4 model) {
 		RenderRequest request = RENDER_REQUEST_DRAW_AABB(mesh, model);
 		this->deferred_requests.append(request);
@@ -124,4 +135,5 @@ struct RenderAPI {
 		RenderRequest request = RENDER_REQUEST_DRAW_SKYBOX(material);
 		this->deferred_requests.append(request);
 	}
+	*/
 };

@@ -69,9 +69,18 @@ struct EntityManagerAPI {
 		return entity_slot;
 	}
 
+	/*
 	Entity& create_entity_from_mesh(String name, EntityHandle parent, MeshHandle mesh, int instance_count = 1) {
 		Entity& entity = this->create_entity(name, parent);
 		this->deferred_requests.append(ENTITY_MANAGER_REQUEST_CREATE_ENTITY_FROM_MESH(entity.self, mesh, instance_count));
+
+		return entity;
+	}
+	*/
+
+	Entity& create_entity_from_model(String name, EntityHandle parent, ModelHandle model, int instance_count = 1) {
+		Entity& entity = this->create_entity(name, parent);
+		this->deferred_requests.append(ENTITY_MANAGER_REQUEST_CREATE_ENTITY_FROM_MODEL(entity.self, model, instance_count));
 
 		return entity;
 	}
