@@ -209,6 +209,7 @@ struct Material {
 	void set_mat4(String name, const Mat4& mat);
 
 	static void copy(Material* dest, Material* source) {
+		*dest = *source;
 		Hashmap<String, BindingValue>::copy(&dest->bindings, &source->bindings);
 	}
 };

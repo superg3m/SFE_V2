@@ -159,7 +159,6 @@ struct MeshComponent : public Component {
 
 	MeshComponent(Entity* owner, MeshHandle mesh, int instance_count);
 	void update(EngineAPI* engine, float dt) override;
-	void set_mesh(MeshHandle mesh);
 };
 
 struct SkyboxComponent : public Component {
@@ -169,6 +168,54 @@ struct SkyboxComponent : public Component {
 
 	SkyboxComponent(Entity* owner, MaterialHandle material);
 	void update(EngineAPI* engine, float dt) override;
+};
+
+struct KeyFrameVec3 {
+	float time = 0.0f;
+	Vec3 value = Vec3(0.0f);
+};
+
+struct KeyFrameQuat {
+	float time = 0.0f;
+	Quat value = Quat::identity();
+};
+
+struct TransformTrack {
+	String targetName;
+	Vector<KeyFrameVec3> positions;
+	Vector<KeyFrameQuat> rotations;
+	Vector<KeyFrameVec3> scales;
+};
+
+struct AnimationClip {
+	String name;
+	float duration = 0.0f;
+	bool looping = true;
+	Vector<TransformTrack> tracks;
+};
+
+struct ObjectBinding {
+	Entity* entity = nullptr;
+	Vector<size_t> track_indices;
+};
+
+struct AnimationComponent : public Component {
+	using Component::Component;
+	
+	AnimationClip* clip = nullptr;
+	float time = 0.0f;
+	bool is_looping = true;
+	bool is_playing = false;
+
+	Hashmap<String, AnimationClip> m_clips;
+	Hashmap<Entity*, ObjectBinding> m_bindings;
+
+	AnimationComponent(Entity* owner, MeshHandle mesh, int instance_count);
+	void update(EngineAPI* engine, float dt) override;
+	void SetClip(AnimationClip* clip);
+	void RegisterClip(const String& name, AnimationClip* clip);
+	void Play(const String& name, bool loop = true);
+	bool IsPlaying() const;
 };
 
 #define COMPONENT(T)       			\
