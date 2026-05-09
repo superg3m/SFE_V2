@@ -134,6 +134,11 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 // TODO(Jovanni): I want to reorganize the runtime.
 
 The end goal of this project is the following:
+- [] basically i'm going to go through the assimp model load and reimplmeent the mesh entries, however!
+i'm going to get all of the meshes and organize them by material,
+Hashmap<MaterialIndex, Vector<SubMesh>>
+
+
 - [] remove general allocator calls if possible
 - [] Lights (should be easy?)
 
