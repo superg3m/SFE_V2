@@ -24,6 +24,8 @@ void CameraComponent::update(EngineAPI* engine, float dt) {
 	this->front = Vec3::euler(this->yaw, this->pitch).normalize();
 	this->right = Vec3::cross(this->front, this->world_up).normalize();
 	this->up    = Vec3::cross(this->right, this->front).normalize();
+
+	this->owner->transform.rotation = Quat::from_euler(Vec3(this->pitch, -90 - this->yaw, 0));
 }
 
 void CameraComponent::lookat(Vec3 target_position) {

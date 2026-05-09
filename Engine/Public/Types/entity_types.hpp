@@ -93,6 +93,19 @@ struct FirstPersonCameraControllerComponent : public Component {
 	void update(EngineAPI* engine, float dt) override;
 };
 
+struct PointLightComponent : public Component {
+	using Component::Component;
+
+    Vec3 position;
+    Vec3 ambient;
+    Vec3 diffuse;
+    Vec3 specular;
+
+	PointLightComponent(Entity* owner, Vec3 position);
+
+	void update(EngineAPI* engine, float dt) override {};
+};
+
 struct HealthComponent : public Component {
 	using Component::Component;
 

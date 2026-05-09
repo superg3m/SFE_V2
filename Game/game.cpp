@@ -14,6 +14,7 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	ModelHandle glass = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
 	ModelHandle helmet = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
 	ModelHandle church = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/church.glb"));
+	ModelHandle gun = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/gun/scene.gltf"));
 
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
 	int index = 0;
@@ -76,6 +77,10 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	camera.add_component<FirstPersonCameraControllerComponent>();
 	engine->scene.camera = camera.self;
 
+	Entity& gun_entity = engine->manager.create_entity_from_model(STR_INTERN("gun"), camera.self, gun);
+	gun_entity.transform.position = Vec3(0.5f, -0.5f, -1);
+	gun_entity.transform.scale = Vec3(-0.75, 0.75, 0.75);
+
 	app->timer.start(5.0f);
 }
 
@@ -124,19 +129,20 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 // TODO(Jovanni): I want to reorganize the runtime.
 
 The end goal of this project is the following:
-- [] CameraComponent
+- [] remove general allocator calls if possible
+- [] Lights (should be easy?)
+
+
+- [] I can probably get away with allowing entitys to have a pointer to their parent because passing around the manager for that is really annoying just to get world space you know
 - [] maybe still consider have Texture* or Mesh* and then an OpenGL::Mesh inherits from it. SO you have most fields accessable through just the handle without going back
 	to the executable. This is very nice and clean it wwould work. The only reason i'm opposed is the the new OpenGL::Mesh will be be slow I think because of 
 	lack of cache locality and pointer chasing, but maybe it doesn't matter since these operations by their very natrue are very vew and far between I think?
 - [] display second camera "minimap" (should just be a screen textured-quad anchored to the top-right, small with render texture from the framebuffer)
 	this is why making it manditory to pass in a frame buffer is nice! FrameBuffer {FrameBufferHandle fb, TextureHandle textrue}
-- [] remove general allocator calls if possible
 - [] Control the framebuffer stuff gets rendered on (make sure you can easily make framebuffers, and get their textures)
 - [] Multiple Cameras (camera's as entities)
-- [] Lights (should be easy?)
 - [] Approaching Zero Driver Overhead in OpenGL (Check if VAO is already bound for example)
 - [] transparent mesh (should be easy?)
-- [] semi-transparent mesh (should just work, but maybe not?)
 - [] robust rendering system (account for framebuffer objects)
 	- [] texture for depth, color, light, normals
 		- These shouldn't be in the shader, theres should just be thier own shader and i just swap out the shader

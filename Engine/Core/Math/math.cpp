@@ -244,7 +244,7 @@ Vec3 Vec3::cross(Vec3 A, Vec3 B) {
 }
 
 Vec3 Vec3::euler(float yaw, float pitch) {
-	Vec3 r(0,0,0);
+	Vec3 r = Vec3(0.0f);
 	r.x = cosf(DEGREES_TO_RAD(yaw)) * cosf(DEGREES_TO_RAD(pitch));
 	r.y = sinf(DEGREES_TO_RAD(pitch));
 	r.z = sinf(DEGREES_TO_RAD(yaw)) * cosf(DEGREES_TO_RAD(pitch));
