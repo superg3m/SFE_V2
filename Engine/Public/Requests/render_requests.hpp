@@ -203,3 +203,5 @@ struct RenderRequest {
 #define RENDER_REQUEST_DRAW_CALL(mesh, desc, model, instance_count) RenderRequest{.type = RequestType::DRAW_CALL, .draw_call = DrawCallRequest::create(mesh, desc, model, instance_count)}
 #define RENDER_REQUEST_DRAW_AABB(mesh, model) RenderRequest{.type = RequestType::DRAW_AABB, .draw_call = DrawCallRequest::create(mesh, model)}
 #define RENDER_REQUEST_DRAW_SKYBOX(texture) RenderRequest{.type = RequestType::DRAW_SKYBOX, .draw_skybox = DrawSkyboxRequest::create(texture)}
+
+#define RENDER_REQUEST_RECOMPILE_DIRTY_SHADERS() RenderRequest{.type = RequestType::SHADER_RECOMPILE}

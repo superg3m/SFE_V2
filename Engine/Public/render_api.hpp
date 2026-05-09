@@ -65,12 +65,11 @@ struct RenderAPI {
 		return mesh;
 	}
 
-	/*
-	void shader_recompile(ShaderHandle shader) {
-		RenderRequest request = RENDER_REQUSTREC RenderRequest::shader_recompile(shader);
-		this->requests.append(request);
+	// Right now this doesn't account for dirty shaders it just recompiles all the shaders
+	void recompile_dirty_shaders() {
+		RenderRequest request = RENDER_REQUEST_RECOMPILE_DIRTY_SHADERS();
+		this->deferred_requests.append(request);
 	}
-	*/
 
 	ModelHandle create_model(String path, TextureDescription desc = {}) {
 		ModelHandle model = this->_private_acquire_model_handle(this->b);

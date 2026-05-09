@@ -7,6 +7,8 @@ in vec3 v_Normal;
 
 struct Material {
 	sampler2D albedo;
+	bool has_albedo;
+
 	float metallic;
 	float roughness;
 	float ao;
@@ -15,7 +17,7 @@ struct Material {
 };
 
 uniform Material uMaterial;
-uniform bool has_albedo;
+
 
 // TODO(Jovanni): Actually understand this
 
@@ -71,13 +73,8 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 // ----------------------------------------------------------------------------
 void main() {
 	// TODO(Jovanni): Remove this, this is just so the lights are not my limiting factor right now
-	FragColor = vec4(texture(uMaterial.albedo, v_TexCoord).rgb, uMaterial.opacity);
-	if (has_albedo) {
-		// FragColor = vec4(texture(uMaterial.albedo, v_TexCoord).rgb, uMaterial.opacity);
-	} else {
-		// FragColor = vec4(vec3(1), uMaterial.opacity);
-	}
-	
+	vec3 albedo = uMaterial.has_albedo ? texture(uMaterial.albedo, v_TexCoord).rgb : vec3(1);
+	FragColor = vec4(albedo, uMaterial.opacity);
 	return;
 
 	/*

@@ -221,6 +221,10 @@ struct OpenGL {
 
 	// TODO(Jovanni): I should pass in the camera and lights
 	void execute_defered_request(EngineAPI* engine) {
+		LOCAL_PERSIST Shader pbr_shader = Shader::create({STR("../../../Game/Assets/Shaders/pbr.vert"), STR("../../../Game/Assets/Shaders/pbr.frag")});
+		LOCAL_PERSIST Shader pbr_instanced_shader = Shader::create({STR("../../../Game/Assets/Shaders/pbr_instanced.vert"), STR("../../../Game/Assets/Shaders/pbr.frag")});
+		LOCAL_PERSIST Shader skybox_shader = Shader::create({STR("../../../Game/Assets/Shaders/skybox.vert"), STR("../../../Game/Assets/Shaders/skybox.frag")});
+
 		Vector<RenderGroup> opaque_draw_calls = Vector<RenderGroup>(engine->memory.frame_allocator);
 		Vector<RenderGroup> translucent_draw_calls = Vector<RenderGroup>(engine->memory.frame_allocator);
 		Vector<DrawSkyboxRequest> skyboxes = Vector<DrawSkyboxRequest>(engine->memory.frame_allocator);
@@ -268,12 +272,11 @@ struct OpenGL {
 				} break;
 
 				// TODO(Jovanni): make a funciton thats just recompile_dirty_shaders()
-				/*
 				case RequestType::SHADER_RECOMPILE: {
-					Shader& shader = this->shaders.get(request.shader.user.handle);
-					shader.compile();
+					pbr_shader.compile();
+					pbr_instanced_shader.compile();
+					skybox_shader.compile();
 				} break;
-				*/
 
 				case RequestType::MODEL_LOAD: {
 					Model& mesh = this->models.get(request.model.user.handle);
@@ -325,10 +328,6 @@ struct OpenGL {
 			}
 		}
 
-		LOCAL_PERSIST Shader pbr_shader = Shader::create({STR("../../../Game/Assets/Shaders/pbr.vert"), STR("../../../Game/Assets/Shaders/pbr.frag")});
-		LOCAL_PERSIST Shader pbr_instanced_shader = Shader::create({STR("../../../Game/Assets/Shaders/pbr_instanced.vert"), STR("../../../Game/Assets/Shaders/pbr.frag")});
-		
-		LOCAL_PERSIST Shader skybox_shader = Shader::create({STR("../../../Game/Assets/Shaders/skybox.vert"), STR("../../../Game/Assets/Shaders/skybox.frag")});
 		LOCAL_PERSIST Material& skybox_material = this->materials.get(this->materials.acquire());
 		LOCAL_PERSIST Mesh skybox_mesh = Mesh::skybox_cube(skybox_material.self);
 

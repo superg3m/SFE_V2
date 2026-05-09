@@ -424,7 +424,7 @@ OpenGL::Model OpenGL::Model::load_from_file(OpenGL* backend, String path, Textur
 		Handle material_handle = backend->materials.acquire();
 		Material& material = backend->materials.get(material_handle);
 		material = Material::create(material_handle, Allocator::general(), MaterialType::PBR);
-		material.set_bool(STR("has_albedo"), load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_DIFFUSE, STR(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), desc));
+		material.set_bool(STR(MATERIAL_HAS_ALBEDO_UNIFORM_NAME), load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_DIFFUSE, STR(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), desc));
 
 		/*
 		aiColor4D ambient_color(0.0f, 0.0f, 0.0f, 0.0f);

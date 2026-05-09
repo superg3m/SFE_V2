@@ -8,6 +8,7 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	TextureHandle container_texture = engine->renderer.create_texture(STR_INTERN("../../../Game/Assets/Textures/container.jpg"));
 	Material& cube_material = engine->renderer.create_material();
 	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), container_texture); 
+	cube_material.set_bool(STR_INTERN(MATERIAL_HAS_ALBEDO_UNIFORM_NAME), true); 
 
 	MeshHandle cube_mesh = engine->renderer.create_mesh_cube(cube_material.self);
 	ModelHandle backback = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
@@ -107,7 +108,7 @@ EXPORT_FN void application_update(EngineAPI* engine, Arena* string_arena, Hashma
 	}
 
 	if (engine->input.get_key_pressed(KEY_R)) {
-		// engine->renderer.recompile_dirty_shaders();
+		engine->renderer.recompile_dirty_shaders();
 	}
 }
 

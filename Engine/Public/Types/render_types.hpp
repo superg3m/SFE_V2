@@ -173,6 +173,8 @@ struct Material {
 */
 
 #define MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME "uMaterial.albedo"
+#define MATERIAL_HAS_ALBEDO_UNIFORM_NAME "uMaterial.has_albedo"
+
 #define MATERIAL_METALLIC_UNIFORM_NAME "uMaterial.metallic"
 #define MATERIAL_ROUGHNESS_UNIFORM_NAME "uMaterial.roughness"
 #define MATERIAL_OPACITY_UNIFORM_NAME "uMaterial.opacity"
