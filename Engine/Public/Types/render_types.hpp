@@ -34,16 +34,22 @@ struct MaterialHandle {
 	static MaterialHandle invalid() {
 		return {Handle::invalid()};
 	}
+
+	bool operator==(MaterialHandle& other) const {
+		return this->handle == other.handle;
+	}
 };
 
 struct MeshHandle {
 	Handle handle = Handle::invalid();
-	MeshHandle(Handle handle) {
+	MaterialHandle original_material = MaterialHandle::invalid();
+	MeshHandle(Handle handle, MaterialHandle material) {
 		this->handle = handle;
+		this->original_material = material; // NOTE(Jovanni): Material associated with this mesh
 	}
 	
 	static MeshHandle invalid() {
-		return {Handle::invalid()};
+		return {Handle::invalid(), MaterialHandle::invalid()};
 	}
 };
 
@@ -201,6 +207,10 @@ struct Material {
 	void set_vec4(String name, const Vec4& value);
 	void set_vec4(String name, float x, float y, float z, float w);
 	void set_mat4(String name, const Mat4& mat);
+
+	static void copy(Material* dest, Material* source) {
+		Hashmap<String, BindingValue>::copy(&dest->bindings, &source->bindings);
+	}
 };
 // --------------------------------------------------
 

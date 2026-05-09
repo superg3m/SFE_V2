@@ -188,7 +188,7 @@ struct OpenGL {
 		GLenum draw_type = GL_TRIANGLES;
 		u32 vertex_count  = 0;
 		u32 index_count   = 0;
-		MaterialHandle material = MaterialHandle::invalid();
+		MaterialHandle original_material = MaterialHandle::invalid();
 		String name;
 		AABB aabb;
 
@@ -214,6 +214,7 @@ struct OpenGL {
 
 	struct RenderGroup {
 		Mesh mesh;
+		Material material;
 		Mat4 model;
 		int instance_count;
 		RasterizerDescription desc;
@@ -295,11 +296,12 @@ struct OpenGL {
 
 				case RequestType::DRAW_CALL: {
 					Mesh& mesh_slot = this->meshes.get(request.draw_call.mesh.handle);
-					Material& material = this->materials.get(mesh_slot.material.handle);
+					Material& material = this->materials.get(request.draw_call.material.handle);
 
 					RenderGroup group = {};
 					group.model = request.draw_call.model;
 					group.mesh = mesh_slot;
+					group.material = material;
 					group.instance_count = request.draw_call.instance_count;
 					group.desc = request.draw_call.rasterizer_description;
 
@@ -341,21 +343,19 @@ struct OpenGL {
 			{
 				for (RenderGroup& group : opaque_draw_calls) {
 					bool instanced = group.instance_count > 1;
-					Material& material = this->materials.get(group.mesh.material.handle);
-
 					group.mesh.vao.bind();
 					group.mesh.vbo.bind();
 					group.mesh.ebo.bind();
 					cmd.bind_rasterizer_description(group.desc);
 					if (instanced) {
 						pbr_instanced_shader.use();
-						pbr_instanced_shader.set_material(this, &material);
+						pbr_instanced_shader.set_material(this, &group.material);
 						pbr_instanced_shader.set_model(group.model);
 						pbr_instanced_shader.set_view(view);
 						pbr_instanced_shader.set_projection(projection);
 					} else {
 						pbr_shader.use();
-						pbr_shader.set_material(this, &material);
+						pbr_shader.set_material(this, &group.material);
 						pbr_shader.set_model(group.model);
 						pbr_shader.set_view(view);
 						pbr_shader.set_projection(projection);
@@ -439,7 +439,6 @@ struct OpenGL {
 
 					for (RenderGroup& group : translucent_draw_calls) {
 						bool instanced = group.instance_count > 1;
-						Material& material = this->materials.get(group.mesh.material.handle);
 
 						group.mesh.vao.bind();
 						group.mesh.vbo.bind();
@@ -447,13 +446,13 @@ struct OpenGL {
 						cmd.bind_rasterizer_description(group.desc);
 						if (instanced) {
 							pbr_instanced_shader.use();
-							pbr_instanced_shader.set_material(this, &material);
+							pbr_instanced_shader.set_material(this, &group.material);
 							pbr_instanced_shader.set_model(group.model);
 							pbr_instanced_shader.set_view(view);
 							pbr_instanced_shader.set_projection(projection);
 						} else {
 							pbr_shader.use();
-							pbr_shader.set_material(this, &material);
+							pbr_shader.set_material(this, &group.material);
 							pbr_shader.set_model(group.model);
 							pbr_shader.set_view(view);
 							pbr_shader.set_projection(projection);

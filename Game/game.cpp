@@ -82,6 +82,10 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	gun_entity.transform.position = Vec3(0.5f, -0.5f, -1);
 	gun_entity.transform.scale = Vec3(-0.75, 0.75, 0.75);
 
+	Entity& point_light_1 = engine->manager.create_entity(STR_INTERN("light1"), engine->scene.root);
+	point_light_1.add_component<MeshComponent>(cube_mesh, 1);
+	// point_light_1.add_component<PointLightComponent>();
+
 	app->timer.start(5.0f);
 }
 

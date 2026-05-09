@@ -13,7 +13,7 @@ MaterialDescription(
 */
 
 typedef VertexBufferHandle(AcquireVertexBufferFunc)(void* b);
-typedef MeshHandle(AcquireMeshFunc)(void* b);
+typedef MeshHandle(AcquireMeshFunc)(void* b, MaterialHandle material);
 typedef ModelHandle(AcquireModelFunc)(void* b);
 typedef TextureHandle(AcquireTextureFunc)(void* b);
 
@@ -58,7 +58,7 @@ struct RenderAPI {
 	*/
 
 	MeshHandle create_mesh_cube(MaterialHandle material) {
-		MeshHandle mesh = this->_private_acquire_mesh_handle(this->b);
+		MeshHandle mesh = this->_private_acquire_mesh_handle(this->b, material);
 		RenderRequest request = RENDER_REQUEST_MESH_CREATE_CUBE(mesh, material);
 		this->deferred_requests.append(request);
 
@@ -104,8 +104,8 @@ struct RenderAPI {
 		return material_slot;
 	}
 
-	void draw_mesh(MeshHandle mesh, RasterizerDescription desc, Mat4 model, u32 instance_count = 1) {
-		RenderRequest request = RENDER_REQUEST_DRAW_CALL(mesh, desc, model, instance_count);
+	void draw_mesh(MeshHandle mesh, MaterialHandle material, RasterizerDescription desc, Mat4 model, u32 instance_count = 1) {
+		RenderRequest request = RENDER_REQUEST_DRAW_CALL(mesh, material, desc, model, instance_count);
 		this->deferred_requests.append(request);
 	}
 

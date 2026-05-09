@@ -37,9 +37,9 @@ struct Renderer {
 		return backend->vbos.acquire();
 	}
 
-	static MeshHandle acquire_mesh_handle(void* b) {
+	static MeshHandle acquire_mesh_handle(void* b, MaterialHandle material) {
 		B* backend = (B*)b; 
-		return backend->meshes.acquire();
+		return MeshHandle(backend->meshes.acquire(), material);
 	}
 
 	static ModelHandle acquire_model_handle(void* b) {

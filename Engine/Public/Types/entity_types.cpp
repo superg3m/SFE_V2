@@ -160,8 +160,15 @@ MeshComponent::MeshComponent(Entity* owner, MeshHandle mesh, int instance_count)
 }
 
 void MeshComponent::update(EngineAPI* engine, float dt) {
+	if (this->material == MaterialHandle::invalid()) {
+		Material& original_material = engine->renderer.materials->get(mesh.original_material.handle);
+		Material& material_slot = engine->renderer.create_material();
+		Material::copy(&material_slot, &original_material);
+		this->material = material_slot.self;
+	}
+
 	if (!this->should_render) return;
-	engine->renderer.draw_mesh(this->mesh, this->rasterizer_description, engine->manager.get_world_transform(this->owner->self), this->instance_count);
+	engine->renderer.draw_mesh(this->mesh, this->material, this->rasterizer_description, engine->manager.get_world_transform(this->owner->self), this->instance_count);
 
 	if (!this->render_aabb) return;
 	engine->renderer.draw_aabb(this->mesh, engine->manager.get_world_transform(this->owner->self));

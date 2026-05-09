@@ -96,12 +96,12 @@ void OpenGL::Mesh::setup(Vector<Vertex>& vertices, Vector<u32>& indices) {
 }
 
 OpenGL::Mesh OpenGL::Model::process_mesh(OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform) {
-	MeshHandle mesh_handle = backend->meshes.acquire();
+	MeshHandle mesh_handle = MeshHandle(backend->meshes.acquire(), map.get(ai_mesh->mMaterialIndex));
 	OpenGL::Mesh& mesh = backend->meshes.get(mesh_handle.handle);
 	mesh.self = mesh_handle;
 	mesh.index_count = ai_mesh->mNumFaces * 3;
 	mesh.vertex_count = ai_mesh->mNumVertices;
-	mesh.material = map.get(ai_mesh->mMaterialIndex);
+	mesh.original_material = map.get(ai_mesh->mMaterialIndex);
 	mesh.name = String::create(String::allocate(Allocator::general(), ai_mesh->mName.C_Str(), ai_mesh->mName.length), ai_mesh->mName.length); // is this cstr stable?
 
 	// TODO(Jovanni): Pass memory context 
@@ -247,7 +247,7 @@ OpenGL::Mesh OpenGL::Mesh::cube(MaterialHandle material) {
 	};
 
 
-	Mesh ret = {.draw_type = GL_TRIANGLES, .material = material};
+	Mesh ret = {.draw_type = GL_TRIANGLES, .original_material = material};
 	ret.setup(cube_vertices, cube_indices);
 
 	return ret;
@@ -304,7 +304,7 @@ OpenGL::Mesh OpenGL::Mesh::skybox_cube(MaterialHandle material) {
 	};
 
 
-	Mesh ret = {.draw_type = GL_TRIANGLES, .material = material};
+	Mesh ret = {.draw_type = GL_TRIANGLES, .original_material = material};
 	ret.setup(cube_vertices, cube_indices);
 
 	return ret;
@@ -358,7 +358,7 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material, AA
 
 	Vector<u32> aabb_indices = {};
 
-	Mesh ret = {.draw_type = GL_LINES, .material = material};
+	Mesh ret = {.draw_type = GL_LINES, .original_material = material};
 	ret.setup(aabb_vertices, aabb_indices);
 
 	return ret;
@@ -387,7 +387,7 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material) {
 
 	Vector<u32> aabb_indices = {};
 
-	Mesh ret = {.draw_type = GL_LINES, .material = material};
+	Mesh ret = {.draw_type = GL_LINES, .original_material = material};
 	ret.setup(aabb_vertices, aabb_indices);
 
 	return ret;

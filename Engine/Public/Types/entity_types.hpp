@@ -149,6 +149,7 @@ struct PlayerControllerComponent : public Component {
 struct MeshComponent : public Component {
 	using Component::Component;
 	MeshHandle mesh = MeshHandle::invalid();
+	MaterialHandle material = MaterialHandle::invalid();
 	Mat4 model = Mat4::identity();
 	int instance_count = 1;
 
@@ -158,6 +159,7 @@ struct MeshComponent : public Component {
 
 	MeshComponent(Entity* owner, MeshHandle mesh, int instance_count);
 	void update(EngineAPI* engine, float dt) override;
+	void set_mesh(MeshHandle mesh);
 };
 
 struct SkyboxComponent : public Component {

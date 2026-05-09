@@ -310,14 +310,13 @@ struct Editor {
 						if (MeshComponent* mesh_component = dynamic_cast<MeshComponent*>(c)) {
 							if (ImGui::CollapsingHeader("MeshComponent", ImGuiTreeNodeFlags_DefaultOpen)) {
 								ImGui::Indent(4.0f);
-
-								auto mesh_slot = renderer->backend.meshes.get(mesh_component->mesh.handle);
-								Vector<Handle> material_handles = renderer->backend.materials.handle_list(engine->memory.frame_allocator);
-
+		
 								ImGui::Checkbox("Render", &mesh_component->should_render);
 								ImGui::Checkbox("Wireframe", &mesh_component->rasterizer_description.wireframe);
 								ImGui::Checkbox("Render AABB", &mesh_component->render_aabb);
 								ImGui::Spacing();
+
+								auto mesh_slot = engine->renderer.get(mesh_component->mesh);
 
 								ImGui::Text("Mesh");
 								ImGui::Button("Drop Mesh Here", ImVec2(200, 40));
@@ -325,13 +324,16 @@ struct Editor {
 									if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_MESH")) {
 										RUNTIME_ASSERT(payload->DataSize == sizeof(Handle));
 										Handle dropped_mesh = *(Handle*)payload->Data;
+										auto mesh_slot = engine->renderer.backend.meshes.get(dropped_mesh);
+
 										mesh_component->mesh.handle = dropped_mesh;
+										mesh_component->material = mesh_slot.original_material;
 									}
 
 									ImGui::EndDragDropTarget();
 								}
 									
-								Material& material = renderer->get(mesh_slot.material);
+								Material& material = renderer->get(mesh_component->material);
 								for (auto& pair : material.bindings) {
 									String key = pair.key;
 									BindingValue& value = pair.value;
