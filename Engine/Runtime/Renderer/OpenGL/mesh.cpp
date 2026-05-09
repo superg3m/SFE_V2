@@ -401,7 +401,7 @@ OpenGL::Model OpenGL::Model::load_from_file(MemoryContext memory, OpenGL* backen
 		aiProcess_PreTransformVertices|aiProcess_GenSmoothNormals | 
 		aiProcess_JoinIdenticalVertices
 	);
-	// aiProcess_PreTransformVertices|
+	// TODO(Jovanni): ok so in order to support animations correctly I need to remove this flag: aiProcess_PreTransformVertices
 
 	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(path);
 	const aiScene* scene = importer.ReadFile(path.data, assimp_flags);
