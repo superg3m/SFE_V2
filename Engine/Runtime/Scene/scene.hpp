@@ -8,12 +8,12 @@ struct EntityManager;
 struct Scene {
 	MemoryContext memory = {};
 	EntityHandle root = EntityHandle::invalid();
-	Camera active_camera = Camera(0, 0, 10);
+	EntityHandle camera = EntityHandle::invalid();
 
 	static Scene create(EntityManager* manager);
 	void update(EngineAPI* api, float dt);
 
 	SceneAPI API() {
-		return SceneAPI(this->root, this->active_camera);
+		return SceneAPI(this->root, this->camera);
 	}
 };

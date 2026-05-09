@@ -40,11 +40,27 @@ struct EngineAPI {
 	{}
 		
 	Mat4 get_view_matrix() {
-		return this->scene.active_camera.get_view_matrix();
+		if (this->scene.camera != EntityHandle::invalid()) {
+			Entity& camera = this->manager.get(this->scene.camera);
+			CameraComponent* camera_component = camera.get_component<CameraComponent>();
+			RUNTIME_ASSERT(camera_component);
+
+			return camera_component->get_view_matrix();
+		}
+
+		return Mat4::identity();
 	}
 
-	Mat4 get_projection_matrix() {
+	Mat4 get_perspective_matrix() {
 		float aspect = (float)this->window.WINDOW_WIDTH / (float)this->window.WINDOW_HEIGHT;
-		return Mat4::perspective(this->scene.active_camera.zoom, aspect, 0.1f, 1000.0f);
+		if (this->scene.camera != EntityHandle::invalid()) {
+			Entity& camera = this->manager.get(this->scene.camera);
+			CameraComponent* camera_component = camera.get_component<CameraComponent>();
+			RUNTIME_ASSERT(camera_component);
+
+			return camera_component->get_perspective_matrix(aspect);
+		}
+
+		return Mat4::identity();
 	}
 };

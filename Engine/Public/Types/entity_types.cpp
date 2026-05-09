@@ -15,45 +15,39 @@ void Entity::update(EngineAPI* engine, float dt) {
 	}
 }
 
-void CameraComponent::update(EngineAPI* engine, float dt) {
-	Mat4 view = this->get_view_matrix(engine); // I mean this is very bad but, it is what it is
+CameraComponent::CameraComponent(Entity* owner, Vec3 position) {
+	this->owner = owner;
+	this->owner->transform.position = position;
+}
 
-	this->front = Vec3(view.v[0].x, view.v[1].x, view.v[2].x).normalize();
+void CameraComponent::update(EngineAPI* engine, float dt) {
+	this->front = Vec3::euler(this->yaw, this->pitch).normalize();
 	this->right = Vec3::cross(this->front, this->world_up).normalize();
 	this->up    = Vec3::cross(this->right, this->front).normalize();
 }
 
-Mat4 CameraComponent::get_view_matrix(EngineAPI* engine) {
-	bool success = false;
-	Mat4 view = engine->manager.get_world_transform(this->owner->self).inverse(success);
-	if (!success) {
-		LOG_ERROR("failed to invert camera transform\n");
-	}
-
-	return view;
+void CameraComponent::lookat(Vec3 target_position) {
+	Vec3 target_direction = (target_position - this->owner->transform.position).normalize(); 
+	this->yaw   = RAD_TO_DEGREES(atan2(target_direction.z, target_direction.x));
+	this->pitch = RAD_TO_DEGREES(asin(target_direction.y));
 }
 
-Mat4 CameraComponent::process_mouse_delta(Vec2 delta, bool contrain_pitch) {
-	delta *= this->sensitivity;
-
-	Vec3 euler = this->owner->transform.rotation.to_euler();
-
-	euler.x += delta.x;
-	euler.y += delta.y;
-
-    if (contrain_pitch) {
-		CLAMP(euler.y, -89.0f, 89.0f);
-    }
-
-	this->owner->transform.rotation = Quat::from_euler(euler);
+void CameraComponent::lookat(float x, float y, float z) {
+	Vec3 target_direction = (Vec3(x, y, z) - this->owner->transform.position).normalize(); 
+	this->yaw   = RAD_TO_DEGREES(atan2(target_direction.z, target_direction.x));
+	this->pitch = RAD_TO_DEGREES(asin(target_direction.y));
 }
 
-Mat4 CameraComponent::get_projection_matrix(float aspect_ratio) {
-	return Mat4::perspective(this->fov, aspect_ratio, this->near_plane, this->far_plane);
+Mat4 CameraComponent::get_view_matrix() {
+	return Mat4::lookat(this->owner->transform.position, this->owner->transform.position + this->front, this->up);
 }
 
-void CameraComponent::process_keyboard(CameraDirection direction, float speed, float dt) {
-	float velocity = speed * dt;
+Mat4 CameraComponent::get_perspective_matrix(float aspect) {
+	return Mat4::perspective(this->fov, aspect, this->near_plane, this->far_plane);
+}
+
+void CameraComponent::process_keyboard(CameraDirection direction, float deltaTime) {
+	float velocity = this->movement_speed * deltaTime;
 
 	if (direction == CameraDirection::UP) {
 		this->owner->transform.position = this->owner->transform.position + this->world_up.scale(velocity);
@@ -80,35 +74,65 @@ void CameraComponent::process_keyboard(CameraDirection direction, float speed, f
 	}
 }
 
+void CameraComponent::process_mouse_movement(Vec2 delta, bool contrain_pitch) {
+	delta *= this->mouse_sensitivity;
+
+	this->yaw   += delta.x;
+	this->pitch += delta.y;
+
+	if (contrain_pitch) {
+		if (this->pitch > 89.0f) {
+			this->pitch = 89.0f;
+		} else if (this->pitch < -89.0f) {
+			this->pitch = -89.0f;
+		}
+	}
+}
+
+/*
+void Camera::process_mouse_scroll(float yoffset) {
+	this->zoom -= yoffset;
+	if (this->zoom < 1.0f) {
+		this->zoom = 1.0f;
+	}
+
+	if (this->zoom > 45.0f) {
+		this->zoom = 45.0f;
+	}
+}
+*/
+
+FirstPersonCameraControllerComponent::FirstPersonCameraControllerComponent(Entity* owner) {
+	this->owner = owner;
+}
+
 // TODO(Jovanni): ALRIGHT actually do this
 void FirstPersonCameraControllerComponent::update(EngineAPI* engine, float dt) {
 	CameraComponent* camera = this->owner->get_component<CameraComponent>();
 	RUNTIME_ASSERT(camera);
 
-	camera->process_mouse_delta(engine->input.input_state.mouse_delta * this->sensitivity * dt, true);
-
 	if (engine->input.get_key(KEY_SPACE, PRESSED|DOWN)) {
-		camera->process_keyboard(CameraDirection::UP, this->speed, dt);
+		camera->process_keyboard(CameraDirection::UP, dt);
 	}
 
 	if (engine->input.get_key(KEY_CTRL, PRESSED|DOWN)) {
-		camera->process_keyboard(CameraDirection::DOWN, this->speed, dt);
+		camera->process_keyboard(CameraDirection::DOWN, dt);
 	}
 
 	if (engine->input.get_key(KEY_W, PRESSED|DOWN)) {
-		camera->process_keyboard(CameraDirection::FORWARD, this->speed, dt); 
+		camera->process_keyboard(CameraDirection::FORWARD, dt); 
 	}
 
 	if (engine->input.get_key(KEY_A, PRESSED|DOWN)) {
-		camera->process_keyboard(CameraDirection::LEFT, this->speed, dt); 
+		camera->process_keyboard(CameraDirection::LEFT, dt); 
 	}
 
 	if (engine->input.get_key(KEY_S, PRESSED|DOWN)) {
-		camera->process_keyboard(CameraDirection::BACKWARD, this->speed, dt);
+		camera->process_keyboard(CameraDirection::BACKWARD, dt);
 	}
 
 	if (engine->input.get_key(KEY_D, PRESSED|DOWN)) {
-		camera->process_keyboard(CameraDirection::RIGHT, this->speed, dt); 
+		camera->process_keyboard(CameraDirection::RIGHT, dt); 
 	}
 }
 

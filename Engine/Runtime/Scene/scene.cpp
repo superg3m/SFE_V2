@@ -6,7 +6,6 @@ Scene Scene::create(EntityManager* manager) {
 	Scene ret = {};
 	ret.memory = manager->memory;
 	ret.root = manager->entities.acquire();
-	ret.active_camera = Camera::create(0, 0, 10);
 
 	Entity& root_slot = manager->get(ret.root.handle);
 	root_slot.self = ret.root;

@@ -192,7 +192,7 @@ struct Editor {
 		push_editor_style();
 
 		Mat4 view = engine->get_view_matrix();
-		Mat4 projection = engine->get_projection_matrix();
+		Mat4 projection = engine->get_perspective_matrix();
 
 		{
 			ImGuiWindowFlags flags = (
@@ -419,6 +419,18 @@ struct Editor {
 							}
 						} else if (SkyboxComponent* skybox_component = dynamic_cast<SkyboxComponent*>(c)) {
 							if (ImGui::CollapsingHeader("SkyboxComponent", ImGuiTreeNodeFlags_DefaultOpen)) {
+								ImGui::Indent(4.0f);
+
+								ImGui::Unindent(4.0f);
+							}
+						} else if (CameraComponent* camera_component = dynamic_cast<CameraComponent*>(c)) {
+							if (ImGui::CollapsingHeader("CameraComponent", ImGuiTreeNodeFlags_DefaultOpen)) {
+								ImGui::Indent(4.0f);
+
+								ImGui::Unindent(4.0f);
+							}
+						} else if (FirstPersonCameraControllerComponent* camera_controller = dynamic_cast<FirstPersonCameraControllerComponent*>(c)) {
+							if (ImGui::CollapsingHeader("FirstPersonCameraControllerComponent", ImGuiTreeNodeFlags_DefaultOpen)) {
 								ImGui::Indent(4.0f);
 
 								ImGui::Unindent(4.0f);

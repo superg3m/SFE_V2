@@ -65,7 +65,7 @@ struct EntityManagerAPI {
 		entity_slot.name = name;
 		entity_slot.self = entity;
 		entity_slot.children = Vector<EntityHandle>(this->memory.permanent_allocator);
-		entity_slot.components = Hashmap<std::type_index, Component *>(this->memory.permanent_allocator);
+		entity_slot.components = Hashmap<int, Component *>(this->memory.permanent_allocator);
 		this->set_parent(entity, parent);
 
 		return entity_slot;

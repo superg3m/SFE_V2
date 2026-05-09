@@ -226,8 +226,10 @@ struct OpenGL {
 		Vector<DrawSkyboxRequest> skyboxes = Vector<DrawSkyboxRequest>(engine->memory.frame_allocator);
 		Vector<DrawCallRequest> aabbs = Vector<DrawCallRequest>(engine->memory.frame_allocator);
 
+		Entity& camera_entity = engine->manager.get(engine->scene.camera);
+		CameraComponent* camera = camera_entity.get_component<CameraComponent>();
 		Mat4 view = engine->get_view_matrix();
-		Mat4 projection = engine->get_projection_matrix();
+		Mat4 projection = engine->get_perspective_matrix();
 
 		for (RenderRequest& request : engine->renderer.deferred_requests) {
 			switch (request.type) {
@@ -424,11 +426,11 @@ struct OpenGL {
 					for (int i = 0; i < translucent_draw_calls.count; i++) {
 						RenderGroup group_a = translucent_draw_calls[i];
 						Vec3 a_position = Vec3(group_a.model.v[0].w, group_a.model.v[1].w, group_a.model.v[2].w); 
-						float a_distance = Vec3::distance(a_position, engine->scene.active_camera.position);
+						float a_distance = Vec3::distance(a_position, camera->owner->transform.position);
 						for (int j = i + 1; j < translucent_draw_calls.count; j++) {
 							RenderGroup group_b = translucent_draw_calls[j];
 							Vec3 b_position = Vec3(group_b.model.v[0].w, group_b.model.v[1].w, group_b.model.v[2].w); 
-							float b_distance = Vec3::distance(b_position,  engine->scene.active_camera.position);
+							float b_distance = Vec3::distance(b_position, camera->owner->transform.position);
 
 							if (a_distance > b_distance) {
 								Memory::swap(translucent_draw_calls[i], translucent_draw_calls[j]);

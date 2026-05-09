@@ -30,7 +30,10 @@ void mouse(GLFWwindow* window, double mouse_x, double mouse_y) {
 	);
 
 	if (engine->window.capture_mouse) {
-		engine->scene.active_camera.process_mouse_movement(engine->input.input_state.mouse_delta.x, engine->input.input_state.mouse_delta.y);
+		CameraComponent* camera = engine->manager.get(engine->scene.camera).get_component<CameraComponent>();
+		RUNTIME_ASSERT(camera);
+
+		camera->process_mouse_movement(engine->input.input_state.mouse_delta, true);
 	}
 }
 

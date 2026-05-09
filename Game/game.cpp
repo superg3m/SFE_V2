@@ -59,16 +59,23 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), skybox_day);
 	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), skybox_night);
 
-	engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
-	engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
-	engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
-	engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
+	// engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
+	// engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
+	// engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
+	// engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
 
 	Entity& cube = engine->manager.create_entity(STR_INTERN("cube"), engine->scene.root);
 	Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
 
 	cube.add_component<MeshComponent>(cube_mesh, app->cube_translations.count);
 	skybox.add_component<SkyboxComponent>(app->skybox_material);
+
+
+	Entity& camera = engine->manager.create_entity(STR_INTERN("camera"), engine->scene.root);
+	camera.add_component<CameraComponent>(Vec3(0, 0, 10));
+	camera.add_component<FirstPersonCameraControllerComponent>();
+	engine->scene.camera = camera.self;
+
 	app->timer.start(5.0f);
 }
 
@@ -96,30 +103,6 @@ EXPORT_FN void application_update(EngineAPI* engine, Arena* string_arena, Hashma
 
 	if (engine->input.get_key_pressed(KEY_R)) {
 		// engine->renderer.recompile_dirty_shaders();
-	}
-
-	if (engine->input.get_key(KEY_SPACE, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::UP, dt);
-	}
-
-	if (engine->input.get_key(KEY_CTRL, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::DOWN, dt);
-	}
-
-	if (engine->input.get_key(KEY_W, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::FORWARD, dt); 
-	}
-
-	if (engine->input.get_key(KEY_A, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::LEFT, dt); 
-	}
-
-	if (engine->input.get_key(KEY_S, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::BACKWARD, dt);
-	}
-
-	if (engine->input.get_key(KEY_D, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::RIGHT, dt); 
 	}
 }
 

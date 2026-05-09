@@ -4,7 +4,7 @@
 
 struct SceneAPI {
 	EntityHandle& root;
-	Camera& active_camera;
+	EntityHandle& camera;
 
-	SceneAPI(EntityHandle& root, Camera& active_camera) : root(root), active_camera(active_camera) {}
+	SceneAPI(EntityHandle& root, EntityHandle& camera) : root(root), camera(camera) {}
 };

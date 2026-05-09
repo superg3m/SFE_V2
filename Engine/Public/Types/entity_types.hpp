@@ -3,8 +3,6 @@
 #include "../../Core/core.hpp"
 #include "render_types.hpp"
 
-#include <typeindex>
-
 struct EngineAPI;
 
 struct EntityHandle {
@@ -22,6 +20,17 @@ struct EntityHandle {
 	}
 };
 
+constexpr uint64_t fnv1a(const char* str) {
+	uint64_t hash = 14695981039346656037ull;
+
+	while (*str) {
+		hash ^= (uint64_t)(unsigned char)*str++;
+		hash *= 1099511628211ull;
+	}
+
+	return hash;
+}
+
 struct Engine;
 struct Entity;
 struct Component {
@@ -31,45 +40,47 @@ struct Component {
 	virtual void update(EngineAPI* engine, float dt) = 0;
 
 	template<typename T>
-	static int get_component_id() {
-		static int component_id = Component::next_component_id++;
-		return component_id;
+	static int get_component_id(const char* component_name) {
+		return fnv1a(component_name);
 	}
 
 protected:
 	Component() = default;
-	static int next_component_id;
 };
 
 struct CameraComponent : public Component {
 	using Component::Component;
 
-	float fov = 60.0f;
+	float fov = 65.0f;
 	float near_plane = 0.1f;
 	float far_plane = 1000.0f;
-	float sensitivity = 1.0;
+	float mouse_sensitivity = 0.1f;
+	float movement_speed = 40.0f;
+
+	float yaw   = -90.0f;
+	float pitch = 0.0f;
 
 	Vec3 world_up = Vec3(0, 1, 0);
 	Vec3 up = {};
 	Vec3 front = {};
 	Vec3 right = {};
 
-	CameraComponent(Entity* owner);
-	void update(EngineAPI* engine, float dt) override;
-	Mat4 get_view_matrix(EngineAPI* engine);
-	Mat4 get_projection_matrix(float aspect_ratio);
-	Mat4 process_mouse_delta(Vec2 delta, bool contrain_pitch);
+	CameraComponent(Entity* owner, Vec3 position);
 
-	void process_keyboard(CameraDirection direction, float speed, float dt);
+	void update(EngineAPI* engine, float dt) override;
+	void lookat(Vec3 target_position);
+	void lookat(float x, float y, float z);
+	Mat4 get_view_matrix();
+	Mat4 get_perspective_matrix(float aspect);
+	void process_keyboard(CameraDirection direction, float deltaTime);
+	void process_mouse_movement(Vec2 delta, bool contrain_pitch);
+	void process_mouse_scroll(float yoffset);
 };
 
 struct FirstPersonCameraControllerComponent : public Component {
 	using Component::Component;
 
-	float sensitivity = 1.0f;
-	float speed = 200.0;
-
-	FreeCameraComponent(Entity* owner);
+	FirstPersonCameraControllerComponent(Entity* owner);
 	void update(EngineAPI* engine, float dt) override;
 };
 
@@ -136,13 +147,16 @@ struct SkyboxComponent : public Component {
 	void update(EngineAPI* engine, float dt) override;
 };
 
-#define COMPONENT(T)     \
-T _##T = T(1);           \
-template<>               \
-T* get_my_component<T>() { \
-	return &_##T;        \
-}                        \
-
+#define COMPONENT(T)       			\
+T _##T = T(1);             			\
+template<>                 			\
+T* get_my_component<T>() { 			\
+	return &_##T;          			\
+}                          			\
+template<>							\
+const char* component_name<T>() {	\
+	return STRINGIFY(T);         	\
+}                                	\
 
 struct Transform {
 	Vec3 position = Vec3(0);
@@ -162,7 +176,7 @@ struct Entity {
 	EntityHandle self = EntityHandle::invalid();
 	EntityHandle parent = EntityHandle::invalid();
 	Vector<EntityHandle> children = {};
-	Hashmap<std::type_index, Component*> components; // TODO(Jovanni): Test this to make sure it works
+	Hashmap<int, Component*> components; // TODO(Jovanni): Test this to make sure it works
 
 	String name = {};
 	Transform transform = {};
@@ -190,7 +204,7 @@ struct Entity {
 
 	template<typename T>
 	bool has_component() {
-		return this->components.has(typeid(T));
+		return this->components.has(Component::get_component_id<T>(this->component_name<T>()));
 	}
 
 	template<typename T, typename... Rest>
@@ -202,20 +216,25 @@ struct Entity {
 	void add_component(Args&&... args) {
 		T* c = this->get_my_component<T>();
 		new (c) T(this, std::forward<Args>(args)...);
-		this->components.put(typeid(T), c);
+		this->components.put(Component::get_component_id<T>(this->component_name<T>()), c);
 	}
 
 	template<typename T>
 	void remove_component() {
 		T* c = this->get_my_component<T>();
-		this->components.remove(typeid(T));
+		this->components.remove(Component::get_component_id<T>(this->component_name<T>()));
 	}
 
 	template<typename T> 
 	T* get_my_component();
 
+	template<typename T>
+	const char* component_name();
+
 	COMPONENT(HealthComponent)
 	COMPONENT(MeshComponent)
 	COMPONENT(StatusComponent)
 	COMPONENT(SkyboxComponent)
+	COMPONENT(CameraComponent)
+	COMPONENT(FirstPersonCameraControllerComponent)
 };
