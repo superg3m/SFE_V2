@@ -10,11 +10,11 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), container_texture); 
 	cube_material.set_bool(STR_INTERN(MATERIAL_HAS_ALBEDO_UNIFORM_NAME), true); 
 
-	MeshHandle cube_mesh = engine->renderer.create_mesh_cube(cube_material.self);
-	ModelHandle backback = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
-	ModelHandle glass = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
-	ModelHandle helmet = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
-	ModelHandle church = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/church.glb"));
+	// MeshHandle cube_mesh = engine->renderer.create_mesh_cube(cube_material.self);
+	// ModelHandle backback = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
+	// ModelHandle glass = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
+	// ModelHandle helmet = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
+	// ModelHandle church = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/church.glb"));
 	ModelHandle gun = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/gun/scene.gltf"));
 
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
@@ -34,7 +34,7 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 		VertexAttribute{4, 0, BufferStrideTypeInfo::MAT4, true},
 	}, engine->memory.frame_allocator});
 
-	app->instance_cube_vbo = engine->renderer.create_vbo(cube_mesh, layout, app->cube_translations, true);
+	// app->instance_cube_vbo = engine->renderer.create_vbo(cube_mesh, layout, app->cube_translations, true);
 
 	// {right, left, top, bottom, front, back}
 	#define SKYBOX_TEXTURE_PREFIX "../../../Game/Assets/Skyboxes/day_and_night"
@@ -61,16 +61,16 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), skybox_day);
 	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), skybox_night);
 
-	engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
-	engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
-	engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
-	engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
+	// engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
+	// engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
+	// engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
+	// engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
 
-	Entity& cube = engine->manager.create_entity(STR_INTERN("cube"), engine->scene.root);
+	// Entity& cube = engine->manager.create_entity(STR_INTERN("cube"), engine->scene.root);
 	Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
 
 	// TODO(Make this cube, MeshInstanceComponent)
-	cube.add_component<MeshComponent>(cube_mesh, app->cube_translations.count);
+	// cube.add_component<MeshComponent>(cube_mesh, app->cube_translations.count);
 	skybox.add_component<SkyboxComponent>(app->skybox_material);
 
 	Entity& camera = engine->manager.create_entity(STR_INTERN("camera"), engine->scene.root);
@@ -82,8 +82,8 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	gun_entity.transform.position = Vec3(0.5f, -0.5f, -1);
 	gun_entity.transform.scale = Vec3(-0.75, 0.75, 0.75);
 
-	Entity& point_light_1 = engine->manager.create_entity(STR_INTERN("light1"), engine->scene.root);
-	point_light_1.add_component<MeshComponent>(cube_mesh, 1);
+	// Entity& point_light_1 = engine->manager.create_entity(STR_INTERN("light1"), engine->scene.root);
+	// point_light_1.add_component<MeshComponent>(cube_mesh, 1);
 	// point_light_1.add_component<PointLightComponent>();
 
 	app->timer.start(5.0f);

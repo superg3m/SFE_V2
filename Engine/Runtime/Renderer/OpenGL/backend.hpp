@@ -178,6 +178,14 @@ struct OpenGL {
 		void end_frame();
 	};
 
+	struct SubMesh {
+		GLenum draw_type = GL_TRIANGLES;
+		u32 vertex_count  = 0;
+		u32 index_count   = 0;
+		u32 vertex_base   = 0;
+		u32 index_base   = 0;
+	};
+
 	// Ok so I can get away with not having Submeshes because assimp has the preprocess geometry flag, I think.
 	struct Mesh {
 		MeshHandle self = MeshHandle::invalid();
@@ -201,6 +209,8 @@ struct OpenGL {
 	};
 
 	struct Model {
+		// TODO(Jovanni): vector of clips
+		// Vector<AnimationClip> clips;
 		Vector<Mesh> meshes; // these have the MeshComponents
 
 		// TODO(Jovanni):

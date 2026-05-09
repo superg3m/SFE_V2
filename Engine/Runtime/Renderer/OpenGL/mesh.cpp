@@ -401,6 +401,7 @@ OpenGL::Model OpenGL::Model::load_from_file(MemoryContext memory, OpenGL* backen
 		aiProcess_PreTransformVertices|aiProcess_GenSmoothNormals | 
 		aiProcess_JoinIdenticalVertices
 	);
+	// aiProcess_PreTransformVertices|
 
 	INVARIENT_STRING_STRUCT_IS_HAS_NULL_TERMINTOR(path);
 	const aiScene* scene = importer.ReadFile(path.data, assimp_flags);
@@ -466,6 +467,8 @@ OpenGL::Model OpenGL::Model::load_from_file(MemoryContext memory, OpenGL* backen
 	}
 
 	ret.process_node(memory, backend, material_index_to_material_handle, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
+
+
 
 	return ret;
 }
