@@ -63,8 +63,11 @@ struct CameraComponent : public Component {
 	void process_keyboard(CameraDirection direction, float speed, float dt);
 };
 
-struct FreeCameraComponent : public Component {
+struct FirstPersonCameraControllerComponent : public Component {
 	using Component::Component;
+
+	float sensitivity = 1.0f;
+	float speed = 200.0;
 
 	FreeCameraComponent(Entity* owner);
 	void update(EngineAPI* engine, float dt) override;

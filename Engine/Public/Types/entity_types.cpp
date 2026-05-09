@@ -42,11 +42,7 @@ Mat4 CameraComponent::process_mouse_delta(Vec2 delta, bool contrain_pitch) {
 	euler.y += delta.y;
 
     if (contrain_pitch) {
-        if (euler.y > 89.0f) {
-            euler.y = 89.0f;
-        } else if (euler.y < -89.0f) {
-            euler.y = -89.0f;
-        }
+		CLAMP(euler.y, -89.0f, 89.0f);
     }
 
 	this->owner->transform.rotation = Quat::from_euler(euler);
@@ -85,54 +81,34 @@ void CameraComponent::process_keyboard(CameraDirection direction, float speed, f
 }
 
 // TODO(Jovanni): ALRIGHT actually do this
-void FreeCameraComponent::update(EngineAPI* engine, float dt) {
-	// engine->input.input_state.mouse_delta * sensitivity * dt;
-	// engine->input.input_state.mouse_delta * sensitivity * dt;
-	/*
-	if (inputManager.IsMousePositionChanged()) {
+void FirstPersonCameraControllerComponent::update(EngineAPI* engine, float dt) {
+	CameraComponent* camera = this->owner->get_component<CameraComponent>();
+	RUNTIME_ASSERT(camera);
 
-		float deltaX = currentPos.x - oldPos.x;
-		float deltaY = currentPos.y - oldPos.y;
-
-		// rot around Y axis
-		float yDeltaAngle = -deltaX * m_sensitivity * deltaTime;
-		m_yRot += yDeltaAngle;
-		glm::quat yRot = glm::angleAxis(glm::radians(m_yRot), glm::vec3(0.0f, 1.0f, 0.0f));
-
-		// rot around X axis
-		float xDeltaAngle = -deltaY * m_sensitivity * deltaTime;
-		m_xRot += xDeltaAngle;
-		m_xRot = std::clamp(m_xRot, -89.0f, 89.0f);
-		glm::quat xRot = glm::angleAxis(glm::radians(m_xRot), glm::vec3(1.0f, 0.0f, 0.0f));
-
-		rotation = glm::normalize(yRot * xRot);
-
-		m_owner->SetRotation(rotation);
-	}
-	*/
+	camera->process_mouse_delta(engine->input.input_state.mouse_delta * this->sensitivity * dt, true);
 
 	if (engine->input.get_key(KEY_SPACE, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::UP, dt);
+		camera->process_keyboard(CameraDirection::UP, this->speed, dt);
 	}
 
 	if (engine->input.get_key(KEY_CTRL, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::DOWN, dt);
+		camera->process_keyboard(CameraDirection::DOWN, this->speed, dt);
 	}
 
 	if (engine->input.get_key(KEY_W, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::FORWARD, dt); 
+		camera->process_keyboard(CameraDirection::FORWARD, this->speed, dt); 
 	}
 
 	if (engine->input.get_key(KEY_A, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::LEFT, dt); 
+		camera->process_keyboard(CameraDirection::LEFT, this->speed, dt); 
 	}
 
 	if (engine->input.get_key(KEY_S, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::BACKWARD, dt);
+		camera->process_keyboard(CameraDirection::BACKWARD, this->speed, dt);
 	}
 
 	if (engine->input.get_key(KEY_D, PRESSED|DOWN)) {
-		engine->scene.active_camera.process_keyboard(CameraDirection::RIGHT, dt); 
+		camera->process_keyboard(CameraDirection::RIGHT, this->speed, dt); 
 	}
 }
 
