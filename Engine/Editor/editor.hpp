@@ -152,7 +152,7 @@ struct Engine;
 struct Editor {
 	EntityHandle selected = EntityHandle::invalid();
 	ImGuizmo::OPERATION current_gizmo_operation = ImGuizmo::OPERATION::TRANSLATE;
-	Camera camera = Camera(0, 0, 10);
+	// EntityHandle camera = EntityHandle::invalid();
 
 	static Editor create(Engine* engine);
 

@@ -59,17 +59,17 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), skybox_day);
 	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), skybox_night);
 
-	// engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
-	// engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
-	// engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
-	// engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
+	engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
+	engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
+	engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
+	engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
 
 	Entity& cube = engine->manager.create_entity(STR_INTERN("cube"), engine->scene.root);
 	Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
 
+	// TODO(Make this cube, MeshInstanceComponent)
 	cube.add_component<MeshComponent>(cube_mesh, app->cube_translations.count);
 	skybox.add_component<SkyboxComponent>(app->skybox_material);
-
 
 	Entity& camera = engine->manager.create_entity(STR_INTERN("camera"), engine->scene.root);
 	camera.add_component<CameraComponent>(Vec3(0, 0, 10));

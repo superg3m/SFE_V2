@@ -7,4 +7,3 @@
 #include "Hashing/hashing.cpp"
 #include "Random/random.cpp"
 #include "Platform/platform.cpp"
-#include "Camera/camera.cpp"

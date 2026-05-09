@@ -48,6 +48,15 @@ protected:
 	Component() = default;
 };
 
+enum class CameraDirection {
+	UP,
+	DOWN,
+	FORWARD,
+	BACKWARD,
+	LEFT,
+	RIGHT
+};
+
 struct CameraComponent : public Component {
 	using Component::Component;
 
@@ -55,7 +64,7 @@ struct CameraComponent : public Component {
 	float near_plane = 0.1f;
 	float far_plane = 1000.0f;
 	float mouse_sensitivity = 0.1f;
-	float movement_speed = 40.0f;
+	float movement_speed = 10.0f;
 
 	float yaw   = -90.0f;
 	float pitch = 0.0f;
