@@ -304,12 +304,9 @@ struct Hashmap {
 
 	static void copy(Hashmap<K, V>* destination, Hashmap<K, V>* source) {
 		RUNTIME_ASSERT(source);
-		RUNTIME_ASSERT(destination && destination->entries == nullptr);
-
-		if (source->entries == nullptr) return;
+		RUNTIME_ASSERT(destination);
 
 		Memory::copy(destination, sizeof(Hashmap<K, V>), source, sizeof(Hashmap<K, V>));
-
 		size_t allocation_size = source->capacity * sizeof(HashmapEntry<K, V>);
 		destination->entries = (HashmapEntry<K, V>*)destination->allocator.malloc(allocation_size, alignof(HashmapEntry<K, V>));
 		Memory::copy(destination->entries, allocation_size, source->entries, allocation_size);

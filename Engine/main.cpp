@@ -5,10 +5,10 @@
 
 Engine* engine = nullptr;
 
-constexpr int PROGRAM_MEMORY_CAPACITY = MB(50);
-constexpr int PERMANENT_MEMORY_CAPACITY = MB(15);
-constexpr int STRING_MEMORY_CAPACITY = MB(15);
-constexpr int FRAME_MEMORY_CAPACITY = MB(15);
+constexpr int PROGRAM_MEMORY_CAPACITY = MB(400);
+constexpr int PERMANENT_MEMORY_CAPACITY = MB(100);
+constexpr int STRING_MEMORY_CAPACITY = MB(100);
+constexpr int FRAME_MEMORY_CAPACITY = MB(100);
 
 INTERNAL_LINKAGE Platform::DLL* dll = nullptr;
 INTERNAL_LINKAGE const char* dll_name = "game.dll";

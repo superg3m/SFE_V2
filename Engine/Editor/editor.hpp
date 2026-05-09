@@ -325,9 +325,11 @@ struct Editor {
 										RUNTIME_ASSERT(payload->DataSize == sizeof(Handle));
 										Handle dropped_mesh = *(Handle*)payload->Data;
 										auto mesh_slot = engine->renderer.backend.meshes.get(dropped_mesh);
+										Material& material_slot = engine->renderer.backend.materials.get(mesh_component->material.handle);
+										Material& original_material_slot = engine->renderer.backend.materials.get(mesh_slot.original_material.handle);
 
-										mesh_component->mesh.handle = dropped_mesh;
-										mesh_component->material = mesh_slot.original_material;
+										Material::copy(&material_slot, &original_material_slot);
+										mesh_component->mesh.handle = dropped_mesh; 
 									}
 
 									ImGui::EndDragDropTarget();

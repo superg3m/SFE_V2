@@ -95,18 +95,18 @@ void OpenGL::Mesh::setup(Vector<Vertex>& vertices, Vector<u32>& indices) {
 	this->ebo = IndexBuffer::create(this->vao, indices);
 }
 
-OpenGL::Mesh OpenGL::Model::process_mesh(OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform) {
+OpenGL::Mesh OpenGL::Model::process_mesh(MemoryContext memory, OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform) {
 	MeshHandle mesh_handle = MeshHandle(backend->meshes.acquire(), map.get(ai_mesh->mMaterialIndex));
 	OpenGL::Mesh& mesh = backend->meshes.get(mesh_handle.handle);
 	mesh.self = mesh_handle;
 	mesh.index_count = ai_mesh->mNumFaces * 3;
 	mesh.vertex_count = ai_mesh->mNumVertices;
 	mesh.original_material = map.get(ai_mesh->mMaterialIndex);
-	mesh.name = String::create(String::allocate(Allocator::general(), ai_mesh->mName.C_Str(), ai_mesh->mName.length), ai_mesh->mName.length); // is this cstr stable?
+	mesh.name = String::create(String::allocate(memory.permanent_allocator, ai_mesh->mName.C_Str(), ai_mesh->mName.length), ai_mesh->mName.length); // is this cstr stable?
 
 	// TODO(Jovanni): Pass memory context 
-	Vector<Vertex> vertices = Vector<Vertex>(Allocator::general(), ai_mesh->mNumVertices);
-	Vector<u32> indices = Vector<u32>(Allocator::general(), ai_mesh->mNumFaces * 3);
+	Vector<Vertex> vertices = Vector<Vertex>(memory.frame_allocator, ai_mesh->mNumVertices);
+	Vector<u32> indices = Vector<u32>(memory.frame_allocator, ai_mesh->mNumFaces * 3);
 
 	unsigned int meshPrimitiveType;
 	if (ai_mesh->mPrimitiveTypes & aiPrimitiveType_POINT) {
@@ -173,7 +173,7 @@ OpenGL::Mesh OpenGL::Model::process_mesh(OpenGL* backend, Hashmap<int, MaterialH
 	return mesh;
 }
 
-void OpenGL::Model::process_node(OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform) {
+void OpenGL::Model::process_node(MemoryContext memory, OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform) {
 	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		RUNTIME_ASSERT_MSG(mesh->mPrimitiveTypes != 0, "Primitive type not set by ASSIMP in mesh.\n");
@@ -187,12 +187,12 @@ void OpenGL::Model::process_node(OpenGL* backend, Hashmap<int, MaterialHandle>& 
 			RUNTIME_ASSERT(false);
 		}
 
-		this->meshes.append(this->process_mesh(backend, map, mesh, scene, parent_transform));
+		this->meshes.append(this->process_mesh(memory, backend, map, mesh, scene, parent_transform));
 	}
 
 	Mat4 new_parent_transform = parent_transform * convert_assimp_matrix_to_glm(node->mTransformation);
 	for (unsigned int i = 0; i < node->mNumChildren; i++) {
-		this->process_node(backend, map, node->mChildren[i], scene, new_parent_transform);
+		this->process_node(memory, backend, map, node->mChildren[i], scene, new_parent_transform);
 	}
 }
 
@@ -393,7 +393,7 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material) {
 	return ret;
 }
 
-OpenGL::Model OpenGL::Model::load_from_file(OpenGL* backend, String path, TextureDescription desc) {
+OpenGL::Model OpenGL::Model::load_from_file(MemoryContext memory, OpenGL* backend, String path, TextureDescription desc) {
 	Model ret = {};
 	Assimp::Importer importer;
 	unsigned int assimp_flags = (
@@ -423,7 +423,7 @@ OpenGL::Model OpenGL::Model::load_from_file(OpenGL* backend, String path, Textur
 		const aiMaterial* ai_material = scene->mMaterials[i];
 		Handle material_handle = backend->materials.acquire();
 		Material& material = backend->materials.get(material_handle);
-		material = Material::create(material_handle, Allocator::general(), MaterialType::PBR);
+		material = Material::create(material_handle, memory.permanent_allocator, MaterialType::PBR);
 		material.set_bool(STR(MATERIAL_HAS_ALBEDO_UNIFORM_NAME), load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_DIFFUSE, STR(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), desc));
 
 		/*
@@ -457,7 +457,6 @@ OpenGL::Model OpenGL::Model::load_from_file(OpenGL* backend, String path, Textur
 
 		aiString alpha_mode;
 		if (ai_material->Get(AI_MATKEY_GLTF_ALPHAMODE, alpha_mode) == AI_SUCCESS) {
-			printf("%s\n", alpha_mode.C_Str());
 			if (alpha_mode == aiString("BLEND")) {
 				material.opacity = 0.20f;
 			}
@@ -466,7 +465,7 @@ OpenGL::Model OpenGL::Model::load_from_file(OpenGL* backend, String path, Textur
 		material_index_to_material_handle.put(i, MaterialHandle(material_handle));
 	}
 
-	ret.process_node(backend, material_index_to_material_handle, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
+	ret.process_node(memory, backend, material_index_to_material_handle, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
 
 	return ret;
 }

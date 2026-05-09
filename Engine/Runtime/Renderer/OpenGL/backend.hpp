@@ -206,10 +206,10 @@ struct OpenGL {
 		// TODO(Jovanni):
 		// Vector<MaterialHandle>
 
-		static Model load_from_file(OpenGL* backend, String path, TextureDescription desc);
+		static Model load_from_file(MemoryContext memory, OpenGL* backend, String path, TextureDescription desc);
 	private:
-		void process_node(OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform);
-		Mesh process_mesh(OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
+		void process_node(MemoryContext memory, OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform);
+		Mesh process_mesh(MemoryContext memory, OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
 	};
 
 	struct RenderGroup {
@@ -281,7 +281,7 @@ struct OpenGL {
 
 				case RequestType::MODEL_LOAD: {
 					Model& mesh = this->models.get(request.model.user.handle);
-					mesh = Model::load_from_file(this, request.model.path, request.model.texture_description);
+					mesh = Model::load_from_file(engine->memory, this, request.model.path, request.model.texture_description);
 				} break;
 
 				case RequestType::MESH_CUBE_CREATE: {
