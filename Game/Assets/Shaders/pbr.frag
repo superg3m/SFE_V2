@@ -9,11 +9,15 @@ struct Material {
 	sampler2D albedo;
 	bool has_albedo;
 
+	sampler2D specular;
+	bool has_specular;
+
 	float metallic;
 	float roughness;
 	float ao;
 
 	float opacity; // 1.0 fully opaque, 0.0 full transparent
+	float shininess; // power of two
 };
 
 uniform Material uMaterial;
@@ -21,18 +25,19 @@ uniform Material uMaterial;
 
 // TODO(Jovanni): Actually understand this
 
-// lights
-/*
-struct Light {
-	vec3 position;
-	vec3 color;
+struct PointLight {
+    vec3 position;
+
+    vec3 ambient_color;
+    vec3 diffuse_color;
+    vec3 specular_color;
 };
 
-uniform int uLightCount;
-uniform Light uLight[4];
-uniform vec3 uCameraPosition;
-*/
+#define MAX_LIGHT_COUNT 4
 
+uniform int uPointLightCount;
+uniform PointLight uPointLights[MAX_LIGHT_COUNT]; // TODO(Jovanni): Make a shader header that has a define for this that works for bot hthe c code and glsl
+uniform vec3 uCameraPosition;
 const float PI = 3.14159265359;
 // ----------------------------------------------------------------------------
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
@@ -70,11 +75,33 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
 vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
+
+// float specular_mask = mpow(max(dot(V, R), 0.0), uMaterial.shininess);
+
 // ----------------------------------------------------------------------------
 void main() {
-	// TODO(Jovanni): Remove this, this is just so the lights are not my limiting factor right now
-	vec3 albedo = uMaterial.has_albedo ? texture(uMaterial.albedo, v_TexCoord).rgb : vec3(1);
-	FragColor = vec4(albedo, uMaterial.opacity);
+	vec3 N = normalize(v_Normal);
+    vec3 V = normalize(uCameraPosition - v_WorldPosition);
+
+	vec3 albedo_sample = uMaterial.has_albedo ? texture(uMaterial.albedo, v_TexCoord).rgb : vec3(1);
+	vec3 specular_sample = uMaterial.has_specular ? texture(uMaterial.specular, v_TexCoord).rgb : vec3(1);
+
+	vec4 result = vec4(albedo_sample, uMaterial.opacity);
+	for(int i = 0; i < uPointLightCount; i++) {
+		vec3 L = normalize(uPointLights[i].position - v_WorldPosition);
+		vec3 R = reflect(-L, N);
+		vec3 H = normalize(L + V);
+		float lambertion_mask = max(dot(N, L), 0.0);
+		float specular_mask = pow(max(dot(N, H), 0.0), uMaterial.shininess); // binn-phong
+
+		vec3 ambient = uPointLights[i].ambient_color * albedo_sample;
+   	 	vec3 diffuse = uPointLights[i].diffuse_color * lambertion_mask * albedo_sample;
+		vec3 specular = uPointLights[i].specular_color * specular_mask * specular_sample;
+
+		result += vec4(ambient + diffuse + specular, 0);
+	}
+
+	FragColor = result;
 	return;
 
 	/*
