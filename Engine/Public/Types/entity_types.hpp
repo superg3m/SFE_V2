@@ -212,10 +212,10 @@ struct AnimationComponent : public Component {
 
 	AnimationComponent(Entity* owner, MeshHandle mesh, int instance_count);
 	void update(EngineAPI* engine, float dt) override;
-	void SetClip(AnimationClip* clip);
-	void RegisterClip(const String& name, AnimationClip* clip);
-	void Play(const String& name, bool loop = true);
-	bool IsPlaying() const;
+	void set_Clip(AnimationClip* clip);
+	void register_clip(String name, AnimationClip* clip);
+	void play(String name, bool loop = true);
+	void pause();
 };
 
 #define COMPONENT(T)       			\
