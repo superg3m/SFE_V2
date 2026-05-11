@@ -154,7 +154,8 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 The end goal of this project is the following:
 - [] Animations
 - [] Physics (collisions, shooting)
-- [] remove general allocator calls if possible
+- [] Multiple Cameras (camera's as entities)
+- [] shadow mapping
 
 - [] I can probably get away with allowing entitys to have a pointer to their parent because passing around the manager for that is really annoying just to get world space you know
 - [] maybe still consider have Texture* or Mesh* and then an OpenGL::Mesh inherits from it. SO you have most fields accessable through just the handle without going back
@@ -163,7 +164,7 @@ The end goal of this project is the following:
 - [] display second camera "minimap" (should just be a screen textured-quad anchored to the top-right, small with render texture from the framebuffer)
 	this is why making it manditory to pass in a frame buffer is nice! FrameBuffer {FrameBufferHandle fb, TextureHandle textrue}
 - [] Control the framebuffer stuff gets rendered on (make sure you can easily make framebuffers, and get their textures)
-- [] Multiple Cameras (camera's as entities)
+- [] remove general allocator calls if possible
 - [] Approaching Zero Driver Overhead in OpenGL (Check if VAO is already bound for example)
 - [] robust rendering system (account for framebuffer objects)
 	- [] texture for depth, color, light, normals
@@ -171,22 +172,16 @@ The end goal of this project is the following:
 		that way its easy and doesn't clutter up shaders.
 
 - [] Accomplish this for the editor https://x.com/JKoukourakis/status/2001955668715282521/photo/2
-- [] Replace imgui with my own GUI System
 - [] See if you can make the API system a bit nicer (I don't like how error prone it is)
-	basically because the api objects have data (deferred requests) you can just construct them how you would like to anywehere
-- [] skybox component and draw a skybox (should be easy?)
-- [-] pickable entities (probably ray based) (maybe frame buffer) (but also maybe just tree based?)
-- [] Material system thats nice and hotswappable
-	- [] most of this is actully a editor thing
+	basically because the api objects have data (deferred requests) you can't just construct them how you would like to anywehere
+	make them singletons?
 - [] Scene system with nice lighting abilities (spotlight, sunlight, pointlights)
-- [-] nice docking imgui and imguizmo
-	- [] Make it stylized
-- [] AS FEW Syscalls during a frame as possible!!!
-- [] Profile and code instrumentation in imgui
+	- [ ] directional light
+	- [ ] spotlight
+	- [x] pointlight
 
+- [] Profile and code instrumentation in imgui
 - [] Remove all constructors except for containers and other places it makes sense, in those places make sure you have a default constructor
-- [] Make sure you have as few general allocation as possible I'm very very concerned about allocations across dll boundaries
-- [] AABB render (*maybe you can do this by sying draw mesh, but only this range of entries? Little bit hacky but works)
 - [] 3d grid of lines (should be simple?)
 - [] inside the shader directory I should have a manifest that keep track of the last modified time (so I can not have to recompile all shaders) (just the dirty ones)
 - [] Shader Header is a really interesting idea
