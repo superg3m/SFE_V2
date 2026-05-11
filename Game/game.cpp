@@ -152,12 +152,8 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 // TODO(Jovanni): I want to reorganize the runtime.
 
 The end goal of this project is the following:
-- [x] basically i'm going to go through the assimp model load and reimplmeent the mesh entries, however!
-i'm going to get all of the meshes and organize them by material,
-Hashmap<MaterialIndex, Vector<SubMesh>>
-
+- [] Physics (collisions, shooting)
 - [] remove general allocator calls if possible
-- [] Lights (should be easy?)
 
 - [] I can probably get away with allowing entitys to have a pointer to their parent because passing around the manager for that is really annoying just to get world space you know
 - [] maybe still consider have Texture* or Mesh* and then an OpenGL::Mesh inherits from it. SO you have most fields accessable through just the handle without going back
@@ -174,7 +170,6 @@ Hashmap<MaterialIndex, Vector<SubMesh>>
 		that way its easy and doesn't clutter up shaders.
 
 - [] Animations
-- [] Physics (collisions, shooting)
 - [] Accomplish this for the editor https://x.com/JKoukourakis/status/2001955668715282521/photo/2
 - [] Replace imgui with my own GUI System
 - [] See if you can make the API system a bit nicer (I don't like how error prone it is)
