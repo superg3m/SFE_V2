@@ -66,8 +66,8 @@ INTERNAL_LINKAGE bool load_assimp_texture(OpenGL* backend, Material* material, i
 
 		String filename = String::create(filename_buffer, length);
 		if (backend->texture_cache.has(filename)) {
-			material->set_uniform(name, backend->texture_cache[filename]);
-			return true;
+			// material->set_uniform(name, backend->texture_cache[filename]);
+			// return true;
 		}
 
 		const aiTexture* ai_texture = scene->GetEmbeddedTexture(str.C_Str());

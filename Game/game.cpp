@@ -110,7 +110,7 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 EXPORT_FN void application_update(EngineAPI* engine, Arena* string_arena, Hashmap<String, String>* string_intern_map, float dt) {
 	AppState* app = (AppState*)engine->app;
 
-	app->accumulator += dt * 5;
+	app->accumulator += dt * 1;
 	if (app->accumulator >= 720.0f) {
 		app->accumulator = 0.0f;
 	}

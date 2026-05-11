@@ -108,7 +108,7 @@ void main() {
 		float quadratic = 0.032;
 		float attenuation = 1.0 / (constant + linear * dist + quadratic * dist * dist);
 
-		vec3 diffuse = 0.5 * lambertian_mask * albedo_sample;
+		vec3 diffuse = 0.75 * lambertian_mask * albedo_sample;
 		vec3 specular = float(uMaterial.has_specular) * specular_mask * specular_sample;
 		diffuse *= attenuation;
 		specular *= attenuation;
