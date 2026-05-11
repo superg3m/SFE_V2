@@ -181,6 +181,8 @@ OpenGL::Submesh OpenGL::Model::process_submesh(MemoryContext memory, Vector<Vert
 
 OpenGL::Mesh OpenGL::Model::process_leaf_node(MemoryContext memory, Vector<Vertex>& vertices, Vector<u32>& indices, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform) {
 	OpenGL::Mesh mesh = {};
+	mesh.sub_meshes = Vector<Submesh>(memory.permanent_allocator);
+	mesh.children = Vector<Mesh>(memory.permanent_allocator);
 	mesh.is_leaf = node->mNumMeshes;
 	mesh.name = String::create(
 		String::allocate(
@@ -250,6 +252,8 @@ OpenGL::Mesh OpenGL::Model::process_node(MemoryContext memory, Vector<Vertex>& v
 	// TODO(Jovanni): I basically want to accumulate the submeshes from the children and thats the mesh. If and only if that child is a leafnode
 	// I want to basically collapse BOOM_35 to one Mesh with the submeshes
 	OpenGL::Mesh mesh = {};
+	mesh.sub_meshes = Vector<Submesh>(memory.permanent_allocator);
+	mesh.children = Vector<Mesh>(memory.permanent_allocator);
 	mesh.name = String::create(
 		String::allocate(
 			memory.permanent_allocator,
