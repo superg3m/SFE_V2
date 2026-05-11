@@ -152,8 +152,10 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 // TODO(Jovanni): I want to reorganize the runtime.
 
 The end goal of this project is the following:
+- [] Animations
 - [] Physics (collisions, shooting)
 - [] remove general allocator calls if possible
+- [] cache textures
 
 - [] I can probably get away with allowing entitys to have a pointer to their parent because passing around the manager for that is really annoying just to get world space you know
 - [] maybe still consider have Texture* or Mesh* and then an OpenGL::Mesh inherits from it. SO you have most fields accessable through just the handle without going back
@@ -169,7 +171,6 @@ The end goal of this project is the following:
 		- These shouldn't be in the shader, theres should just be thier own shader and i just swap out the shader
 		that way its easy and doesn't clutter up shaders.
 
-- [] Animations
 - [] Accomplish this for the editor https://x.com/JKoukourakis/status/2001955668715282521/photo/2
 - [] Replace imgui with my own GUI System
 - [] See if you can make the API system a bit nicer (I don't like how error prone it is)

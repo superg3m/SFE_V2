@@ -25,16 +25,18 @@ struct RenderAPI {
 
 	MemoryContext memory = {};
 	Vector<RenderRequest> deferred_requests = {};
-	Registry<Material, 256>* materials = {};
+	Registry<Material, 256>* materials = nullptr;
+	Hashmap<String, TextureHandle>* texture_cache = nullptr;
 	AcquireVertexBufferFunc* _private_acquire_vbo_handle = nullptr;
     AcquireMeshFunc*         _private_acquire_mesh_handle = nullptr;
     AcquireModelFunc*        _private_acquire_model_handle = nullptr;
     AcquireTextureFunc*      _private_acquire_texture_handle = nullptr;
 
-	RenderAPI(MemoryContext memory, void* b, Registry<Material, 256>* materials, AcquireVertexBufferFunc* _private_acquire_vbo_handle, AcquireMeshFunc* _private_acquire_mesh_handle, AcquireModelFunc* _private_acquire_model_handle, AcquireTextureFunc* _private_acquire_texture_handle) {
+	RenderAPI(MemoryContext memory, void* b, Registry<Material, 256>* materials, Hashmap<String, TextureHandle>* texture_cache, AcquireVertexBufferFunc* _private_acquire_vbo_handle, AcquireMeshFunc* _private_acquire_mesh_handle, AcquireModelFunc* _private_acquire_model_handle, AcquireTextureFunc* _private_acquire_texture_handle) {
 		this->b = b;
 		this->memory = memory;
 		this->materials = materials;
+		this->texture_cache = texture_cache;
 		this->_private_acquire_vbo_handle = _private_acquire_vbo_handle;
 		this->_private_acquire_mesh_handle = _private_acquire_mesh_handle;
 		this->_private_acquire_model_handle = _private_acquire_model_handle;

@@ -58,11 +58,17 @@ INTERNAL_LINKAGE bool load_assimp_texture(OpenGL* backend, Material* material, i
 	aiString str;
 	if (ai_material->GetTexture(ai_texture_type, 0, &str, NULL, NULL, NULL, NULL, NULL) == AI_SUCCESS) {
 		const char* texture_path = str.C_Str();
-		char filename[512] = {};
+		char filename_buffer[512] = {};
 		u64 length = 0; 
-		String::append(filename, length, 512, directory.data, directory.length);
-		String::append(filename, length, 512, '/');
-		String::append(filename, length, 512,  texture_path, String::cstr_length(texture_path));
+		String::append(filename_buffer, length, 512, directory.data, directory.length);
+		String::append(filename_buffer, length, 512, '/');
+		String::append(filename_buffer, length, 512,  texture_path, String::cstr_length(texture_path));
+
+		String filename = String::create(filename_buffer, length);
+		if (backend->texture_cache.has(filename)) {
+			material->set_uniform(name, backend->texture_cache[filename]);
+			return true;
+		}
 
 		const aiTexture* ai_texture = scene->GetEmbeddedTexture(str.C_Str());
 		Handle texture_handle = backend->textures.acquire();
@@ -74,9 +80,10 @@ INTERNAL_LINKAGE bool load_assimp_texture(OpenGL* backend, Material* material, i
 			LOG_DEBUG("Material: %d | has embedded Texture of type: %s\n", i, name.data);
 		} else {
 			LOG_DEBUG("Material: %d | has external texture of type: %s\n", i, name.data);
-			texture = OpenGL::Texture::load_from_file(String::create(filename, length), desc);
+			texture = OpenGL::Texture::load_from_file(filename, desc);
 		}
 
+		backend->texture_cache.put(filename, TextureHandle(texture_handle));
 		material->set_uniform(name, TextureHandle(texture_handle));
 	} else {
 		LOG_ERROR("Failed to get texture path for material: %d | type: %s\n", i, name);

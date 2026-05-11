@@ -60,7 +60,7 @@ struct Renderer {
 	}
 
 	RenderAPI API() {
-		return RenderAPI(this->memory, &this->backend, &this->backend.materials, &acquire_vbo_handle, &acquire_mesh_handle, &acquire_model_handle, &acquire_texture_handle);
+		return RenderAPI(this->memory, &this->backend, &this->backend.materials, &this->backend.texture_cache, &acquire_vbo_handle, &acquire_mesh_handle, &acquire_model_handle, &acquire_texture_handle);
 	}
 
 	void sync(RenderAPI* api) {

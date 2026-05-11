@@ -556,6 +556,7 @@ struct OpenGL {
 
 	static OpenGL create(MemoryContext memory) {
 		OpenGL ret = {};
+		ret.texture_cache = Hashmap<String, TextureHandle>(memory.permanent_allocator);
 		ret.textures = Registry<OpenGL::Texture, 256>::create(memory);
 		ret.materials = Registry<Material, 256>::create(memory);
 		ret.shaders = Registry<OpenGL::Shader, 256>::create(memory);
@@ -581,6 +582,8 @@ struct OpenGL {
 
 	u32 picking_fbo = INT_MAX; 
 	u32 picking_texture = INT_MAX;
+
+	Hashmap<String, TextureHandle> texture_cache = {};
 
 	Registry<OpenGL::Texture, 256> textures = {};
 	Registry<Material, 256> materials = {};
