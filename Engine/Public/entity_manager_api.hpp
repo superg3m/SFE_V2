@@ -4,12 +4,13 @@
 #include "Types/entity_types.hpp"
 #include "Requests/entity_manager_requests.hpp"
 
+using EntityRegistry = Registry<Entity, 2048>;
 struct EntityManagerAPI {
 	MemoryContext memory = {};
 	Vector<EntityManagerRequest> deferred_requests = {};
-	Registry<Entity, 256>* entities = nullptr;
+	EntityRegistry* entities = nullptr;
 
-	static EntityManagerAPI create(MemoryContext memory, Registry<Entity, 256>* entities) {
+	static EntityManagerAPI create(MemoryContext memory, EntityRegistry* entities) {
 		EntityManagerAPI api = {};
 		api.memory = memory;
 		api.deferred_requests = Vector<EntityManagerRequest>(memory.frame_allocator);
@@ -117,8 +118,8 @@ struct EntityManagerAPI {
 		Vector<Handle> ret = this->entities->handle_list(this->memory.frame_allocator);
 		for (int i = 0; i < ret.count; i++) {
 			Entity& entity_slot = this->entities->get(ret[i]);
-			if (!entity_slot.has_component<T>()) {
-				ret.unstable_swapback_remove(i);
+			if (!entity_slot.active || !entity_slot.has_component<T>()) {
+				ret.unstable_swapback_remove(i--);
 			}
 		}
 

@@ -321,6 +321,7 @@ void OpenGL::Shader::set_material(OpenGL* backend, Material* material) {
 	this->set_float(STR(MATERIAL_OPACITY_UNIFORM_NAME), material->opacity);
 	this->set_float(STR(MATERIAL_METALLIC_UNIFORM_NAME), material->metallic);
 	this->set_float(STR(MATERIAL_ROUGHNESS_UNIFORM_NAME), material->roughness);
+	this->set_float(STR(MATERIAL_SHININESS_UNIFORM_NAME), material->shininess);
 
 	int texture_count = 0;
 	for (const auto entry : material->bindings) {

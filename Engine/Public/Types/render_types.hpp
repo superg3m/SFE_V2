@@ -35,6 +35,10 @@ struct MaterialHandle {
 		return {Handle::invalid()};
 	}
 
+	bool operator==(MaterialHandle other) {
+		return this->handle == other.handle;
+	}
+
 	bool operator==(MaterialHandle& other) const {
 		return this->handle == other.handle;
 	}
@@ -181,18 +185,23 @@ struct Material {
 #define MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME "uMaterial.albedo"
 #define MATERIAL_HAS_ALBEDO_UNIFORM_NAME "uMaterial.has_albedo"
 
+#define MATERIAL_SPECULAR_TEXTURE_UNIFORM_NAME "uMaterial.specular"
+#define MATERIAL_HAS_SPECULAR_UNIFORM_NAME "uMaterial.has_specular"
+
 #define MATERIAL_METALLIC_UNIFORM_NAME "uMaterial.metallic"
 #define MATERIAL_ROUGHNESS_UNIFORM_NAME "uMaterial.roughness"
 #define MATERIAL_OPACITY_UNIFORM_NAME "uMaterial.opacity"
+#define MATERIAL_SHININESS_UNIFORM_NAME "uMaterial.shininess"
 
 struct Material {
 	MaterialType type = MaterialType::PBR; 
 	MaterialHandle self = MaterialHandle::invalid();
 	Hashmap<String, BindingValue> bindings;
 
-	float opacity = 1.0; // 1.0 fully opaque, 0.0 full transparent
-	float metallic = 1.0; // 1.0 fully metallic, 0.0 not metallic
-	float roughness = 1.0; // 1.0 fully rough, 0.0 not rough
+	float opacity = 1.0f; // 1.0 fully opaque, 0.0 full transparent
+	float metallic = 1.0f; // 1.0 fully metallic, 0.0 not metallic
+	float roughness = 1.0f; // 1.0 fully rough, 0.0 not rough
+	float shininess = 16.0f;
 
 	static Material create(MaterialHandle self, Allocator allocator, MaterialType type);
 	void set_uniform(String name, BindingValue value);
@@ -209,7 +218,9 @@ struct Material {
 	void set_mat4(String name, const Mat4& mat);
 
 	static void copy(Material* dest, Material* source) {
+		MaterialHandle saved_self = dest->self;
 		*dest = *source;
+		dest->self = saved_self;
 		Hashmap<String, BindingValue>::copy(&dest->bindings, &source->bindings);
 	}
 };

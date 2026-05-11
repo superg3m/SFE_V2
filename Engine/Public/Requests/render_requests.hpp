@@ -144,6 +144,9 @@ struct DrawCallRequest {
 	MaterialHandle material = material;
 	RasterizerDescription rasterizer_description = {};
 	Mat4 model = Mat4::identity();
+
+	Vec3 color = Vec3(0);
+	bool use_color = false;
 	int instance_count = 1;
 
 	// for aabb
@@ -156,13 +159,15 @@ struct DrawCallRequest {
 		return ret;
 	}
 
-	static DrawCallRequest create(MeshHandle mesh, MaterialHandle material, RasterizerDescription desc, Mat4 model, int instance_count = 1) {
+	static DrawCallRequest create(MeshHandle mesh, MaterialHandle material, RasterizerDescription desc, Mat4 model, Vec3 color, bool use_color, int instance_count = 1) {
 		DrawCallRequest ret = {}; 	
 		ret.mesh = mesh;
 		ret.material = material;
 		ret.model = model;
 		ret.instance_count = instance_count;
 		ret.rasterizer_description = desc;
+		ret.color = color;
+		ret.use_color = use_color;
 
 		return ret;
 	}
@@ -202,7 +207,7 @@ struct RenderRequest {
 
 #define RENDER_REQUEST_MODEL_LOAD(model, path, desc) RenderRequest{.type = RequestType::MODEL_LOAD, .model = ModelRequest::create(model, path, desc)}
 #define RENDER_REQUEST_MESH_CREATE_CUBE(mesh, material) RenderRequest{.type = RequestType::MESH_CUBE_CREATE, .mesh = MeshRequest::create(mesh, material)}
-#define RENDER_REQUEST_DRAW_CALL(mesh, material, desc, model, instance_count) RenderRequest{.type = RequestType::DRAW_CALL, .draw_call = DrawCallRequest::create(mesh, material, desc, model, instance_count)}
+#define RENDER_REQUEST_DRAW_CALL(mesh, material, desc, model, color, use_color, instance_count) RenderRequest{.type = RequestType::DRAW_CALL, .draw_call = DrawCallRequest::create(mesh, material, desc, model, color, use_color, instance_count)}
 #define RENDER_REQUEST_DRAW_AABB(mesh, model) RenderRequest{.type = RequestType::DRAW_AABB, .draw_call = DrawCallRequest::create(mesh, model)}
 #define RENDER_REQUEST_DRAW_SKYBOX(texture) RenderRequest{.type = RequestType::DRAW_SKYBOX, .draw_skybox = DrawSkyboxRequest::create(texture)}
 

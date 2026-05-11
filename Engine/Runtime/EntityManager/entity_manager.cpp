@@ -12,18 +12,23 @@ Entity& EntityManager::create_entity(String name, EntityHandle parent) {
 	return this->API().create_entity(name, parent);
 }
 
+void EntityManager::add_mesh(EntityHandle parent, OpenGL::Mesh& mesh, int instance_count) {
+	Entity& entity = this->create_entity(mesh.name, parent);
+	if (mesh.sub_meshes.count) {
+		entity.add_component<MeshComponent>(mesh.self, instance_count);
+	}
+
+	for (OpenGL::Mesh& child_mesh : mesh.children) {
+		add_mesh(entity.self, child_mesh, instance_count);
+	}
+}
+
 void EntityManager::create_entity_from_model(Renderer<OpenGL>* renderer, EntityHandle entity, ModelHandle model, int instance_count) {
 	OpenGL::Model& model_slot = renderer->get(model);
-	if (model_slot.meshes.count == 1) {
-		Entity& entity_slot = this->get(entity);
-		entity_slot.add_component<MeshComponent>(model_slot.meshes[0].self, instance_count);
-		return;
-	}
 
 	for (int i = 0; i < model_slot.meshes.count; i++) {
 		OpenGL::Mesh& mesh = model_slot.meshes[i];
-		Entity& child = this->create_entity(mesh.name, entity);
-		child.add_component<MeshComponent>(mesh.self, instance_count);
+		this->add_mesh(entity, mesh, instance_count);
 	}
 }
 

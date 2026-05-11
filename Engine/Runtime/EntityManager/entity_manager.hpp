@@ -5,11 +5,12 @@
 
 struct EntityManager {
 	MemoryContext memory = {};
-	Registry<Entity, 256> entities = {};
+	EntityRegistry entities = {};
 
 	static EntityManager create(MemoryContext memory) {
 		EntityManager ret = {};
 		ret.memory = memory;
+		ret.entities = EntityRegistry::create(memory);
 
 		return ret;
 	}
@@ -19,6 +20,7 @@ struct EntityManager {
 	void create_entity_from_model(Renderer<OpenGL>* renderer, EntityHandle entity, ModelHandle mesh, int instance_count);
 	Entity& get(EntityHandle entity);
 
+	void add_mesh(EntityHandle parent, OpenGL::Mesh& mesh, int instance_count);
 	Mat4 get_world_transform(EntityHandle entity);
 	void set_world_transform(EntityHandle entity, Mat4 world_transform);
 

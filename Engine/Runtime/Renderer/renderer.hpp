@@ -11,7 +11,7 @@ struct Renderer {
 	static Renderer<B> create(MemoryContext memory) {
 		Renderer<B> ret = {};
 		ret.memory = memory;
-		ret.backend = B::create();
+		ret.backend = B::create(memory);
 
 		return ret;
 	}

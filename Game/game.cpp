@@ -5,16 +5,20 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	AppState* app = (AppState*)engine->app;
 	*app = {};
 
-	TextureHandle container_texture = engine->renderer.create_texture(STR_INTERN("../../../Game/Assets/Textures/container.jpg"));
+	TextureHandle container_albedo_texture = engine->renderer.create_texture(STR_INTERN("../../../Game/Assets/Textures/container2.png"));
+	TextureHandle container_specular_texture = engine->renderer.create_texture(STR_INTERN("../../../Game/Assets/Textures/container2_specular.png"));
 	Material& cube_material = engine->renderer.create_material();
-	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), container_texture); 
+	cube_material.set_texture(STR_INTERN(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), container_albedo_texture); 
 	cube_material.set_bool(STR_INTERN(MATERIAL_HAS_ALBEDO_UNIFORM_NAME), true); 
 
-	// MeshHandle cube_mesh = engine->renderer.create_mesh_cube(cube_material.self);
-	// ModelHandle backback = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
-	// ModelHandle glass = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
-	// ModelHandle helmet = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
-	// ModelHandle church = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/church.glb"));
+	cube_material.set_texture(STR_INTERN(MATERIAL_SPECULAR_TEXTURE_UNIFORM_NAME), container_specular_texture); 
+	cube_material.set_bool(STR_INTERN(MATERIAL_HAS_SPECULAR_UNIFORM_NAME), true); 
+
+	MeshHandle cube_mesh = engine->renderer.create_mesh_cube(cube_material.self);
+	ModelHandle backback = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
+	ModelHandle glass = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
+	ModelHandle helmet = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
+	ModelHandle church = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/church.glb"));
 	ModelHandle gun = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/gun/scene.gltf"));
 
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
@@ -34,7 +38,7 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 		VertexAttribute{4, 0, BufferStrideTypeInfo::MAT4, true},
 	}, engine->memory.frame_allocator});
 
-	// app->instance_cube_vbo = engine->renderer.create_vbo(cube_mesh, layout, app->cube_translations, true);
+	app->instance_cube_vbo = engine->renderer.create_vbo(cube_mesh, layout, app->cube_translations, true);
 
 	// {right, left, top, bottom, front, back}
 	#define SKYBOX_TEXTURE_PREFIX "../../../Game/Assets/Skyboxes/day_and_night"
@@ -61,16 +65,16 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), skybox_day);
 	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), skybox_night);
 
-	// engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
-	// engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
-	// engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
-	// engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
+	engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
+	engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
+	engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
+	engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
 
-	// Entity& cube = engine->manager.create_entity(STR_INTERN("cube"), engine->scene.root);
+	Entity& cube = engine->manager.create_entity(STR_INTERN("cube"), engine->scene.root);
 	Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
 
 	// TODO(Make this cube, MeshInstanceComponent)
-	// cube.add_component<MeshComponent>(cube_mesh, app->cube_translations.count);
+	cube.add_component<MeshComponent>(cube_mesh, app->cube_translations.count);
 	skybox.add_component<SkyboxComponent>(app->skybox_material);
 
 	Entity& camera = engine->manager.create_entity(STR_INTERN("camera"), engine->scene.root);
@@ -82,9 +86,23 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	gun_entity.transform.position = Vec3(0.5f, -0.5f, -1);
 	gun_entity.transform.scale = Vec3(-0.75, 0.75, 0.75);
 
-	// Entity& point_light_1 = engine->manager.create_entity(STR_INTERN("light1"), engine->scene.root);
-	// point_light_1.add_component<MeshComponent>(cube_mesh, 1);
-	// point_light_1.add_component<PointLightComponent>();
+	Material& light_material = engine->renderer.create_material();
+	{
+		MeshHandle light_mesh = engine->renderer.create_mesh_cube(light_material.self);
+		Entity& point_light_1 = engine->manager.create_entity(STR_INTERN("light1"), engine->scene.root);
+		MeshComponent* m1 = point_light_1.add_component<MeshComponent>(light_mesh, 1);
+		point_light_1.add_component<PointLightComponent>();
+		point_light_1.transform.scale = Vec3(0.25);
+		m1->use_color = true;
+		m1->color = Vec3(0);
+
+		Entity& point_light_2 = engine->manager.create_entity(STR_INTERN("light2"), engine->scene.root);
+		MeshComponent* m2 = point_light_2.add_component<MeshComponent>(light_mesh, 1);
+		point_light_2.add_component<PointLightComponent>();
+		point_light_2.transform.scale = Vec3(0.25);
+		m2->use_color = true;
+		m2->color = Vec3(0);
+	}
 
 	app->timer.start(5.0f);
 }
@@ -134,14 +152,12 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 // TODO(Jovanni): I want to reorganize the runtime.
 
 The end goal of this project is the following:
-- [] basically i'm going to go through the assimp model load and reimplmeent the mesh entries, however!
+- [x] basically i'm going to go through the assimp model load and reimplmeent the mesh entries, however!
 i'm going to get all of the meshes and organize them by material,
 Hashmap<MaterialIndex, Vector<SubMesh>>
 
-
 - [] remove general allocator calls if possible
 - [] Lights (should be easy?)
-
 
 - [] I can probably get away with allowing entitys to have a pointer to their parent because passing around the manager for that is really annoying just to get world space you know
 - [] maybe still consider have Texture* or Mesh* and then an OpenGL::Mesh inherits from it. SO you have most fields accessable through just the handle without going back
@@ -152,7 +168,6 @@ Hashmap<MaterialIndex, Vector<SubMesh>>
 - [] Control the framebuffer stuff gets rendered on (make sure you can easily make framebuffers, and get their textures)
 - [] Multiple Cameras (camera's as entities)
 - [] Approaching Zero Driver Overhead in OpenGL (Check if VAO is already bound for example)
-- [] transparent mesh (should be easy?)
 - [] robust rendering system (account for framebuffer objects)
 	- [] texture for depth, color, light, normals
 		- These shouldn't be in the shader, theres should just be thier own shader and i just swap out the shader

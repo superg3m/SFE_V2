@@ -96,13 +96,9 @@ struct FirstPersonCameraControllerComponent : public Component {
 struct PointLightComponent : public Component {
 	using Component::Component;
 
-    Vec3 position;
-    Vec3 ambient;
-    Vec3 diffuse;
-    Vec3 specular;
+	Vec3 color;
 
-	PointLightComponent(Entity* owner, Vec3 position);
-
+	PointLightComponent(Entity* owner);
 	void update(EngineAPI* engine, float dt) override {};
 };
 
@@ -156,6 +152,9 @@ struct MeshComponent : public Component {
 	bool should_render = true;
 	bool render_aabb = false;
 	RasterizerDescription rasterizer_description = {};
+
+	bool use_color = false;
+	Vec3 color;
 
 	MeshComponent(Entity* owner, MeshHandle mesh, int instance_count);
 	void update(EngineAPI* engine, float dt) override;
@@ -284,10 +283,12 @@ struct Entity {
 	}
 
 	template<typename T, typename... Args>
-	void add_component(Args&&... args) {
+	T* add_component(Args&&... args) {
 		T* c = this->get_my_component<T>();
 		new (c) T(this, std::forward<Args>(args)...);
 		this->components.put(Component::get_component_id<T>(this->component_name<T>()), c);
+
+		return c;
 	}
 
 	template<typename T>
@@ -308,4 +309,5 @@ struct Entity {
 	COMPONENT(SkyboxComponent)
 	COMPONENT(CameraComponent)
 	COMPONENT(FirstPersonCameraControllerComponent)
+	COMPONENT(PointLightComponent)
 };

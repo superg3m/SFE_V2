@@ -104,8 +104,8 @@ struct RenderAPI {
 		return material_slot;
 	}
 
-	void draw_mesh(MeshHandle mesh, MaterialHandle material, RasterizerDescription desc, Mat4 model, u32 instance_count = 1) {
-		RenderRequest request = RENDER_REQUEST_DRAW_CALL(mesh, material, desc, model, instance_count);
+	void draw_mesh(MeshHandle mesh, MaterialHandle material, RasterizerDescription desc, Mat4 model, Vec3 color, bool use_color, u32 instance_count = 1) {
+		RenderRequest request = RENDER_REQUEST_DRAW_CALL(mesh, material, desc, model, color, use_color, instance_count);
 		this->deferred_requests.append(request);
 	}
 

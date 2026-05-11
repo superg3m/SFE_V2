@@ -12,7 +12,6 @@ out vec3 v_Normal;
 uniform mat4 uModel;
 uniform mat4 uView;
 uniform mat4 uProjection;
-// uniform mat3 uNormalMatrix;
 
 uniform bool uInstance;
 
@@ -21,7 +20,7 @@ void main() {
 
 	v_TexCoord = aTexCoord;
     v_WorldPosition = vec3(model * vec4(aPos, 1.0));
-    // v_Normal = uNormalMatrix * aNormal;   
+	v_Normal = mat3(transpose(inverse(uModel))) * aNormal; 
 
 	gl_Position = uProjection * uView * vec4(v_WorldPosition, 1.0);
 }

@@ -162,22 +162,12 @@ struct Editor {
 
 		ImGui::Image(
 			(ImTextureID)(uintptr_t)texture.id,
-			ImVec2(64, 64),
+			ImVec2(32, 32),
 			ImVec2(0, 1),
 			ImVec2(1, 0)
 		);
 
 		return true;
-	}
-
-	void render_texture_image(Engine* engine, Renderer<OpenGL>* renderer, TextureHandle texture) {
-		OpenGL::Texture texture_slot = renderer->backend.textures.get(texture.handle);
-		ImGui::Image(
-			(ImTextureID)(uintptr_t)texture_slot.id,
-			ImVec2(64, 64),
-			ImVec2(0, 1),
-			ImVec2(1, 0)
-		);
 	}
 
 	template<typename B>
@@ -314,9 +304,12 @@ struct Editor {
 								ImGui::Checkbox("Render", &mesh_component->should_render);
 								ImGui::Checkbox("Wireframe", &mesh_component->rasterizer_description.wireframe);
 								ImGui::Checkbox("Render AABB", &mesh_component->render_aabb);
-								ImGui::Spacing();
+								ImGui::Checkbox("Use Color", &mesh_component->use_color);
+								if (mesh_component->use_color) {
+									ImGui::ColorEdit3("mesh_color", &mesh_component->color.x);
+								}
 
-								auto mesh_slot = engine->renderer.get(mesh_component->mesh);
+								ImGui::Spacing();
 
 								ImGui::Text("Mesh");
 								ImGui::Button("Drop Mesh Here", ImVec2(200, 40));
@@ -439,6 +432,19 @@ struct Editor {
 
 								ImGui::Unindent(4.0f);
 							}
+						} else if (PointLightComponent* point_light_component = dynamic_cast<PointLightComponent*>(c)) {
+							if (ImGui::CollapsingHeader("PointLightComponent", ImGuiTreeNodeFlags_DefaultOpen)) {
+								ImGui::Indent(4.0f);
+
+								if (ImGui::ColorEdit3("light_color", &point_light_component->color.x)) {
+									MeshComponent* m = point_light_component->owner->get_component<MeshComponent>();
+									if (m) {
+										m->color = point_light_component->color;
+									}
+								}
+
+								ImGui::Unindent(4.0f);
+							}
 						} else {
 							RUNTIME_ASSERT(false);
 						}
@@ -536,7 +542,10 @@ struct Editor {
 					Handle texture_handle = texture_handles[i];
 
 					if (!render_texture_image(engine, renderer, texture_handle)) continue;
-					ImGui::SameLine();
+
+					if (i == 0 || i % 32 != 0) {
+						ImGui::SameLine();
+					}
 
 					if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
 						ImGui::SetDragDropPayload("ASSET_TEXTURE", &texture_handle, sizeof(Handle));
@@ -558,7 +567,9 @@ struct Editor {
 						ImGui::EndDragDropSource();
 					}
 
-					ImGui::SameLine();
+					if (i == 0 || i % 32 != 0) {
+						ImGui::SameLine();
+					}
 				}
 
 				ImGui::End();

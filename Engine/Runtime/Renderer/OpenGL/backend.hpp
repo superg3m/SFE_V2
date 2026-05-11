@@ -178,7 +178,8 @@ struct OpenGL {
 		void end_frame();
 	};
 
-	struct SubMesh {
+	struct Submesh {
+		Mat4 parent_world_transform;
 		GLenum draw_type = GL_TRIANGLES;
 		u32 vertex_count  = 0;
 		u32 index_count   = 0;
@@ -193,12 +194,13 @@ struct OpenGL {
 		VertexBuffer vbo = {};
 		IndexBuffer ebo = {};
 
-		GLenum draw_type = GL_TRIANGLES;
-		u32 vertex_count  = 0;
-		u32 index_count   = 0;
+		Vector<Mesh> children;
+		Vector<Submesh> sub_meshes;
 		MaterialHandle original_material = MaterialHandle::invalid();
 		String name;
 		AABB aabb;
+
+		bool is_leaf = false;
 
 		static Mesh create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
 		static Mesh cube(MaterialHandle material);
@@ -218,8 +220,9 @@ struct OpenGL {
 
 		static Model load_from_file(MemoryContext memory, OpenGL* backend, String path, TextureDescription desc);
 	private:
-		void process_node(MemoryContext memory, OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform);
-		Mesh process_mesh(MemoryContext memory, OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
+		Mesh process_leaf_node(MemoryContext memory, Vector<Vertex>& vertices, Vector<u32>& indices,Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform);
+		Mesh process_node(MemoryContext memory, Vector<Vertex>& vertices, Vector<u32>& indices, OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform, bool multi_processing);
+		Submesh process_submesh(MemoryContext memory, Vector<Vertex>& vertices, Vector<u32>& indices, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform);
 	};
 
 	struct RenderGroup {
@@ -228,6 +231,9 @@ struct OpenGL {
 		Mat4 model;
 		int instance_count;
 		RasterizerDescription desc;
+
+		bool use_color;
+		Vec3 color;
 	};
 
 	// TODO(Jovanni): I should pass in the camera and lights
@@ -245,6 +251,14 @@ struct OpenGL {
 		CameraComponent* camera = camera_entity.get_component<CameraComponent>();
 		Mat4 view = engine->get_view_matrix();
 		Mat4 projection = engine->get_perspective_matrix();
+
+		#define MAX_LIGHT_COUNT 4
+		Vector<Handle> lights = engine->manager.query_component_list<PointLightComponent>();
+		Vector<PointLightComponent*> collected_point_lights = Vector<PointLightComponent*>(engine->memory.frame_allocator);
+
+		for (Handle light : lights) {
+			collected_point_lights.append(engine->manager.get(light).get_component<PointLightComponent>());
+		}
 
 		for (RenderRequest& request : engine->renderer.deferred_requests) {
 			switch (request.type) {
@@ -290,8 +304,8 @@ struct OpenGL {
 				} break;
 
 				case RequestType::MODEL_LOAD: {
-					Model& mesh = this->models.get(request.model.user.handle);
-					mesh = Model::load_from_file(engine->memory, this, request.model.path, request.model.texture_description);
+					Model& model = this->models.get(request.model.user.handle);
+					model = Model::load_from_file(engine->memory, this, request.model.path, request.model.texture_description);
 				} break;
 
 				case RequestType::MESH_CUBE_CREATE: {
@@ -314,6 +328,8 @@ struct OpenGL {
 					group.material = material;
 					group.instance_count = request.draw_call.instance_count;
 					group.desc = request.draw_call.rasterizer_description;
+					group.color = request.draw_call.color;
+					group.use_color = request.draw_call.use_color;
 
 					bool translucent = material.opacity < 1.0f;
 					if (translucent) {
@@ -347,40 +363,77 @@ struct OpenGL {
 		LOCAL_PERSIST Mesh aabb_mesh = Mesh::axis_aligned_bounding_box(MaterialHandle::invalid());
 
 		// eventually do every framebuffers as well...
-		CommandBuffer cmd = {}; 
-		cmd.begin_frame();
-			// NOTE(Jovanni): Draw opaques
-			{
-				for (RenderGroup& group : opaque_draw_calls) {
-					bool instanced = group.instance_count > 1;
-					group.mesh.vao.bind();
-					group.mesh.vbo.bind();
-					group.mesh.ebo.bind();
-					cmd.bind_rasterizer_description(group.desc);
-					if (instanced) {
-						pbr_instanced_shader.use();
-						pbr_instanced_shader.set_material(this, &group.material);
-						pbr_instanced_shader.set_model(group.model);
-						pbr_instanced_shader.set_view(view);
-						pbr_instanced_shader.set_projection(projection);
-					} else {
-						pbr_shader.use();
-						pbr_shader.set_material(this, &group.material);
-						pbr_shader.set_model(group.model);
-						pbr_shader.set_view(view);
-						pbr_shader.set_projection(projection);
-					}
+		CommandBuffer cmd = {};
+		const auto draw_render_group = [&](CommandBuffer& cmd, Vector<RenderGroup>& groups) {
+			Shader& shader = pbr_instanced_shader;
 
-					this->draw_mesh(group.mesh, group.instance_count);
-					for (int i = 0; i < 4; i++) {
-						gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
-						glBindTexture(GL_TEXTURE_2D, 0);
-					}
+			for (RenderGroup& group : groups) {
+				bool instanced = group.instance_count > 1;
+				Shader& shader = instanced ? pbr_instanced_shader : pbr_shader;
+
+				group.mesh.vao.bind();
+				group.mesh.vbo.bind();
+				group.mesh.ebo.bind();
+				cmd.bind_rasterizer_description(group.desc);
+
+				shader.use();
+				shader.set_material(this, &group.material);
+				shader.set_model(group.model);
+				shader.set_view(view);
+				shader.set_projection(projection);
+				shader.set_bool(STR("uUseColor"), group.use_color);
+				shader.set_vec3(STR("uColor"), group.color);
+
+				shader.set_vec3(STR("uCameraPosition"), camera->owner->transform.position);
+				int light_count = MIN(collected_point_lights.count, MAX_LIGHT_COUNT);
+				shader.set_int(STR("uPointLightCount"), light_count);
+
+				const auto append_and_set_float_uniform = [](Shader& shader, char* buffer, u64 inital_length, u64 CAP, const char* str, u64 str_length, float value) {
+					u64 length = inital_length;
+					Memory::zero(buffer + inital_length, CAP - inital_length);
+					length = inital_length;
+					String::append(buffer, length, CAP, str, str_length);
+
+					shader.set_float(String::create(buffer, length), value);
+				};
+
+				const auto append_and_set_vec3_uniform = [](Shader& shader, char* buffer, u64 inital_length, u64 CAP, const char* str, u64 str_length, Vec3 value) {
+					u64 length = inital_length;
+					Memory::zero(buffer + inital_length, CAP - inital_length);
+					length = inital_length;
+					String::append(buffer, length, CAP, str, str_length);
+
+					shader.set_vec3(String::create(buffer, length), value);
+				};
+
+				// TODO(Jovanni): sort by distance from object
+				for (int i = 0; i < light_count; i++) {
+					PointLightComponent* light = collected_point_lights[i];
+
+					constexpr int CAP = 128;
+					char buffer[CAP] = "uPointLights[%d]";
+					u64 initial_length = 0; 
+					String::sprintf(buffer, CAP, initial_length, buffer, i);
+
+					u64 length = initial_length;
+					String::append(buffer, length, CAP, STRING_LIT_ARG(".position"));
+					shader.set_vec3(String::create(buffer, length), light->owner->transform.position);
+
+					append_and_set_vec3_uniform(shader, buffer, initial_length, CAP, STRING_LIT_ARG(".color"), light->color);
+				}
+
+				this->draw_mesh(group.mesh, group.instance_count);
+				for (int i = 0; i < 8; i++) {
+					gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
+					glBindTexture(GL_TEXTURE_2D, 0);
 				}
 			}
+		};
+
+		cmd.begin_frame();
+			draw_render_group(cmd, opaque_draw_calls);
 			
-			{
-				// TODO(Jovanni): Draw skyboxes
+			if (skyboxes.count) {
 				glDepthFunc(GL_LEQUAL);
 				Mat4 skybox_view_matrix = view;
 				skybox_view_matrix.v[0].w = 0.0f;
@@ -408,7 +461,6 @@ struct OpenGL {
 				glDepthFunc(GL_LESS);
 			}
 
-			// Draw AABBS
 			if (aabbs.count) {
 				Mesh& mesh_slot = this->meshes.get(aabbs[0].mesh.handle);
 
@@ -425,58 +477,29 @@ struct OpenGL {
 				}
 			}
 			
-			{
-				// NOTE(Jovanni): Draw translucents
-				if (translucent_draw_calls.count) {
-					gl_error_check(glEnable(GL_BLEND));
-					gl_error_check(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+			if (translucent_draw_calls.count) {
+				gl_error_check(glEnable(GL_BLEND));
+				gl_error_check(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
-					// sort_translucent_meshs_by_camera
-					for (int i = 0; i < translucent_draw_calls.count; i++) {
-						RenderGroup group_a = translucent_draw_calls[i];
-						Vec3 a_position = Vec3(group_a.model.v[0].w, group_a.model.v[1].w, group_a.model.v[2].w); 
-						float a_distance = Vec3::distance(a_position, camera->owner->transform.position);
-						for (int j = i + 1; j < translucent_draw_calls.count; j++) {
-							RenderGroup group_b = translucent_draw_calls[j];
-							Vec3 b_position = Vec3(group_b.model.v[0].w, group_b.model.v[1].w, group_b.model.v[2].w); 
-							float b_distance = Vec3::distance(b_position, camera->owner->transform.position);
+				// sort_translucent_meshs_by_camera
+				for (int i = 0; i < translucent_draw_calls.count; i++) {
+					RenderGroup group_a = translucent_draw_calls[i];
+					Vec3 a_position = Vec3(group_a.model.v[0].w, group_a.model.v[1].w, group_a.model.v[2].w); 
+					float a_distance = Vec3::distance(a_position, camera->owner->transform.position);
+					for (int j = i + 1; j < translucent_draw_calls.count; j++) {
+						RenderGroup group_b = translucent_draw_calls[j];
+						Vec3 b_position = Vec3(group_b.model.v[0].w, group_b.model.v[1].w, group_b.model.v[2].w); 
+						float b_distance = Vec3::distance(b_position, camera->owner->transform.position);
 
-							if (a_distance > b_distance) {
-								Memory::swap(translucent_draw_calls[i], translucent_draw_calls[j]);
-							}
+						if (a_distance > b_distance) {
+							Memory::swap(translucent_draw_calls[i], translucent_draw_calls[j]);
 						}
 					}
-
-					for (RenderGroup& group : translucent_draw_calls) {
-						bool instanced = group.instance_count > 1;
-
-						group.mesh.vao.bind();
-						group.mesh.vbo.bind();
-						group.mesh.ebo.bind();
-						cmd.bind_rasterizer_description(group.desc);
-						if (instanced) {
-							pbr_instanced_shader.use();
-							pbr_instanced_shader.set_material(this, &group.material);
-							pbr_instanced_shader.set_model(group.model);
-							pbr_instanced_shader.set_view(view);
-							pbr_instanced_shader.set_projection(projection);
-						} else {
-							pbr_shader.use();
-							pbr_shader.set_material(this, &group.material);
-							pbr_shader.set_model(group.model);
-							pbr_shader.set_view(view);
-							pbr_shader.set_projection(projection);
-						}
-
-						this->draw_mesh(group.mesh, group.instance_count);
-						for (int i = 0; i < 4; i++) {
-							gl_error_check(glActiveTexture(GL_TEXTURE0 + i));
-							glBindTexture(GL_TEXTURE_2D, 0);
-						}
-					}
-				
-					gl_error_check(glDisable(GL_BLEND));
 				}
+				
+				draw_render_group(cmd, translucent_draw_calls);
+
+				gl_error_check(glDisable(GL_BLEND));
 			}
 		cmd.end_frame();
 	}
@@ -499,10 +522,12 @@ struct OpenGL {
 	}
 
 	void draw_mesh(Mesh& mesh, int instance_count) {
-		if (mesh.index_count) {
-			this->draw_indices(0, 0, mesh.index_count, instance_count, mesh.draw_type);
-		} else {
-			this->draw_vertices(0, mesh.vertex_count, instance_count, mesh.draw_type);
+		for (Submesh submesh : mesh.sub_meshes) {
+			if (submesh.index_count) {
+				this->draw_indices(submesh.vertex_base, submesh.index_base, submesh.index_count, instance_count, submesh.draw_type);
+			} else {
+				this->draw_vertices(submesh.vertex_base, submesh.vertex_count, instance_count, submesh.draw_type);
+			}
 		}
 	}
 
@@ -529,8 +554,18 @@ struct OpenGL {
     }
 	*/
 
-	static OpenGL create() {
+	static OpenGL create(MemoryContext memory) {
 		OpenGL ret = {};
+		ret.textures = Registry<OpenGL::Texture, 256>::create(memory);
+		ret.materials = Registry<Material, 256>::create(memory);
+		ret.shaders = Registry<OpenGL::Shader, 256>::create(memory);
+		ret.vaos = Registry<OpenGL::VertexArrayObject, 256>::create(memory);
+		ret.vbos = Registry<OpenGL::VertexBuffer, 256>::create(memory);
+		ret.ebos = Registry<OpenGL::IndexBuffer, 256>::create(memory);
+		ret.command_buffers = Registry<OpenGL::CommandBuffer, 256>::create(memory);
+		ret.models = Registry<OpenGL::Model, 256>::create(memory);
+		ret.meshes = Registry<OpenGL::Mesh, 256>::create(memory);
+
 		gl_error_check(glEnable(GL_DEPTH_TEST));
 
 		return ret;

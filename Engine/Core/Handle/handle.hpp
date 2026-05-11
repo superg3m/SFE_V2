@@ -22,8 +22,16 @@ struct Handle {
 		return ret;
 	}
 
+	bool operator==(Handle other) {
+		return this->index == other.index && this->generation == other.generation;
+	}
+
 	bool operator==(Handle other) const {
 		return this->index == other.index && this->generation == other.generation;
+	}
+
+	bool operator!=(Handle other) {
+		return !(*this == other);
 	}
 
 	bool operator!=(Handle other) const {
@@ -44,10 +52,13 @@ template<typename T, int N>
 struct Registry {
 	// I need LinkedList because the addresses won't be the same otherwise when this resizes...
 	// I want like a freelist
-	Slot<T> slots[N] = {};
+	Vector<Slot<T>> slots = {};
 
-	static Registry<T, N> create() {
+	static Registry<T, N> create(MemoryContext memory) {
 		Registry<T, N> ret = {};
+		ret.slots = Vector<Slot<T>>(memory.permanent_allocator, N);
+		ret.slots.resize(N);
+
 		return ret;
 	}
 

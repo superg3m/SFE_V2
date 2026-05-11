@@ -2,13 +2,13 @@
 #include <stb_image.h>
 #include <float.h>
 
-INTERNAL_LINKAGE Mat4 convert_assimp_matrix_to_glm(const aiMatrix4x4& ai_matrix) {
+INTERNAL_LINKAGE Mat4 convert_assimp_matrix_to_mat4(const aiMatrix4x4& ai_matrix) {
 	Mat4 ret = Mat4::identity();
 
-	ret.v[0].x = ai_matrix.a1; ret.v[1].x = ai_matrix.b1; ret.v[2].x = ai_matrix.c1; ret.v[3].x = ai_matrix.d1; 
-	ret.v[0].y = ai_matrix.a2; ret.v[1].y = ai_matrix.b2; ret.v[2].y = ai_matrix.c2; ret.v[3].y = ai_matrix.d2;
-	ret.v[0].z = ai_matrix.a3; ret.v[1].z = ai_matrix.b3; ret.v[2].z = ai_matrix.c3; ret.v[3].z = ai_matrix.d3;
-	ret.v[0].w = ai_matrix.a4; ret.v[1].w = ai_matrix.b4; ret.v[2].w = ai_matrix.c4; ret.v[3].w = ai_matrix.d4;
+	ret.v[0].x = ai_matrix.a1; ret.v[0].y = ai_matrix.a2; ret.v[0].z = ai_matrix.a3; ret.v[0].w = ai_matrix.a4;
+	ret.v[1].x = ai_matrix.b1; ret.v[1].y = ai_matrix.b2; ret.v[1].z = ai_matrix.b3; ret.v[1].w = ai_matrix.b4;
+	ret.v[2].x = ai_matrix.c1; ret.v[2].y = ai_matrix.c2; ret.v[2].z = ai_matrix.c3; ret.v[2].w = ai_matrix.c4;
+	ret.v[3].x = ai_matrix.d1; ret.v[3].y = ai_matrix.d2; ret.v[3].z = ai_matrix.d3; ret.v[3].w = ai_matrix.d4;
 
 	return ret;
 }
@@ -87,37 +87,29 @@ INTERNAL_LINKAGE bool load_assimp_texture(OpenGL* backend, Material* material, i
 
 void OpenGL::Mesh::setup(Vector<Vertex>& vertices, Vector<u32>& indices) {
 	this->aabb = calculate_aabb(vertices, 0, vertices.count);
-	this->vertex_count = vertices.count;
-	this->index_count = indices.count;
 
 	this->vao = VertexArrayObject::create();
 	this->vbo = VertexBuffer::create(this->vao, VertexLayout::PNTC(), vertices.data, vertices.count, sizeof(Vertex));
 	this->ebo = IndexBuffer::create(this->vao, indices);
 }
 
-OpenGL::Mesh OpenGL::Model::process_mesh(MemoryContext memory, OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform) {
-	MeshHandle mesh_handle = MeshHandle(backend->meshes.acquire(), map.get(ai_mesh->mMaterialIndex));
-	OpenGL::Mesh& mesh = backend->meshes.get(mesh_handle.handle);
-	mesh.self = mesh_handle;
-	mesh.index_count = ai_mesh->mNumFaces * 3;
-	mesh.vertex_count = ai_mesh->mNumVertices;
-	mesh.original_material = map.get(ai_mesh->mMaterialIndex);
-	mesh.name = String::create(String::allocate(memory.permanent_allocator, ai_mesh->mName.C_Str(), ai_mesh->mName.length), ai_mesh->mName.length); // is this cstr stable?
-
-	// TODO(Jovanni): Pass memory context 
-	Vector<Vertex> vertices = Vector<Vertex>(memory.frame_allocator, ai_mesh->mNumVertices);
-	Vector<u32> indices = Vector<u32>(memory.frame_allocator, ai_mesh->mNumFaces * 3);
+OpenGL::Submesh OpenGL::Model::process_submesh(MemoryContext memory, Vector<Vertex>& vertices, Vector<u32>& indices, aiMesh* ai_mesh, const aiScene* scene, Mat4 parent_transform) {
+	OpenGL::Submesh submesh = {};
+    submesh.vertex_base = (unsigned int)vertices.count;
+    submesh.index_base = (unsigned int)indices.count;
+    submesh.index_count = ai_mesh->mNumFaces * 3;
+    submesh.vertex_count = ai_mesh->mNumVertices;
 
 	unsigned int meshPrimitiveType;
 	if (ai_mesh->mPrimitiveTypes & aiPrimitiveType_POINT) {
 		meshPrimitiveType = 1;
-		mesh.draw_type = GL_POINTS;
+		submesh.draw_type = GL_POINTS;
 	} else if (ai_mesh->mPrimitiveTypes & aiPrimitiveType_LINE) {
 		meshPrimitiveType = 2;
-		mesh.draw_type = GL_LINES;
+		submesh.draw_type = GL_LINES;
 	} else if (ai_mesh->mPrimitiveTypes & aiPrimitiveType_TRIANGLE) {
 		meshPrimitiveType = 3;
-		mesh.draw_type = GL_TRIANGLES;
+		submesh.draw_type = GL_TRIANGLES;
 	} else if (ai_mesh->mPrimitiveTypes & aiPrimitiveType_POLYGON) {
 		LOG_ERROR(
 			"We only support drawing triangle, line, or point meshes. "
@@ -139,12 +131,12 @@ OpenGL::Mesh OpenGL::Model::process_mesh(MemoryContext memory, OpenGL* backend, 
 		for (unsigned int j = 0; j < ai_mesh->mNumVertices; j++) {
 			const aiVector3D& ai_position = ai_mesh->mVertices[j];
 
-			Vec4 transformed_position = /* parent_transform * */ Vec4(ai_position.x, ai_position.y, ai_position.z, 1.0f);
+			Vec4 transformed_position = parent_transform * Vec4(ai_position.x, ai_position.y, ai_position.z, 1.0f);
 			v.aPosition = Vec3(transformed_position.x, transformed_position.y, transformed_position.z);
 
 			if (ai_mesh->mNormals) {
 				const aiVector3D& pNormal = ai_mesh->mNormals[j];
-				Vec4 transformed_normal = /* parent_transform * */ Vec4(pNormal.x, pNormal.y, pNormal.z, 0.0f); // W component is 0 for vectors
+				Vec4 transformed_normal = parent_transform * Vec4(pNormal.x, pNormal.y, pNormal.z, 0.0f); // W component is 0 for vectors
 				v.aNormal = Vec3(transformed_normal.x, transformed_normal.y, transformed_normal.z).normalize(); // Normalize after transform
 			} else {
 				aiVector3D Normal(0.0f, 1.0f, 0.0f);
@@ -169,31 +161,225 @@ OpenGL::Mesh OpenGL::Model::process_mesh(MemoryContext memory, OpenGL* backend, 
 		}
 	} // Geometry End
 
-	mesh.setup(vertices, indices);
+	return submesh;
+}
+
+// You need to recurse into the children
+// vertices and indices need to passed to the children
+// then you need to identify if that child is a leaf node. If its a leaf node you need to add it as a submesh and not 
+// add it as as child the mesh.
+
+// if you are a not a leaf node and you are a child then you can do your setup for that child
+// ensure that that child has the correct orignal material_index
+
+OpenGL::Mesh OpenGL::Model::process_leaf_node(MemoryContext memory, Vector<Vertex>& vertices, Vector<u32>& indices, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform) {
+	OpenGL::Mesh mesh = {};
+	mesh.is_leaf = node->mNumMeshes;
+	mesh.name = String::create(
+		String::allocate(
+			memory.permanent_allocator,
+			node->mName.C_Str(),
+			node->mName.length
+		),
+		node->mName.length
+	);
+
+	unsigned int total_vertex_count = 0;
+	unsigned int total_index_count  = 0;
+
+	// YES LEAF_NODE
+	// RUNTIME_ASSERT(node->mNumMeshes);
+	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
+		aiMesh* ai_mesh = scene->mMeshes[node->mMeshes[i]];
+		total_vertex_count += ai_mesh->mNumVertices;
+		total_index_count  += ai_mesh->mNumFaces * 3;
+	}
+
+	if (total_vertex_count) {
+		// vertices.reserve(total_vertex_count);
+		// indices.reserve(total_index_count);
+	}
+
+	int material_index = -1;
+	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
+		aiMesh* ai_mesh = scene->mMeshes[node->mMeshes[i]];
+		if (material_index == -1) {
+			material_index = ai_mesh->mMaterialIndex;
+		}
+
+		RUNTIME_ASSERT(ai_mesh->mMaterialIndex == material_index);
+		RUNTIME_ASSERT_MSG(ai_mesh->mPrimitiveTypes != 0, "Primitive type not set by ASSIMP in mesh.\n");
+
+		if ((ai_mesh->mPrimitiveTypes & (ai_mesh->mPrimitiveTypes - 1)) != 0) {
+			RUNTIME_ASSERT_MSG(
+				false,
+				"This mesh has more than one primitive "
+				"type in it. The model should be loaded "
+				"with the aiProcess_SortByPType flag set.\n"
+			);
+		}
+
+		mesh.sub_meshes.append(this->process_submesh(memory, vertices, indices, ai_mesh, scene, parent_transform));
+	}
+
+	mesh.original_material = map.get(material_index);
+
 	return mesh;
 }
 
-void OpenGL::Model::process_node(MemoryContext memory, OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform) {
-	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
-		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		RUNTIME_ASSERT_MSG(mesh->mPrimitiveTypes != 0, "Primitive type not set by ASSIMP in mesh.\n");
-		if ((mesh->mPrimitiveTypes & (mesh->mPrimitiveTypes-1)) != 0) {
-			LOG_ERROR(
-				"This mesh has more than one primitive"
-				"type in it. The model should be loaded with the "
-				"aiProcess_SortByPType flag set.\n"
-			);
+// TODO(Jovanni): FIX THIS PLEASE GOD FIX THIS, THis is the worst code I have ever written in my life
+// TODO(Jovanni):  THIS IS SO DOGSHIT MA
+// TODO(Jovanni):  THIS IS SO DOGSHIT MA
+// TODO(Jovanni):  THIS IS SO DOGSHIT MA
+// TODO(Jovanni):  THIS IS SO DOGSHIT MA
+// TODO(Jovanni):  THIS IS SO DOGSHIT MA
+// TODO(Jovanni):  THIS IS SO DOGSHIT MA
+// TODO(Jovanni):  THIS IS SO DOGSHIT MA
+// TODO(Jovanni):  THIS IS SO DOGSHIT MA
+// TODO(Jovanni):  THIS IS SO DOGSHIT MA
+// TODO(Jovanni):  THIS IS SO DOGSHIT MA
+// TODO(Jovanni):  THIS IS SO DOGSHIT MA
+OpenGL::Mesh OpenGL::Model::process_node(MemoryContext memory, Vector<Vertex>& vertices, Vector<u32>& indices, OpenGL* backend, Hashmap<int, MaterialHandle>& map, aiNode* node, const aiScene* scene, Mat4 parent_transform, bool multi_processing) {
+	// TODO(Jovanni): I basically want to accumulate the submeshes from the children and thats the mesh. If and only if that child is a leafnode
+	// I want to basically collapse BOOM_35 to one Mesh with the submeshes
+	OpenGL::Mesh mesh = {};
+	mesh.name = String::create(
+		String::allocate(
+			memory.permanent_allocator,
+			node->mName.C_Str(),
+			node->mName.length
+		),
+		node->mName.length
+	);
 
-			RUNTIME_ASSERT(false);
+	Mat4 local_transform = convert_assimp_matrix_to_mat4(node->mTransformation);
+	Mat4 world_transform = parent_transform * local_transform;
+
+	// If the node has one child it can be one of two things
+	// 1. The child node is a leaf_node meaning it has submeshes (in this case then the parent is also a leaf node and you should transfer your submeshes to the parent)
+	// 2. The child node has more than one child and there for is a non-leaf node
+	if (node->mNumChildren == 0) {
+		mesh = this->process_leaf_node(memory, vertices, indices, map, node, scene, world_transform);
+
+		if (!multi_processing) {
+			MeshHandle mesh_handle = MeshHandle(backend->meshes.acquire(), mesh.original_material);
+			Mesh& mesh_slot = backend->meshes.get(mesh_handle.handle);
+			mesh.self = mesh_handle;
+			mesh.setup(vertices, indices);
+			mesh_slot = mesh;
+
+			vertices.clear();
+			indices.clear();
+		}
+	} else if (node->mNumChildren == 1) { // if you child is a leaf_node then flatten it, absorb those submeshes
+		// YES MAYBE_LEAF_NODE
+		Mesh child = {};
+		if (node->mChildren[0]->mNumChildren == 0) {
+			child = this->process_leaf_node(memory, vertices, indices, map, node->mChildren[0], scene, world_transform);
+		} else {
+			child = this->process_node(memory, vertices, indices, backend, map, node->mChildren[0], scene, world_transform, multi_processing);
 		}
 
-		this->meshes.append(this->process_mesh(memory, backend, map, mesh, scene, parent_transform));
+		mesh.is_leaf = child.is_leaf;
+		if (mesh.is_leaf) {
+			mesh.original_material = child.original_material;
+			for (Submesh child_submesh : child.sub_meshes) {
+				mesh.sub_meshes.append(child_submesh);
+			}
+
+			if (!multi_processing) {
+				MeshHandle mesh_handle = MeshHandle(backend->meshes.acquire(), mesh.original_material);
+				Mesh& mesh_slot = backend->meshes.get(mesh_handle.handle);
+				mesh.self = mesh_handle;
+				mesh.setup(vertices, indices);
+				mesh_slot = mesh;
+
+				vertices.clear();
+				indices.clear();
+			}
+		} else {
+			mesh.children.append(child);
+		}
+	} else {
+		mesh.is_leaf = false;
+
+		// NOT A LEAF_NODE! ALSO NOT DISPLAYABLE
+		bool all_children_are_leaf_nodes = true;
+		bool all_children_have_same_original_material = true;
+
+		// THIS IS SO DOGSHIT MAN
+		MaterialHandle original_material_handle = MaterialHandle::invalid();
+		for (unsigned int i = 0; i < node->mNumChildren; i++) {
+			Mesh child = this->process_node(memory, vertices, indices, backend, map, node->mChildren[i], scene, world_transform, true);
+			if (!child.is_leaf) {
+				all_children_are_leaf_nodes = false;
+				break;
+			}
+
+			if (original_material_handle == MaterialHandle::invalid()) {
+				original_material_handle = child.original_material;
+			}
+
+			if (original_material_handle != child.original_material) {
+				all_children_have_same_original_material = false;
+				break;
+			}
+		}
+
+		vertices.clear();
+		indices.clear();
+
+		Vector<Mesh> children = Vector<Mesh>(memory.permanent_allocator, node->mNumChildren);
+		for (unsigned int i = 0; i < node->mNumChildren; i++) {
+			Mesh child = this->process_node(memory, vertices, indices, backend, map, node->mChildren[i], scene, world_transform, true);
+
+			if (child.vao.id == 0 && (!all_children_are_leaf_nodes || !all_children_have_same_original_material)) {
+				MeshHandle mesh_handle = MeshHandle(backend->meshes.acquire(), child.original_material);
+				Mesh& mesh_slot = backend->meshes.get(mesh_handle.handle);
+				child.self = mesh_handle;
+				child.setup(vertices, indices);
+				mesh_slot = child;
+
+				vertices.clear();
+				indices.clear();
+			}
+
+			children.append(child);
+		}
+
+		if (all_children_are_leaf_nodes && all_children_have_same_original_material) {
+			for (Mesh child : children) {
+				RUNTIME_ASSERT(original_material_handle == child.original_material);
+				for (Submesh child_submesh : child.sub_meshes) {
+					mesh.sub_meshes.append(child_submesh);
+				}
+			}
+
+			mesh.original_material = original_material_handle;
+			MeshHandle mesh_handle = MeshHandle(backend->meshes.acquire(), mesh.original_material);
+			Mesh& mesh_slot = backend->meshes.get(mesh_handle.handle);
+			mesh.self = mesh_handle;
+			mesh.setup(vertices, indices);
+			mesh_slot = mesh;
+
+			vertices.clear();
+			indices.clear();
+		} else {
+			for (Mesh child : children) {
+				mesh.children.append(child);
+			}
+		}
 	}
 
-	Mat4 new_parent_transform = parent_transform * convert_assimp_matrix_to_glm(node->mTransformation);
-	for (unsigned int i = 0; i < node->mNumChildren; i++) {
-		this->process_node(memory, backend, map, node->mChildren[i], scene, new_parent_transform);
-	}
+	// - a leafnode has submeshes and no children
+
+	// If the node has one child it can be one of two things
+	// 1. The child node is a leaf_node meaning it has submeshes (in this case then the parent is also a leaf node and you should transfer your submeshes to the parent)
+	// 2. The child node has more than one child and there for is a non-leaf node
+
+	// If a node has multiple children automatically the parent can't be a leafnode, and it must not have submeshes.
+
+	return mesh;
 }
 
 OpenGL::Mesh OpenGL::Mesh::cube(MaterialHandle material) {
@@ -247,7 +433,16 @@ OpenGL::Mesh OpenGL::Mesh::cube(MaterialHandle material) {
 	};
 
 
-	Mesh ret = {.draw_type = GL_TRIANGLES, .original_material = material};
+	Mesh ret = {.original_material = material};
+	Submesh submesh = {};
+	submesh.parent_world_transform = Mat4::identity();
+	submesh.draw_type = GL_TRIANGLES;
+	submesh.vertex_count = cube_vertices.count;
+	submesh.index_count  = cube_indices.count;
+	submesh.vertex_base  = 0;
+	submesh.index_base   = 0;
+
+	ret.sub_meshes.append(submesh);
 	ret.setup(cube_vertices, cube_indices);
 
 	return ret;
@@ -303,8 +498,16 @@ OpenGL::Mesh OpenGL::Mesh::skybox_cube(MaterialHandle material) {
 		20, 21, 22, 21, 20, 23  // Top
 	};
 
+	Mesh ret = {.original_material = material};
+	Submesh submesh = {};
+	submesh.parent_world_transform = Mat4::identity();
+	submesh.draw_type = GL_TRIANGLES;
+	submesh.vertex_count = cube_vertices.count;
+	submesh.index_count  = cube_indices.count;
+	submesh.vertex_base  = 0;
+	submesh.index_base   = 0;
 
-	Mesh ret = {.draw_type = GL_TRIANGLES, .original_material = material};
+	ret.sub_meshes.append(submesh);
 	ret.setup(cube_vertices, cube_indices);
 
 	return ret;
@@ -358,7 +561,16 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material, AA
 
 	Vector<u32> aabb_indices = {};
 
-	Mesh ret = {.draw_type = GL_LINES, .original_material = material};
+	Mesh ret = {.original_material = material};
+	Submesh submesh = {};
+	submesh.parent_world_transform = Mat4::identity();
+	submesh.draw_type = GL_LINES;
+	submesh.vertex_count = aabb_vertices.count;
+	submesh.index_count  = aabb_indices.count;
+	submesh.vertex_base  = 0;
+	submesh.index_base   = 0;
+
+	ret.sub_meshes.append(submesh);
 	ret.setup(aabb_vertices, aabb_indices);
 
 	return ret;
@@ -387,7 +599,16 @@ OpenGL::Mesh OpenGL::Mesh::axis_aligned_bounding_box(MaterialHandle material) {
 
 	Vector<u32> aabb_indices = {};
 
-	Mesh ret = {.draw_type = GL_LINES, .original_material = material};
+	Mesh ret = {.original_material = material};
+	Submesh submesh = {};
+	submesh.parent_world_transform = Mat4::identity();
+	submesh.draw_type = GL_LINES;
+	submesh.vertex_count = aabb_vertices.count;
+	submesh.index_count  = aabb_indices.count;
+	submesh.vertex_base  = 0;
+	submesh.index_base   = 0;
+
+	ret.sub_meshes.append(submesh);
 	ret.setup(aabb_vertices, aabb_indices);
 
 	return ret;
@@ -398,7 +619,7 @@ OpenGL::Model OpenGL::Model::load_from_file(MemoryContext memory, OpenGL* backen
 	Assimp::Importer importer;
 	unsigned int assimp_flags = (
 		aiProcess_Triangulate|aiProcess_FlipUVs | 
-		aiProcess_PreTransformVertices|aiProcess_GenSmoothNormals | 
+		aiProcess_GenSmoothNormals | 
 		aiProcess_JoinIdenticalVertices
 	);
 	// TODO(Jovanni): ok so in order to support animations correctly I need to remove this flag: aiProcess_PreTransformVertices
@@ -419,13 +640,16 @@ OpenGL::Model OpenGL::Model::load_from_file(MemoryContext memory, OpenGL* backen
 	}
 
 	String directory = String(path.data, index);
-	Hashmap<int, MaterialHandle> material_index_to_material_handle = {};
+	Hashmap<int, MaterialHandle> material_index_to_material_handle = {
+		{-1, MaterialHandle::invalid()}
+	};
 	for (unsigned int i = 0; i < scene->mNumMaterials; i++) {
 		const aiMaterial* ai_material = scene->mMaterials[i];
 		Handle material_handle = backend->materials.acquire();
 		Material& material = backend->materials.get(material_handle);
 		material = Material::create(material_handle, memory.permanent_allocator, MaterialType::PBR);
 		material.set_bool(STR(MATERIAL_HAS_ALBEDO_UNIFORM_NAME), load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_DIFFUSE, STR(MATERIAL_ALBEDO_TEXTURE_UNIFORM_NAME), desc));
+		material.set_bool(STR(MATERIAL_HAS_SPECULAR_UNIFORM_NAME), load_assimp_texture(backend, &material, i, scene, directory, aiTextureType_SPECULAR, STR(MATERIAL_SPECULAR_TEXTURE_UNIFORM_NAME), desc));
 
 		/*
 		aiColor4D ambient_color(0.0f, 0.0f, 0.0f, 0.0f);
@@ -466,9 +690,12 @@ OpenGL::Model OpenGL::Model::load_from_file(MemoryContext memory, OpenGL* backen
 		material_index_to_material_handle.put(i, MaterialHandle(material_handle));
 	}
 
-	ret.process_node(memory, backend, material_index_to_material_handle, scene->mRootNode, scene, convert_assimp_matrix_to_glm(scene->mRootNode->mTransformation));
+	Vector<Vertex> vertices = Vector<Vertex>(memory.permanent_allocator);
+	Vector<u32> indices = Vector<u32>(memory.permanent_allocator);
 
-
+	using MaterialIndex = int;
+	Hashmap<MaterialIndex, Vector<Submesh>> meshes_grouped_by_material = {};
+	ret.meshes.append(ret.process_node(memory, vertices, indices, backend, material_index_to_material_handle, scene->mRootNode, scene, Mat4::identity(), false));
 
 	return ret;
 }
