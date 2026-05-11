@@ -329,6 +329,7 @@ struct Editor {
 								}
 									
 								Material& material = renderer->get(mesh_component->material);
+								ImGui::DragFloat("Opacity", &material.opacity, 0.01f, 0, 1);
 								for (auto& pair : material.bindings) {
 									String key = pair.key;
 									BindingValue& value = pair.value;

@@ -238,9 +238,9 @@ struct OpenGL {
 
 	// TODO(Jovanni): I should pass in the camera and lights
 	void execute_defered_request(EngineAPI* engine) {
-		LOCAL_PERSIST Shader pbr_shader = Shader::create({STR("../../../Game/Assets/Shaders/pbr.vert"), STR("../../../Game/Assets/Shaders/pbr.frag")});
-		LOCAL_PERSIST Shader pbr_instanced_shader = Shader::create({STR("../../../Game/Assets/Shaders/pbr_instanced.vert"), STR("../../../Game/Assets/Shaders/pbr.frag")});
-		LOCAL_PERSIST Shader skybox_shader = Shader::create({STR("../../../Game/Assets/Shaders/skybox.vert"), STR("../../../Game/Assets/Shaders/skybox.frag")});
+		LOCAL_PERSIST Shader pbr_shader = Shader::create({{STR("../../../Game/Assets/Shaders/pbr.vert"), STR("../../../Game/Assets/Shaders/pbr.frag")}, engine->memory.permanent_allocator});
+		LOCAL_PERSIST Shader pbr_instanced_shader = Shader::create({{STR("../../../Game/Assets/Shaders/pbr_instanced.vert"), STR("../../../Game/Assets/Shaders/pbr.frag")}, engine->memory.permanent_allocator});
+		LOCAL_PERSIST Shader skybox_shader = Shader::create({{STR("../../../Game/Assets/Shaders/skybox.vert"), STR("../../../Game/Assets/Shaders/skybox.frag")}, engine->memory.permanent_allocator});
 
 		Vector<RenderGroup> opaque_draw_calls = Vector<RenderGroup>(engine->memory.frame_allocator);
 		Vector<RenderGroup> translucent_draw_calls = Vector<RenderGroup>(engine->memory.frame_allocator);
@@ -491,7 +491,7 @@ struct OpenGL {
 						Vec3 b_position = Vec3(group_b.model.v[0].w, group_b.model.v[1].w, group_b.model.v[2].w); 
 						float b_distance = Vec3::distance(b_position, camera->owner->transform.position);
 
-						if (a_distance > b_distance) {
+						if (a_distance < b_distance) {
 							Memory::swap(translucent_draw_calls[i], translucent_draw_calls[j]);
 						}
 					}

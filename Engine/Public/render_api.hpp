@@ -41,6 +41,7 @@ struct RenderAPI {
 		this->_private_acquire_mesh_handle = _private_acquire_mesh_handle;
 		this->_private_acquire_model_handle = _private_acquire_model_handle;
 		this->_private_acquire_texture_handle = _private_acquire_texture_handle;
+		this->deferred_requests = {};
 	}
 
 	template<typename T>

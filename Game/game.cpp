@@ -155,7 +155,6 @@ The end goal of this project is the following:
 - [] Animations
 - [] Physics (collisions, shooting)
 - [] remove general allocator calls if possible
-- [] cache textures
 
 - [] I can probably get away with allowing entitys to have a pointer to their parent because passing around the manager for that is really annoying just to get world space you know
 - [] maybe still consider have Texture* or Mesh* and then an OpenGL::Mesh inherits from it. SO you have most fields accessable through just the handle without going back
