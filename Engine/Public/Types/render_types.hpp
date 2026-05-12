@@ -68,6 +68,14 @@ struct ModelHandle {
 	}
 };
 
+struct TextureCacheKey {
+	String filename;
+
+	bool operator==(TextureCacheKey& other) const {
+		return (this->filename == other.filename);
+	}
+};
+
 struct VertexBufferHandle {
 	Handle handle = Handle::invalid();
 	VertexBufferHandle(Handle handle) {

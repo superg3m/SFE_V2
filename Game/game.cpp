@@ -18,7 +18,7 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	ModelHandle backback = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
 	ModelHandle glass = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
 	ModelHandle helmet = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
-	ModelHandle church = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/church.glb"));
+	ModelHandle church = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Church/church.glb"));
 	ModelHandle gun = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/gun/scene.gltf"));
 
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
@@ -74,7 +74,7 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
 
 	// TODO(Make this cube, MeshInstanceComponent)
-	cube.add_component<MeshComponent>(cube_mesh, app->cube_translations.count);
+	// cube.add_component<MeshComponent>(cube_mesh, app->cube_translations.count);
 	skybox.add_component<SkyboxComponent>(app->skybox_material);
 
 	Entity& camera = engine->manager.create_entity(STR_INTERN("camera"), engine->scene.root);

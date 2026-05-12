@@ -64,10 +64,10 @@ INTERNAL_LINKAGE bool load_assimp_texture(OpenGL* backend, Material* material, i
 		String::append(filename_buffer, length, 512, '/');
 		String::append(filename_buffer, length, 512,  texture_path, String::cstr_length(texture_path));
 
-		String filename = String::create(filename_buffer, length);
+		String filename = String::create(String::allocate(Allocator::general(), filename_buffer, length), length);
 		if (backend->texture_cache.has(filename)) {
-			// material->set_uniform(name, backend->texture_cache[filename]);
-			// return true;
+			material->set_uniform(name, backend->texture_cache[filename]);
+			return true;
 		}
 
 		const aiTexture* ai_texture = scene->GetEmbeddedTexture(str.C_Str());
@@ -87,6 +87,7 @@ INTERNAL_LINKAGE bool load_assimp_texture(OpenGL* backend, Material* material, i
 		material->set_uniform(name, TextureHandle(texture_handle));
 	} else {
 		LOG_ERROR("Failed to get texture path for material: %d | type: %s\n", i, name);
+		return false;
 	}
 
 	return true;

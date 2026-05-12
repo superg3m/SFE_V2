@@ -144,6 +144,7 @@ struct PlayerControllerComponent : public Component {
 
 struct MeshComponent : public Component {
 	using Component::Component;
+	int hack = 404; // FOR MAC, later just switch to using a enum for the id.
 	MeshHandle mesh = MeshHandle::invalid();
 	MaterialHandle material = MaterialHandle::invalid();
 	Mat4 model = Mat4::identity();

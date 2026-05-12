@@ -297,7 +297,8 @@ struct Editor {
 
 					for (const auto& entry : entity_slot.components) {
 						Component* c = entry.value;
-						if (MeshComponent* mesh_component = dynamic_cast<MeshComponent*>(c)) {
+						MeshComponent* mesh_component = (MeshComponent*)c;
+						if (dynamic_cast<MeshComponent*>(c) || mesh_component->hack == 404) {
 							if (ImGui::CollapsingHeader("MeshComponent", ImGuiTreeNodeFlags_DefaultOpen)) {
 								ImGui::Indent(4.0f);
 		
