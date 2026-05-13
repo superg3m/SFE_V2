@@ -18,3 +18,6 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/GltfMaterial.h>
+
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>

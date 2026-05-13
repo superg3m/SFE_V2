@@ -38,8 +38,8 @@ elif IS_LINUX() and not C_BUILD_IS_DEPENDENCY():
     cc.compiler_name = "gcc"
 
 if cc.compiler_name == "cl":
-    cc.compiler_warning_level = "2"
-    cc.compiler_disable_specific_warnings = ["4244", "4100", "4458", "4201", "4116", "4005"]
+    cc.compiler_warning_level = "1"
+    cc.compiler_disable_specific_warnings = ["4530", "4244", "4100", "4458", "4201", "4116", "4005"]
 else:
     cc.compiler_warning_level = ""
     cc.compiler_disable_specific_warnings = [
@@ -76,6 +76,7 @@ RELATIVE_STB_ROOT = f"{RELATIVE_ENGINE_VENDOR}/stb"
 RELATIVE_GLM_ROOT = f"{RELATIVE_ENGINE_VENDOR}/glm"
 RELATIVE_IMGUI_ROOT = f"{RELATIVE_ENGINE_VENDOR}/imgui-docking"
 RELATIVE_NFD_ROOT = f"{RELATIVE_ENGINE_VENDOR}/nativefiledialog"
+RELATIVE_BULLET_ROOT = f"{RELATIVE_ENGINE_VENDOR}/bullet3"
 
 RELATIVE_GAME_ROOT = "../../../Game"
 
@@ -124,6 +125,7 @@ INCLUDES = [
     f"{RELATIVE_GLAD_ROOT}/include",
     f"{RELATIVE_ASSIMP_ROOT}/include",
     f"{RELATIVE_NFD_ROOT}/src",
+    f"{RELATIVE_BULLET_ROOT}/src",
 ]
 
 nfd = []
@@ -172,7 +174,12 @@ procedures_config = {
             f"{RELATIVE_IMGUI_ROOT}/*.cpp",
             f"{RELATIVE_GLAD_ROOT}/src/glad.c",
             f"{RELATIVE_STB_ROOT}/stb_image.c",
+            
+    		f"{RELATIVE_BULLET_ROOT}/src/btBulletCollisionAll.cpp",
+    		f"{RELATIVE_BULLET_ROOT}/src/btBulletDynamicsAll.cpp",
+    		f"{RELATIVE_BULLET_ROOT}/src/btLinearMathAll.cpp",
         ] + nfd,
+        compile_time_defines=["__BT_DISABLE_SSE__"],
         additional_libs = [],
         include_paths = INCLUDES,
         compiler_inject_into_args=[]

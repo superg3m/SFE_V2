@@ -7,6 +7,7 @@ struct Engine {
 	InputSystem input;
 	Renderer<OpenGL> renderer;
 	EntityManager manager;
+	PhysicsManager physics;
 	Window window;
 	Scene scene;
 
@@ -58,6 +59,7 @@ struct Engine {
 			this->renderer.API(),
 			this->input.API(),
 			this->manager.API(),
+			&this->physics,
 			this->window.API(),
 			this->scene.API(),
 			this->app, 

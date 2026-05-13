@@ -4,6 +4,7 @@
 #include "render_api.hpp"
 #include "input_api.hpp"
 #include "entity_manager_api.hpp"
+#include "physics_manager.hpp"
 #include "window_api.hpp"
 #include "scene_api.hpp"
 
@@ -12,6 +13,7 @@ struct EngineAPI {
 	RenderAPI renderer;
 	InputAPI input;
 	EntityManagerAPI manager;
+	PhysicsManager* physics;
 	WindowAPI window;
 	SceneAPI scene;
 	
@@ -23,6 +25,7 @@ struct EngineAPI {
 		RenderAPI     renderer,
 		InputAPI      input,
 		EntityManagerAPI manager,
+		PhysicsManager* physics,
 		WindowAPI     window,
 		SceneAPI      scene,
 
@@ -33,6 +36,7 @@ struct EngineAPI {
 		renderer     (renderer),
 		input        (input),
 		manager      (manager),
+		physics      (physics),
 		window       (window),
 		scene        (scene),
 		app          (app),

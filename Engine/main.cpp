@@ -101,6 +101,7 @@ int main() {
 			}
 
 			engine->input.poll();
+			engine->physics.update(dt);
 			engine->scene.update(&api, dt);
 			if (application_update) application_update(&api, &string_arena, &string_intern_map, dt);
 			if (application_render) application_render(&api, &string_arena, &string_intern_map, dt);
