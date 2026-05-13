@@ -203,7 +203,7 @@ struct OpenGL {
 		bool is_leaf = false;
 
 		static Mesh create(MaterialHandle material, Vector<Vertex>& vertices, Vector<u32> indices = {}, GLenum draw_type = GL_TRIANGLES, u32 vertex_base = 0, u32 index_base = 0);
-		static Mesh cube(MaterialHandle material);
+		static Mesh cube(MaterialHandle material, Vec3 extents);
 		static Mesh skybox_cube(MaterialHandle material);
 		static Mesh axis_aligned_bounding_box(MaterialHandle material, AABB aabb);
 		static Mesh axis_aligned_bounding_box(MaterialHandle material);
@@ -310,7 +310,7 @@ struct OpenGL {
 
 				case RequestType::MESH_CUBE_CREATE: {
 					Mesh& mesh = this->meshes.get(request.mesh.user.handle);
-					mesh = Mesh::cube(request.mesh.material);
+					mesh = Mesh::cube(request.mesh.material, request.mesh.extents);
 				} break;
 	
 				case RequestType::MATERIAL_SET_UNIFORM: {

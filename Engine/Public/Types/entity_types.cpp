@@ -6,7 +6,9 @@ void Entity::update(EngineAPI* engine, float dt) {
 	
 	for (const auto& entry : this->components) {
 		Component* c = entry.value;
-		c->update(engine, dt);
+		if (c->should_update) {
+			c->update(engine, dt);
+		}
 	}
 
 	for (EntityHandle child : this->children) {
@@ -140,8 +142,9 @@ void FirstPersonCameraControllerComponent::update(EngineAPI* engine, float dt) {
 	}
 }
 
-PointLightComponent::PointLightComponent(Entity* owner) {
+PointLightComponent::PointLightComponent(Entity* owner, Vec3 color) {
 	this->owner = owner;
+	this->color = color;
 }
 
 /*
@@ -187,4 +190,23 @@ SkyboxComponent::SkyboxComponent(Entity* owner, MaterialHandle material) {
 
 void SkyboxComponent::update(EngineAPI* engine, float dt) {
 	engine->renderer.draw_skybox(this->material);
+}
+
+PhysicsComponent::PhysicsComponent(Entity* owner, RigidBody* rigidbody) {
+	this->owner = owner;
+	this->rigidbody = rigidbody;
+
+	this->rigidbody->set_position(owner->transform.position);
+	this->rigidbody->set_rotation(owner->transform.rotation);
+}
+
+void PhysicsComponent::update(EngineAPI* engine, float dt) {
+	if (!this->rigidbody->added_to_world) {
+		engine->physics->add_rigid_body(this->rigidbody);
+	}
+
+	if (this->rigidbody->type == PhysicsBodyType::DYNAMIC) {
+		this->owner->transform.position = this->rigidbody->get_position();
+		this->owner->transform.rotation = this->rigidbody->get_rotation();
+	}
 }

@@ -21,6 +21,7 @@ struct Engine {
 		ret->input = InputSystem::create(ret->window.ctx);
 		ret->renderer = Renderer<OpenGL>::create(memory);
  		ret->manager = EntityManager::create(memory);
+		ret->physics = PhysicsManager::create();
  		ret->scene = Scene::create(&ret->manager);
 
 		return ret;

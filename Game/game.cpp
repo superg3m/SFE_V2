@@ -15,10 +15,10 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	cube_material.set_bool(STR_INTERN(MATERIAL_HAS_SPECULAR_UNIFORM_NAME), true); 
 
 	MeshHandle cube_mesh = engine->renderer.create_mesh_cube(cube_material.self);
-	ModelHandle backback = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
-	ModelHandle glass = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
-	ModelHandle helmet = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
-	ModelHandle church = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Church/church.glb"));
+	// ModelHandle backback = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
+	// ModelHandle glass = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
+	// ModelHandle helmet = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
+	// ModelHandle church = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Church/church.glb"));
 	ModelHandle gun = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/gun/scene.gltf"));
 
 	app->cube_translations = Vector<Mat4>(engine->memory.permanent_allocator);
@@ -65,10 +65,10 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), skybox_day);
 	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), skybox_night);
 
-	engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
-	engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
-	engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
-	engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
+	// engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
+	// engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
+	// engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
+	// engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
 
 	Entity& cube = engine->manager.create_entity(STR_INTERN("cube"), engine->scene.root);
 	Entity& skybox = engine->manager.create_entity(STR_INTERN("skybox"), engine->scene.root);
@@ -102,6 +102,49 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 		point_light_2.transform.scale = Vec3(0.25);
 		m2->use_color = true;
 		m2->color = Vec3(0);
+	}
+
+	{
+		Entity& ground = engine->manager.create_entity(STR_INTERN("ground"), engine->scene.root);
+		Vec3 ground_extents = Vec3(20, 0.1f, 20);
+		MeshHandle ground_mesh = engine->renderer.create_mesh_cube(cube_material.self, ground_extents);
+		ground.add_component<MeshComponent>(ground_mesh, 1);
+
+		Collider* ground_collider = new BoxColider(ground_extents);  
+		RigidBody* ground_body = new RigidBody(PhysicsBodyType::STATIC, ground_collider, 0, 0.5f); 
+		ground.transform.position = Vec3(0, -5, 0);
+		ground.transform.rotation = Quat::from_euler(0, 0, 40.0f);
+		ground.add_component<PhysicsComponent>(ground_body);
+	}
+	
+	{
+		Entity& wall = engine->manager.create_entity(STR_INTERN("wall"), engine->scene.root);
+		Vec3 wall_extents = Vec3(0.1f, 5.0f, 20);
+		MeshHandle ground_mesh = engine->renderer.create_mesh_cube(cube_material.self, wall_extents);
+		wall.add_component<MeshComponent>(ground_mesh, 1);
+
+		Collider* wall_collider = new BoxColider(wall_extents);  
+		RigidBody* wall_body = new RigidBody(PhysicsBodyType::STATIC, wall_collider, 0, 0.5f); 
+		wall.transform.position = Vec3(-8, -10, 0);
+		wall.transform.rotation = Quat::from_euler(0, 0, 45.0f);
+		wall.add_component<PhysicsComponent>(wall_body);
+	}
+
+	{
+		Entity& falling_box = engine->manager.create_entity(STR_INTERN("falling_box"), engine->scene.root);
+		Vec3 falling_box_extents = Vec3(0.25f);
+		MeshHandle falling_box_mesh = engine->renderer.create_mesh_cube(cube_material.self, falling_box_extents);
+		MeshComponent* mc = falling_box.add_component<MeshComponent>(falling_box_mesh, 1);
+		mc->use_color = true;
+		mc->color = Vec3(1, 0, 1);
+		falling_box.add_component<PointLightComponent>(mc->color);
+
+		
+		Collider* falling_box_collider = new BoxColider(falling_box_extents);  
+		RigidBody* falling_box_body = new RigidBody(PhysicsBodyType::DYNAMIC, falling_box_collider, 5.0f, 0.5f); 
+		falling_box.transform.position = Vec3(0, 5, 0);
+		falling_box.transform.rotation = Quat::from_euler(5, 30, 20);
+		falling_box.add_component<PhysicsComponent>(falling_box_body);
 	}
 
 	app->timer.start(5.0f);

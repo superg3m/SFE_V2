@@ -2,6 +2,7 @@
 
 #include "../../Core/core.hpp"
 #include "render_types.hpp"
+#include "physics_types.hpp"
 
 struct EngineAPI;
 
@@ -35,6 +36,7 @@ struct Engine;
 struct Entity;
 struct Component {
 	Entity* owner = nullptr;
+	bool should_update = true;
 	Component(int i) {}
 
 	virtual void update(EngineAPI* engine, float dt) = 0;
@@ -98,7 +100,7 @@ struct PointLightComponent : public Component {
 
 	Vec3 color;
 
-	PointLightComponent(Entity* owner);
+	PointLightComponent(Entity* owner, Vec3 color = Vec3(1.0f));
 	void update(EngineAPI* engine, float dt) override {};
 };
 
@@ -218,6 +220,15 @@ struct AnimationComponent : public Component {
 	void pause();
 };
 
+struct PhysicsComponent : public Component {
+	using Component::Component;
+
+	RigidBody* rigidbody;
+
+	PhysicsComponent(Entity* owner, RigidBody* rigidbody);
+	void update(EngineAPI* engine, float dt) override;
+};
+
 #define COMPONENT(T)       			\
 T _##T = T(1);             			\
 template<>                 			\
@@ -311,4 +322,5 @@ struct Entity {
 	COMPONENT(CameraComponent)
 	COMPONENT(FirstPersonCameraControllerComponent)
 	COMPONENT(PointLightComponent)
+	COMPONENT(PhysicsComponent)
 };

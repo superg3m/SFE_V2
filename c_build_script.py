@@ -174,7 +174,17 @@ procedures_config = {
             f"{RELATIVE_IMGUI_ROOT}/*.cpp",
             f"{RELATIVE_GLAD_ROOT}/src/glad.c",
             f"{RELATIVE_STB_ROOT}/stb_image.c",
-            
+        ] + nfd,
+        compile_time_defines=[],
+        additional_libs = [],
+        include_paths = INCLUDES,
+        compiler_inject_into_args=[]
+    ),
+   
+    "Physics Vendor": ProcedureConfig(
+        build_directory = f"{ABSOLUTE_ENGINE_BUILD}",
+        output_name = "physics_vendor.lib",
+        source_files = [
     		f"{RELATIVE_BULLET_ROOT}/src/btBulletCollisionAll.cpp",
     		f"{RELATIVE_BULLET_ROOT}/src/btBulletDynamicsAll.cpp",
     		f"{RELATIVE_BULLET_ROOT}/src/btLinearMathAll.cpp",
@@ -224,7 +234,7 @@ procedures_config = {
         source_files = [
             f"{RELATIVE_GAME_ROOT}/game.cpp",
         ],
-        additional_libs = libs + ["core.lib", "public.lib"],
+        additional_libs = libs + ["core.lib", "public.lib", "physics_vendor.lib"],
         include_paths = INCLUDES,
         compiler_inject_into_args=inject,
         on_source_change_recompile=recompile #doesn't work on mac because of codesign (BS)

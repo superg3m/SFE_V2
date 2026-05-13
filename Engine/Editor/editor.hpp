@@ -282,16 +282,20 @@ struct Editor {
 					ImGui::Spacing();
 
 					Entity& entity_slot = engine->manager.get(this->selected.handle);
+					PhysicsComponent* physics_component = entity_slot.get_component<PhysicsComponent>();
 					Transform& t = entity_slot.transform;
 
 					Vec3 rotation = t.rotation.to_euler();
 
 					ImGui::Checkbox("Active",    &entity_slot.active);
-					ImGui::DragFloat3("Position", &t.position.x, 0.1f);
-					ImGui::DragFloat3("Rotation", &rotation.x,   0.1f);
-					ImGui::DragFloat3("Scale",    &t.scale.x,    0.1f);
-
-					t.rotation = Quat::from_euler(rotation);
+					if (ImGui::DragFloat3("Position", &t.position.x, 0.1f) && physics_component) {
+						physics_component->rigidbody->set_position(t.position);
+					}
+					if (ImGui::DragFloat3("Rotation", &rotation.x, 0.1f)) {
+						t.rotation = Quat::from_euler(rotation);
+						physics_component->rigidbody->set_rotation(t.rotation);
+					}
+					ImGui::DragFloat3("Scale", &t.scale.x, 0.1f);
 
 					ImGui::Spacing();
 
@@ -447,7 +451,15 @@ struct Editor {
 
 								ImGui::Unindent(4.0f);
 							}
-						} else {
+						} else if (PhysicsComponent* physics_component = dynamic_cast<PhysicsComponent*>(c)) {
+							if (ImGui::CollapsingHeader("PhysicsComponent", ImGuiTreeNodeFlags_DefaultOpen)) {
+								ImGui::Indent(4.0f);
+
+								ImGui::Checkbox("physics_should_update", &physics_component->should_update);
+
+								ImGui::Unindent(4.0f);
+							}
+						}  else {
 							RUNTIME_ASSERT(false);
 						}
 					}
@@ -514,6 +526,7 @@ struct Editor {
 			ImGui::Begin("GizmoOverlay", nullptr, flags);
 				if (this->selected != EntityHandle::invalid()) {
 					Entity& entity_slot = engine->manager.get(this->selected.handle);
+					PhysicsComponent* physics_component = entity_slot.get_component<PhysicsComponent>();
 
 					ImGuizmo::SetOrthographic(false);
 					ImGuizmo::SetDrawlist();
@@ -532,6 +545,10 @@ struct Editor {
 					if (is_manipulated) {
 						Mat4 newTransformWorld = newTransformT.transpose();
 						engine->manager.set_world_transform(this->selected, newTransformWorld);
+						if (physics_component) {
+							physics_component->rigidbody->set_position(entity_slot.transform.position);
+							physics_component->rigidbody->set_rotation(entity_slot.transform.rotation);
+						}
 					}
 				}
 			ImGui::End();

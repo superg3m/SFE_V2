@@ -394,43 +394,45 @@ OpenGL::Mesh OpenGL::Model::process_node(MemoryContext memory, Vector<Vertex>& v
 	return mesh;
 }
 
-OpenGL::Mesh OpenGL::Mesh::cube(MaterialHandle material) {
+OpenGL::Mesh OpenGL::Mesh::cube(MaterialHandle material, Vec3 extents) {
+	Vec3 half = extents * 0.5f;
+
 	Vector<Vertex> cube_vertices = {
 		// Back face (z = -0.5)
-		Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,0,-1), Vec2(0,0)}, // 0
-		Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(0,0,-1), Vec2(1,1)}, // 1
-		Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(0,0,-1), Vec2(1,0)}, // 2
-		Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(0,0,-1), Vec2(0,1)}, // 3
+		Vertex{Vec3(-half.x, -half.y, -half.z), Vec3(0,0,-1), Vec2(0,0)}, // 0
+		Vertex{Vec3( half.x,  half.y, -half.z), Vec3(0,0,-1), Vec2(1,1)}, // 1
+		Vertex{Vec3( half.x, -half.y, -half.z), Vec3(0,0,-1), Vec2(1,0)}, // 2
+		Vertex{Vec3(-half.x,  half.y, -half.z), Vec3(0,0,-1), Vec2(0,1)}, // 3
 
 		// Front face (z = +0.5)
-		Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(0,0,1), Vec2(0,0)}, // 4
-		Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(0,0,1), Vec2(1,0)}, // 5
-		Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,0,1), Vec2(1,1)}, // 6
-		Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(0,0,1), Vec2(0,1)}, // 7
+		Vertex{Vec3(-half.x, -half.y, half.z), Vec3(0,0,1), Vec2(0,0)}, // 4
+		Vertex{Vec3( half.x, -half.y, half.z), Vec3(0,0,1), Vec2(1,0)}, // 5
+		Vertex{Vec3( half.x,  half.y, half.z), Vec3(0,0,1), Vec2(1,1)}, // 6
+		Vertex{Vec3(-half.x,  half.y, half.z), Vec3(0,0,1), Vec2(0,1)}, // 7
 
 		// Left face (x = -0.5)
-		Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(-1,0,0), Vec2(0,1)}, // 8
-		Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(-1,0,0), Vec2(1,1)}, // 9
-		Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(-1,0,0), Vec2(1,0)}, // 10
-		Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(-1,0,0), Vec2(0,0)}, // 11
+		Vertex{Vec3(-half.x,  half.y,  half.z), Vec3(-1,0,0), Vec2(0,1)}, // 8
+		Vertex{Vec3(-half.x,  half.y, -half.z), Vec3(-1,0,0), Vec2(1,1)}, // 9
+		Vertex{Vec3(-half.x, -half.y, -half.z), Vec3(-1,0,0), Vec2(1,0)}, // 10
+		Vertex{Vec3(-half.x, -half.y,  half.z), Vec3(-1,0,0), Vec2(0,0)}, // 11
 
 		// Right face (x = +0.5)
-		Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(1,0,0), Vec2(0,1)}, // 12
-		Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(1,0,0), Vec2(1,0)}, // 13
-		Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(1,0,0), Vec2(1,1)}, // 14
-		Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(1,0,0), Vec2(0,0)}, // 15
+		Vertex{Vec3( half.x,  half.y,  half.z), Vec3(1,0,0), Vec2(0,1)}, // 12
+		Vertex{Vec3( half.x, -half.y, -half.z), Vec3(1,0,0), Vec2(1,0)}, // 13
+		Vertex{Vec3( half.x,  half.y, -half.z), Vec3(1,0,0), Vec2(1,1)}, // 14
+		Vertex{Vec3( half.x, -half.y,  half.z), Vec3(1,0,0), Vec2(0,0)}, // 15
 
 		// Bottom face (y = -0.5)
-		Vertex{Vec3(-0.5f,-0.5f,-0.5f), Vec3(0,-1,0), Vec2(0,1)}, // 16
-		Vertex{Vec3( 0.5f,-0.5f,-0.5f), Vec3(0,-1,0), Vec2(1,1)}, // 17
-		Vertex{Vec3( 0.5f,-0.5f, 0.5f), Vec3(0,-1,0), Vec2(1,0)}, // 18
-		Vertex{Vec3(-0.5f,-0.5f, 0.5f), Vec3(0,-1,0), Vec2(0,0)}, // 19
+		Vertex{Vec3(-half.x, -half.y, -half.z), Vec3(0,-1,0), Vec2(0,1)}, // 16
+		Vertex{Vec3( half.x, -half.y, -half.z), Vec3(0,-1,0), Vec2(1,1)}, // 17
+		Vertex{Vec3( half.x, -half.y,  half.z), Vec3(0,-1,0), Vec2(1,0)}, // 18
+		Vertex{Vec3(-half.x, -half.y,  half.z), Vec3(0,-1,0), Vec2(0,0)}, // 19
 
 		// Top face (y = +0.5)
-		Vertex{Vec3(-0.5f, 0.5f,-0.5f), Vec3(0,1,0), Vec2(0,1)}, // 20
-		Vertex{Vec3( 0.5f, 0.5f, 0.5f), Vec3(0,1,0), Vec2(1,0)}, // 21
-		Vertex{Vec3( 0.5f, 0.5f,-0.5f), Vec3(0,1,0), Vec2(1,1)}, // 22
-		Vertex{Vec3(-0.5f, 0.5f, 0.5f), Vec3(0,1,0), Vec2(0,0)}, // 23
+		Vertex{Vec3(-half.x,  half.y, -half.z), Vec3(0,1,0), Vec2(0,1)}, // 20
+		Vertex{Vec3( half.x,  half.y,  half.z), Vec3(0,1,0), Vec2(1,0)}, // 21
+		Vertex{Vec3( half.x,  half.y, -half.z), Vec3(0,1,0), Vec2(1,1)}, // 22
+		Vertex{Vec3(-half.x,  half.y,  half.z), Vec3(0,1,0), Vec2(0,0)}, // 23
 	};
 
 	Vector<u32> cube_indices = {

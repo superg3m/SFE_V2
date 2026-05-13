@@ -58,9 +58,9 @@ struct RenderAPI {
 	}
 	*/
 
-	MeshHandle create_mesh_cube(MaterialHandle material) {
+	MeshHandle create_mesh_cube(MaterialHandle material, Vec3 extents = Vec3(1.0f)) {
 		MeshHandle mesh = this->_private_acquire_mesh_handle(this->b, material);
-		RenderRequest request = RENDER_REQUEST_MESH_CREATE_CUBE(mesh, material);
+		RenderRequest request = RENDER_REQUEST_MESH_CREATE_CUBE(mesh, material, extents);
 		this->deferred_requests.append(request);
 
 		return mesh;

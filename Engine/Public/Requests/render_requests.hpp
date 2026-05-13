@@ -113,12 +113,22 @@ struct MaterialRequest {
 struct MeshRequest {
 	MeshHandle user = MeshHandle::invalid();
 	MaterialHandle material = MaterialHandle::invalid();
+	Vec3 extents = Vec3(0.0f);
 
 	static MeshRequest create(MeshHandle user, MaterialHandle material) {
 		MeshRequest ret = {};
 		ret.user = user;
 		ret.material = material;
 		
+		return ret;
+	}
+
+	static MeshRequest box(MeshHandle user, MaterialHandle material, Vec3 extents) {
+		MeshRequest ret = {};
+		ret.user = user;
+		ret.material = material;
+		ret.extents = extents;
+
 		return ret;
 	}
 };
@@ -206,7 +216,7 @@ struct RenderRequest {
 #define RENDER_REQUEST_VERTEX_BUFFER_UPDATE(vbo, mesh, data, count, element_size)                  RenderRequest{.type = RequestType::VBO_UPDATE, .vbo = VertexBufferRequest::update(vbo, mesh, data, count, element_size)}
 
 #define RENDER_REQUEST_MODEL_LOAD(model, path, desc) RenderRequest{.type = RequestType::MODEL_LOAD, .model = ModelRequest::create(model, path, desc)}
-#define RENDER_REQUEST_MESH_CREATE_CUBE(mesh, material) RenderRequest{.type = RequestType::MESH_CUBE_CREATE, .mesh = MeshRequest::create(mesh, material)}
+#define RENDER_REQUEST_MESH_CREATE_CUBE(mesh, material, extents) RenderRequest{.type = RequestType::MESH_CUBE_CREATE, .mesh = MeshRequest::box(mesh, material, extents)}
 #define RENDER_REQUEST_DRAW_CALL(mesh, material, desc, model, color, use_color, instance_count) RenderRequest{.type = RequestType::DRAW_CALL, .draw_call = DrawCallRequest::create(mesh, material, desc, model, color, use_color, instance_count)}
 #define RENDER_REQUEST_DRAW_AABB(mesh, model) RenderRequest{.type = RequestType::DRAW_AABB, .draw_call = DrawCallRequest::create(mesh, model)}
 #define RENDER_REQUEST_DRAW_SKYBOX(texture) RenderRequest{.type = RequestType::DRAW_SKYBOX, .draw_skybox = DrawSkyboxRequest::create(texture)}
