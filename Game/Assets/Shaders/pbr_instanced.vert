@@ -20,7 +20,8 @@ void main() {
 
 	v_TexCoord = aTexCoord;
     v_WorldPosition = vec3(model * vec4(aPos, 1.0));
-	v_Normal = mat3(transpose(inverse(uModel))) * aNormal; 
+	mat3 normal_matrix = transpose(inverse(mat3(model)));
+	v_Normal = normalize(normal_matrix * aNormal); 
 
 	gl_Position = uProjection * uView * vec4(v_WorldPosition, 1.0);
 }

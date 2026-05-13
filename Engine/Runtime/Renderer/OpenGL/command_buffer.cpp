@@ -24,7 +24,7 @@ void OpenGL::CommandBuffer::draw_vertices(u32 vertex_base, u32 vertex_count) {}
 void OpenGL::CommandBuffer::draw_indexed(u32 index_base, u32 index_count) {}
 
 void OpenGL::CommandBuffer::begin_frame(u32 framebuffer) {
-	gl_error_check(glBindFramebuffer(GL_FRAMEBUFFER, framebuffer)); // TODO(Jovanni): CACHE THIS
+	// gl_error_check(glBindFramebuffer(GL_FRAMEBUFFER, framebuffer)); // TODO(Jovanni): CACHE THIS
 
 	gl_error_check(glClearColor(0.2f, 0.2f, 0.2f, 1));
 	gl_error_check(glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT));

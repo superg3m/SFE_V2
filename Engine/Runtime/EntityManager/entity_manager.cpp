@@ -32,26 +32,6 @@ void EntityManager::create_entity_from_model(Renderer<OpenGL>* renderer, EntityH
 	}
 }
 
-/*
-Entity& EntityManager::create_entity_from_mesh(Renderer<OpenGL>* renderer, String name, EntityHandle parent, MeshHandle mesh) {
-	EntityHandle head_entity = this->entities.acquire();
-	Entity& entity_slot = this->get(head_entity);
-	entity_slot.self = head_entity;
-	entity_slot.name = name;
-	this->set_parent(head_entity, parent);
-
-	OpenGL::Mesh mesh_slot = renderer->get(mesh);
-
-	// EntityHandle entity = this->entities.acquire();
-	// Entity& entity_slot = this->get(entity);
-	// entity_slot.self = entity;
-	// entity_slot.name = name;
-	// this->set_parent(entity, parent);
-
-	// return entity;
-}
-*/
-
 Entity& EntityManager::get(EntityHandle entity) {
 	return this->entities.get(entity.handle);
 }

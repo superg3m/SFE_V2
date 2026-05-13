@@ -72,6 +72,10 @@ struct EntityManagerAPI {
 		return entity_slot;
 	}
 
+	void delete_entity(EntityHandle entity) {
+		this->entities->release(entity.handle);
+	}
+
 	/*
 	Entity& create_entity_from_mesh(String name, EntityHandle parent, MeshHandle mesh, int instance_count = 1) {
 		Entity& entity = this->create_entity(name, parent);

@@ -24,6 +24,19 @@ struct EntityManager {
 	Mat4 get_world_transform(EntityHandle entity);
 	void set_world_transform(EntityHandle entity, Mat4 world_transform);
 
+	EntityHandle find_entity_by_name(String name, EntityHandle entity) {
+		Entity& entity_slot = this->get(entity);
+		if (entity_slot.name == name) return entity;
+
+		for (EntityHandle child : entity_slot.children) {
+			EntityHandle ret = EntityHandle::invalid();
+			ret = find_entity_by_name(name, child);
+			if (ret != EntityHandle::invalid()) return ret;
+		}
+
+		return EntityHandle::invalid();
+	}
+
 	void execute_deferred_requests(Renderer<OpenGL>* renderer, EngineAPI* api) {
 		for (EntityManagerRequest& request : api->manager.deferred_requests) {
 			switch (request.type) {

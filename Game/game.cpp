@@ -15,9 +15,9 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	cube_material.set_bool(STR_INTERN(MATERIAL_HAS_SPECULAR_UNIFORM_NAME), true); 
 
 	MeshHandle cube_mesh = engine->renderer.create_mesh_cube(cube_material.self);
-	// ModelHandle backback = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
-	// ModelHandle glass = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
-	// ModelHandle helmet = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
+	ModelHandle backback = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Backpack/backpack.obj"), {.vertical_flip = true});
+	ModelHandle glass = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/glass/GlassVaseFlowers.gltf"));
+	ModelHandle helmet = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/FlightHelmet/FlightHelmet.gltf"));
 	// ModelHandle church = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/Church/church.glb"));
 	ModelHandle gun = engine->renderer.create_model(STR_INTERN("../../../Game/Assets/Models/gun/scene.gltf"));
 
@@ -65,9 +65,12 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	skybox_material.set_texture(STR_INTERN("uSkyboxDay"), skybox_day);
 	skybox_material.set_texture(STR_INTERN("uSkyboxNight"), skybox_night);
 
-	// engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
-	// engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
-	// engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
+	engine->manager.create_entity_from_model(STR_INTERN("backpack"), engine->scene.root, backback);
+	Entity& glass_entity = engine->manager.create_entity_from_model(STR_INTERN("glass"), engine->scene.root, glass);
+	glass_entity.transform.position = Vec3(-4.5, 0, -1);
+	
+	Entity& helmet_entity = engine->manager.create_entity_from_model(STR_INTERN("helmet"), engine->scene.root, helmet);
+	helmet_entity.transform.position = Vec3(-5, 0, -1);
 	// engine->manager.create_entity_from_model(STR_INTERN("church"), engine->scene.root, church);
 
 	Entity& cube = engine->manager.create_entity(STR_INTERN("cube"), engine->scene.root);
@@ -91,17 +94,21 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 		MeshHandle light_mesh = engine->renderer.create_mesh_cube(light_material.self);
 		Entity& point_light_1 = engine->manager.create_entity(STR_INTERN("light1"), engine->scene.root);
 		MeshComponent* m1 = point_light_1.add_component<MeshComponent>(light_mesh, 1);
-		point_light_1.add_component<PointLightComponent>();
-		point_light_1.transform.scale = Vec3(0.25);
 		m1->use_color = true;
-		m1->color = Vec3(0);
+		m1->color = Vec3(1, 0, 0);
+		
+		point_light_1.add_component<PointLightComponent>(m1->color);
+		point_light_1.transform.position = Vec3(-5, 0, 0);
+		point_light_1.transform.scale = Vec3(0.25);
 
 		Entity& point_light_2 = engine->manager.create_entity(STR_INTERN("light2"), engine->scene.root);
 		MeshComponent* m2 = point_light_2.add_component<MeshComponent>(light_mesh, 1);
-		point_light_2.add_component<PointLightComponent>();
-		point_light_2.transform.scale = Vec3(0.25);
 		m2->use_color = true;
-		m2->color = Vec3(0);
+		m2->color = Vec3(0, 1, 0);
+		
+		point_light_2.add_component<PointLightComponent>(m2->color);
+		point_light_2.transform.position = Vec3(5, 0, 0);
+		point_light_2.transform.scale = Vec3(0.25);
 	}
 
 	{
@@ -136,13 +143,12 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 		MeshHandle falling_box_mesh = engine->renderer.create_mesh_cube(cube_material.self, falling_box_extents);
 		MeshComponent* mc = falling_box.add_component<MeshComponent>(falling_box_mesh, 1);
 		mc->use_color = true;
-		mc->color = Vec3(1, 0, 1);
+		mc->color = Vec3(0, 0, 1);
 		falling_box.add_component<PointLightComponent>(mc->color);
-
 		
 		Collider* falling_box_collider = new BoxColider(falling_box_extents);  
 		RigidBody* falling_box_body = new RigidBody(PhysicsBodyType::DYNAMIC, falling_box_collider, 5.0f, 0.5f); 
-		falling_box.transform.position = Vec3(0, 5, 0);
+		falling_box.transform.position = Vec3(0, 8, 2);
 		falling_box.transform.rotation = Quat::from_euler(5, 30, 20);
 		falling_box.add_component<PhysicsComponent>(falling_box_body);
 	}
@@ -195,6 +201,9 @@ EXPORT_FN void application_render(EngineAPI* engine, Arena* string_arena, Hashma
 // TODO(Jovanni): I want to reorganize the runtime.
 
 The end goal of this project is the following:
+
+INVALID_OPERATION | C:\Users\Owner\Documents\Coding\vscode\c++\SFE_V2\Engine\Runtime\Renderer\OpenGL\command_buffer.cpp:27
+Func: _GL_ERROR_CHECK, File: C:\Users\Owner\Documents\Coding\vscode\c++\SFE_V2\Engine\Runtime\Renderer\OpenGL\backend.cpp:23
 - [] Animations
 - [] Physics (collisions, shooting)
 - [] Multiple Cameras (camera's as entities)

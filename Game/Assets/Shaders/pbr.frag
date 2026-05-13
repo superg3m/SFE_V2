@@ -88,7 +88,8 @@ void main() {
 	vec3 albedo_sample = uMaterial.has_albedo ? 0.5 * texture(uMaterial.albedo, v_TexCoord).rgb : vec3(1);
 	vec3 specular_sample = uMaterial.has_specular ? texture(uMaterial.specular, v_TexCoord).rgb : vec3(1);
 
-	vec4 result = vec4(albedo_sample, uMaterial.opacity);
+	vec3 ambient = 0.25 * albedo_sample;
+	vec4 result = vec4(ambient, uMaterial.opacity);
 	for(int i = 0; i < uPointLightCount; i++) {
 		PointLight light = uPointLights[i];
 
@@ -101,19 +102,21 @@ void main() {
 
 		float lambertian_mask = max(dot(N, L), 0.0);
 
-		float specular_mask = pow(max(dot(N, H), 0.0), uMaterial.shininess);
+		float specular_mask = 0.0;
+		if(lambertian_mask > 0.0) {
+			specular_mask = pow(max(dot(N, H), 0.0), uMaterial.shininess);
+		}
 
 		float constant  = 1.0;
 		float linear    = 0.09;
 		float quadratic = 0.032;
 		float attenuation = 1.0 / (constant + linear * dist + quadratic * dist * dist);
 
-		vec3 diffuse = 0.75 * lambertian_mask * albedo_sample;
-		vec3 specular = float(uMaterial.has_specular) * specular_mask * specular_sample;
+		vec3 diffuse = light.color * lambertian_mask * albedo_sample;
+		vec3 specular = float(uMaterial.has_specular) * light.color * specular_mask * specular_sample;
 		diffuse *= attenuation;
 		specular *= attenuation;
-
-		result += vec4(light.color * (diffuse + specular), 0.0);
+		result += vec4(diffuse + specular, 0.0);
 	}
 
 	FragColor = result;
