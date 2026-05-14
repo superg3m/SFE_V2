@@ -43,7 +43,7 @@ struct PhysicsManager {
 
 	void update(float dt) {
 		btScalar fixed_timestep = 1.0f / 60.0f;
-		int substep_count = 4;
+		int substep_count = 16;
 		this->world->stepSimulation(dt, substep_count, fixed_timestep);
 	}
 };

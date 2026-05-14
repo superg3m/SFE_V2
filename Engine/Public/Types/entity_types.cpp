@@ -196,6 +196,7 @@ PhysicsComponent::PhysicsComponent(Entity* owner, RigidBody* rigidbody) {
 	this->owner = owner;
 	this->rigidbody = rigidbody;
 
+	this->rigidbody->body->setActivationState(DISABLE_DEACTIVATION);
 	this->rigidbody->set_position(owner->transform.position);
 	this->rigidbody->set_rotation(owner->transform.rotation);
 }

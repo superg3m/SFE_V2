@@ -113,7 +113,7 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 
 	{
 		Entity& ground = engine->manager.create_entity(STR_INTERN("ground"), engine->scene.root);
-		Vec3 ground_extents = Vec3(20, 0.1f, 20);
+		Vec3 ground_extents = Vec3(20, 1.0f, 20);
 		MeshHandle ground_mesh = engine->renderer.create_mesh_cube(cube_material.self, ground_extents);
 		ground.add_component<MeshComponent>(ground_mesh, 1);
 
@@ -126,7 +126,7 @@ EXPORT_FN void application_init(EngineAPI* engine, Arena* string_arena, Hashmap<
 	
 	{
 		Entity& wall = engine->manager.create_entity(STR_INTERN("wall"), engine->scene.root);
-		Vec3 wall_extents = Vec3(0.1f, 5.0f, 20);
+		Vec3 wall_extents = Vec3(1.0f, 5.0f, 20);
 		MeshHandle ground_mesh = engine->renderer.create_mesh_cube(cube_material.self, wall_extents);
 		wall.add_component<MeshComponent>(ground_mesh, 1);
 
