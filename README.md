@@ -10,9 +10,10 @@ SFE_V3:
 	- [] Approaching Zero Driver Overhead in OpenGL (Check if VAO is already bound for example)
 	- [] Bullet-proof allocator stuff (remember when when you used frame allocator in some cases with vector you had, what seemed like, random ass behavior)
 	- [] Profile and code instrumentation in imgui
+	- [] Framebuffer stuff
 	- [] Serialization (this should be like priority number one in next engine, serialize a scene)
 	- [] Read up on animations and implement animation
-	- [] Framebuffer stuff
+	- [] ParticleEmitter 
 	- [] Systems instead of having each component update itself (components will now just be pure data no update method)
 		- [] This mean that system will take in an entity manager and query component set/list (make this like O(N) at worst) (even though it should be O(1))
 	- [] Remove this dogshit seperation between editor.
@@ -24,7 +25,8 @@ SFE_V3:
 	- [] Request system obviously can be thrown out
 	- [] Multiple Cameras (camera's as entities) (Should be able to toggle the active camera and switch view points)
 	- [] Dx11 backend
-	- [] ParticleEmitter 
+	- [] procedural fracturing
+	- [] global illumination
 	- [] Shadow mapping
 	- [] metaballs/implicit surfaces
 	- [] constructive solid geometry(?)
