@@ -5,9 +5,11 @@ SFE_V3:
 	- [] MUCH MORE STUFF IN USER SPACE
 	- [] Drop hot code reloading (too much friction and compile times are like 1 second anyway with unity build just not worth it)
 		- On mac run time type info is messed up across dll boundaries
-
+	- [] Job system (Load assets on another thread return a MeshHandle and then switch out the underlying slot)
+	- [] In theory the Handles can actually hold the commonalities? Then the mesh slot can hold the api specific stuff
 	- [] Approaching Zero Driver Overhead in OpenGL (Check if VAO is already bound for example)
 	- [] Bullet-proof allocator stuff (remember when when you used frame allocator in some cases with vector you had, what seemed like, random ass behavior)
+	- [] Profile and code instrumentation in imgui
 	- [] Serialization (this should be like priority number one in next engine, serialize a scene)
 	- [] Read up on animations and implement animation
 	- [] Framebuffer stuff
@@ -28,9 +30,6 @@ SFE_V3:
 	- [] constructive solid geometry(?)
 
 	- [] I can probably get away with allowing entitys to have a pointer to their parent because passing around the manager for that is really annoying just to get world space
-	- [] Profile and code instrumentation in imgui
-	- [] Job system (Load assets on another thread return a MeshHandle and then switch out the underlying slot)
-	- [] In theory the Handles can actually hold the commonalities? Then the mesh slot can hold the api specific stuff
 	- [] Scene system with nice lighting abilities (spotlight, sunlight, pointlights)
 		- [] directional light
 		- [] spotlight
