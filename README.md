@@ -2,15 +2,17 @@ Officiall I consider this iteration of my engine done
 
 here is what to do for the next iteration:
 SFE_V3:
-	- [] More stuff in user space
+	- [] MUCH MORE STUFF IN USER SPACE
 	- [] Drop hot code reloading (too much friction and compile times are like 1 second anyway with unity build just not worth it)
 		- On mac run time type info is messed up across dll boundaries
 
-	- [] Bullet-proof allocator stuff (remember when when you used frame allocator in some cases with vector you had like random ass behavior)
+	- [] Approaching Zero Driver Overhead in OpenGL (Check if VAO is already bound for example)
+	- [] Bullet-proof allocator stuff (remember when when you used frame allocator in some cases with vector you had, what seemed like, random ass behavior)
 	- [] Serialization (this should be like priority number one in next engine, serialize a scene)
 	- [] Read up on animations and implement animation
 	- [] Framebuffer stuff
-	- [] Systems instead of having each component update itself (componetns will now just be data no update method)
+	- [] Systems instead of having each component update itself (components will now just be pure data no update method)
+		- [] This mean that system will take in an entity manager and query component set/list (make this like O(N) at worst) (even though it should be O(1))
 	- [] Remove this dogshit seperation between editor.
 	- [] Make Shader, Texture, ect... make these like a base class and then you can make an openlg specific derived class
 	- [] I really like the mega files with like types and stuff I think its very apropos.
@@ -18,11 +20,15 @@ SFE_V3:
 	- [] Implement Audio
 	- [] Maybe see if using singletons is worth it? (I can do this now because I don't have a dll)
 	- [] Request system obviously can be thrown out
-	- [] Multiple Cameras (camera's as entities)
+	- [] Multiple Cameras (camera's as entities) (Should be able to toggle the active camera and switch view points)
+	- [] Dx11 backend
+	- [] ParticleEmitter 
 	- [] Shadow mapping
-	- [] Approaching Zero Driver Overhead in OpenGL (Check if VAO is already bound for example)
+
 	- [] I can probably get away with allowing entitys to have a pointer to their parent because passing around the manager for that is really annoying just to get world space
 	- [] Profile and code instrumentation in imgui
+	- [] Job system (Load assets on another thread return a MeshHandle and then switch out the underlying slot)
+	- [] In theory the Handles can actually hold the commonalities? Then the mesh slot can hold the api specific stuff
 	- [] Scene system with nice lighting abilities (spotlight, sunlight, pointlights)
 		- [] directional light
 		- [] spotlight
