@@ -24,6 +24,8 @@ SFE_V3:
 	- [] Dx11 backend
 	- [] ParticleEmitter 
 	- [] Shadow mapping
+	- [] metaballs/implicit surfaces
+	- [] constructive solid geometry(?)
 
 	- [] I can probably get away with allowing entitys to have a pointer to their parent because passing around the manager for that is really annoying just to get world space
 	- [] Profile and code instrumentation in imgui
