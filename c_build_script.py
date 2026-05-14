@@ -142,7 +142,7 @@ elif IS_DARWIN():
 
 # ---------------------------------------------------------------------------------------
 
-recompile = True # if IS_WINDOWS() else False
+recompile = True
 
 procedures_config = {
 	"Core": ProcedureConfig(
@@ -237,7 +237,7 @@ procedures_config = {
         additional_libs = libs + ["core.lib", "public.lib", "physics_vendor.lib"],
         include_paths = INCLUDES,
         compiler_inject_into_args=inject,
-        on_source_change_recompile=recompile #doesn't work on mac because of codesign (BS)
+        on_source_change_recompile=recompile
     ),
 }
 
